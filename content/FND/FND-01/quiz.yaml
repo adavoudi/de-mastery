@@ -9,7 +9,6 @@
   answer: [A]
   explanation: "Max speedup as n→∞ is 1/(1-p) = 1/0.05 = 20x. The serial 5% is the wall."
   source: "https://dl.acm.org/doi/10.1145/1465482.1465560"
-  objectives: []
 - id: FND-01-q2
   type: single
   prompt: "In a Redshift cluster, which component is most analogous to Amdahl's serial fraction (1 - p)?"
@@ -21,7 +20,6 @@
   answer: [A]
   explanation: "The leader node's final serial merge cannot be parallelized across compute nodes; it caps scaling, exactly like (1 - p)."
   source: "https://docs.aws.amazon.com/redshift/latest/dg/c_high_level_system_architecture.html"
-  objectives: []
 - id: FND-01-q3
   type: single
   prompt: "For a scan-heavy aggregation over Parquet, which single factor most often dominates runtime and cost?"
@@ -33,7 +31,6 @@
   answer: [A]
   explanation: "Columnar pruning cuts bytes read by 10-100x; bytes scanned usually dominates, which is why Athena bills by scanned bytes."
   source: "https://duckdb.org/why_duckdb"
-  objectives: []
 - id: FND-01-q4
   type: multi
   prompt: "When is scaling OUT (more machines) likely the WRONG choice? (select all)"
@@ -45,7 +42,6 @@
   answer: [A, B, C]
   explanation: "A, B, C all favor one box. D genuinely exceeds a single machine and justifies scale-out."
   source: "https://dl.acm.org/doi/10.1145/42411.42415"
-  objectives: []
 - id: FND-01-q5
   type: single
   prompt: "What is the fundamental reason a shuffle is expensive in a scaled-out system?"
@@ -57,7 +53,6 @@
   answer: [A]
   explanation: "A shuffle moves records between nodes over the network; network latency/bandwidth dwarf in-memory access, so cross-node data movement is the cost."
   source: "https://research.google/pubs/pub62/"
-  objectives: []
 - id: FND-01-q6
   type: single
   prompt: "Gustafson's law differs from Amdahl's law primarily because it assumes:"
@@ -69,4 +64,3 @@
   answer: [A]
   explanation: "Gustafson fixes time and grows the workload with n, so the parallel fraction grows; Amdahl fixes the workload. Different questions, both valid."
   source: "https://dl.acm.org/doi/10.1145/42411.42415"
-  objectives: []

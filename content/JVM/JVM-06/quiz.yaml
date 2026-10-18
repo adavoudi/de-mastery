@@ -12,7 +12,6 @@
     by is the root cause. Then the first stack frame in your package (not JDK/library frames) is
     where the bug usually is.
   source: "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Throwable.html"
-  objectives: [ccdak:4]
 
 - id: JVM-06-q2
   type: single
@@ -28,7 +27,6 @@
     assert its type/message. Calling method() directly in assertThat would throw before the
     assertion runs.
   source: "https://assertj.github.io/doc/#assertj-core-assertions-guide"
-  objectives: [ccdak:4]
 
 - id: JVM-06-q3
   type: single
@@ -43,7 +41,6 @@
     IEEE-754 rounding means mathematically equal computations can differ in the last bits. Assert
     with a tolerance (within) for floating point, as the platform's testing rules require.
   source: "https://assertj.github.io/doc/#assertj-core-assertions-guide"
-  objectives: [ccdak:4]
 
 - id: JVM-06-q4
   type: single
@@ -59,7 +56,6 @@
     afterward — high-fidelity integration tests, but Docker must be available. Hence the no-Docker
     native-broker path for grading.
   source: "https://java.testcontainers.org/modules/kafka/"
-  objectives: [ccdak:4]
 
 - id: JVM-06-q5
   type: single
@@ -74,7 +70,6 @@
     The native broker (no container) or an in-process TopologyTestDriver provides the no-Docker
     graded path; a skipped test cannot fail G1, so the container/lab layer is additional only.
   source: "https://junit.org/junit5/docs/current/user-guide/"
-  objectives: [ccdak:4]
 
 - id: JVM-06-q6
   type: single
@@ -89,7 +84,6 @@
     Fixed sleeps make tests either flaky or needlessly slow. Poll (e.g. consumer.poll in a loop)
     until you have the expected records or hit a timeout — deterministic and quick.
   source: "https://junit.org/junit5/docs/current/user-guide/"
-  objectives: [ccdak:4]
 
 - id: JVM-06-q7
   type: single
@@ -104,4 +98,3 @@
     '... N more' is frame elision: those N frames match the enclosing stack trace and are omitted.
     It is not a separate failure path.
   source: "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Throwable.html"
-  objectives: [ccdak:4]

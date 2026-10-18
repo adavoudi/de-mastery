@@ -7,4 +7,3 @@ hints:
   - "Write with .write.partitionBy('company_id') so the output has one company_id=<value>/ directory per company — a low-cardinality, frequently-filtered column."
   - "Do NOT partitionBy a high-cardinality column (order_id): that explodes into one directory per order (the small-file problem). Partition by company_id."
   - "Return the output path. The test checks the company_id=.../ directory layout, that the number of partition dirs equals the number of companies, and that the data round-trips."
-cert_objectives: [spark-assoc:2.3, spark-assoc:4.1]

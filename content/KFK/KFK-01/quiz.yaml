@@ -11,7 +11,6 @@
     A partition is an append-only log; offsets increase monotonically and never change, and reading
     does not remove records. Compaction (keep latest per key) is an optional policy, not the base model.
   source: "https://kafka.apache.org/documentation/#intro_concepts_and_terms"
-  objectives: [ccdak:1, dse-found]
 
 - id: KFK-01-q2
   type: single
@@ -27,7 +26,6 @@
     seek there and read forward. Reading from the beginning and filtering works but rereads retained
     history unnecessarily.
   source: "https://kafka.apache.org/documentation/#intro_consumers"
-  objectives: [ccdak:1]
 
 - id: KFK-01-q3
   type: single
@@ -42,7 +40,6 @@
     Order is guaranteed within a partition. The default partitioner routes a given key to one
     partition, so per-key order is preserved; there is no cross-partition (hence no global) ordering.
   source: "https://kafka.apache.org/documentation/#intro_concepts_and_terms"
-  objectives: [ccdak:1, ccaak:1]
 
 - id: KFK-01-q4
   type: multi
@@ -57,7 +54,6 @@
     Time/size retention delete old segments; compaction keeps the latest value per key; you can only
     replay as far back as the earliest retained offset. Reading never deletes records (D is false).
   source: "https://kafka.apache.org/documentation/#compaction"
-  objectives: [ccdak:1, ccaak:1]
 
 - id: KFK-01-q5
   type: single
@@ -73,7 +69,6 @@
     the latest record per key, which is how changelogs/__consumer_offsets work. acks is a durability
     setting, unrelated.
   source: "https://developer.confluent.io/courses/apache-kafka/topics/"
-  objectives: [dse-found, ccdak:1]
 
 - id: KFK-01-q6
   type: single
@@ -88,4 +83,3 @@
     Kafka decouples producers and consumers in time; synchronous request/response is the opposite
     pattern and belongs to a service call/RPC, not a log.
   source: "https://developer.confluent.io/courses/apache-kafka/"
-  objectives: [ccaak:1, dse-found]

@@ -13,7 +13,7 @@ The uniting idea is **health is measurable**: under-replicated partitions, ISR s
 retention, listener reachability and reassignment throttle are all things an operator can *query*
 with `AdminClient` / the CLI and *assert on*. A fix is only a fix if the metric returns to healthy.
 
-## The six incidents and how you reason about them (objectives ccaak:6, ccaak:7)
+## The six incidents and how you reason about them
 
 **1. Under-replicated partitions (URP) after a broker loss.** A broker dies; every partition it
 hosted a replica for now has fewer in-sync replicas than its replication factor. Symptom: URP > 0

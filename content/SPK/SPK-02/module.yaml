@@ -5,8 +5,4 @@ hours: 5
 requires: [SPK-01]
 labs: []
 cost: free
-cert_objectives:
-  - spark-assoc:1.4
-  - spark-assoc:1.5
-  - spark-assoc:1.6
 from_your_world: "dbt's compiled DAG vs. Spark's lazy job DAG"

@@ -9,7 +9,6 @@
   answer: [B]
   explanation: "The Flink Iceberg committer commits one snapshot per successful checkpoint. That makes the checkpoint interval the freshness SLA and, at the same time, the rate at which new (small) data files and snapshots are produced."
   source: "https://iceberg.apache.org/docs/latest/flink-writes/"
-  objectives: [streamhouse:iceberg-streaming]
 
 - id: STH-04-q2
   type: single
@@ -22,7 +21,6 @@
   answer: [B]
   explanation: "One snapshot per checkpoint at 1 s is ~86,400 snapshots/day, each with ≥1 small data file per writer per partition. Readers then open thousands of tiny files. Freshness and small-files are the same dial; compaction is required to decouple them."
   source: "https://iceberg.apache.org/docs/latest/maintenance/"
-  objectives: [streamhouse:commit-tuning]
 
 - id: STH-04-q3
   type: single
@@ -35,7 +33,6 @@
   answer: [B]
   explanation: "The Iceberg committer commits on checkpoint; with an unbounded source and no checkpoints, nothing ever commits. A bounded source lets the job reach end-of-input, checkpoint, and commit — the proven no-Docker CDC pattern. (In production you enable periodic checkpointing instead.)"
   source: "https://iceberg.apache.org/docs/latest/flink-writes/"
-  objectives: [streamhouse:iceberg-streaming]
 
 - id: STH-04-q4
   type: single
@@ -48,7 +45,6 @@
   answer: [B]
   explanation: "Row-level updates/deletes need Iceberg v2 (delete files) and a primary key so Flink can route +I/-U/+U/-D by key. Without the PK the sink can only append and the table never reflects deletes/updates."
   source: "https://iceberg.apache.org/docs/latest/flink-writes/"
-  objectives: [streamhouse:iceberg-streaming]
 
 - id: STH-04-q5
   type: single
@@ -61,7 +57,6 @@
   answer: [B]
   explanation: "Compaction (rewrite_data_files) rewrites many small data files into fewer large ones, restoring read performance. expire_snapshots then reclaims the storage of the now-unreferenced old files. Compaction is the tax that decouples freshness from file size."
   source: "https://iceberg.apache.org/docs/latest/maintenance/"
-  objectives: [streamhouse:commit-tuning]
 
 - id: STH-04-q6
   type: single
@@ -74,7 +69,6 @@
   answer: [B]
   explanation: "Paimon's LSM tree absorbs upserts as new sorted runs and merges them by key via background compaction — purpose-built for high churn. Iceberg v2 applies updates as merge-on-read delete files, whose overhead grows with update rate. For a mostly-append log, Iceberg is the simpler choice."
   source: "https://paimon.apache.org/docs/master/primary-key-table/overview/"
-  objectives: [streamhouse:commit-tuning]
 
 - id: STH-04-q7
   type: multi
@@ -87,7 +81,6 @@
   answer: [A, B, C]
   explanation: "Freshness and file count move together with the commit cadence: short interval ⇒ fresh but many small files; long interval ⇒ stale but fat files; batching ingest into one commit yields one snapshot/one file. Compaction fixes small files after the fact but does not replace checkpointing (which is how the sink commits at all)."
   source: "https://iceberg.apache.org/docs/latest/flink-writes/"
-  objectives: [streamhouse:commit-tuning, streamhouse:iceberg-streaming]
 
 - id: STH-04-q8
   type: single
@@ -100,4 +93,3 @@
   answer: [B]
   explanation: "The merge model differs: Iceberg v2 records row-level deletes and merges them at read time (merge-on-read), while Paimon organises primary-key data as an LSM tree and compacts sorted runs in the background. That is why update rate drives the choice between them."
   source: "https://paimon.apache.org/docs/master/primary-key-table/overview/"
-  objectives: [streamhouse:commit-tuning]

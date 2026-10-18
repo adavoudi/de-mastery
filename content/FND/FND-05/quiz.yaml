@@ -9,7 +9,6 @@
   answer: [A]
   explanation: "You rarely get exactly-once on the wire; you get effectively-once by delivering at-least-once and making the sink's effect idempotent/transactional."
   source: "https://kafka.apache.org/documentation/#semantics"
-  objectives: []
 - id: FND-05-q2
   type: single
   prompt: "What is the defining property of an idempotent write?"
@@ -21,7 +20,6 @@
   answer: [A]
   explanation: "Idempotence: f(f(x)) = f(x). Re-applying the same keyed event does not change the result."
   source: "https://kafka.apache.org/documentation/#semantics"
-  objectives: []
 - id: FND-05-q3
   type: single
   prompt: "Why is a UUID generated at send time a BAD dedup key?"
@@ -33,7 +31,6 @@
   answer: [A]
   explanation: "A dedup key must be STABLE across retries. A fresh UUID per send makes the same logical event look new every time, defeating dedup."
   source: "https://www.confluent.io/blog/exactly-once-semantics-are-possible-heres-how-apache-kafka-does-it/"
-  objectives: []
 - id: FND-05-q4
   type: single
   prompt: "Which maps to the SOX 'completeness' control (no acknowledged transaction lost)?"
@@ -45,7 +42,6 @@
   answer: [A]
   explanation: "Completeness forbids loss, so you must never drop an acknowledged event — at-least-once. Accuracy (no double counting) is then handled by idempotent keyed application."
   source: "https://research.google/pubs/pub43864/"
-  objectives: []
 - id: FND-05-q5
   type: single
   prompt: "The two generals problem implies that over an unreliable channel:"
@@ -57,7 +53,6 @@
   answer: [A]
   explanation: "The impossibility result is exactly why we pick a delivery guarantee and resolve duplicates/loss with idempotency or transactions."
   source: "https://en.wikipedia.org/wiki/Two_Generals%27_Problem"
-  objectives: []
 - id: FND-05-q6
   type: multi
   prompt: "A good dedup key must be: (select all)"
@@ -69,7 +64,6 @@
   answer: [A, B, D]
   explanation: "Stable, unique, and at the right grain. Regenerating it per send (C) breaks stability and defeats dedup."
   source: "https://kafka.apache.org/documentation/#semantics"
-  objectives: []
 - id: FND-05-q7
   type: single
   prompt: "An incremental dbt model with a unique_key and MERGE strategy, re-run on overlapping data, is:"
@@ -81,4 +75,3 @@
   answer: [A]
   explanation: "MERGE on a unique_key upserts, so reprocessing overlapping data yields the same target — the batch form of idempotent exactly-once."
   source: "https://kafka.apache.org/documentation/#semantics"
-  objectives: []

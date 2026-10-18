@@ -5,5 +5,4 @@ hours: 3
 requires: [FND-01]
 labs: []
 cost: free
-cert_objectives: []
 from_your_world: "Redshift DISTKEY/DISTSTYLE choices; why a bad distribution key makes every join a network shuffle"

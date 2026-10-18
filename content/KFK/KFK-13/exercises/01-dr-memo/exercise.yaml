@@ -7,4 +7,3 @@ hints:
   - "Match each scenario's dominant need to a topology: cost-sensitive warm standby -> active_passive (MM2); zero-data-loss regulated -> stretched (synchronous, needs 3 failure domains); both regions serving local low-latency traffic -> active_active. Only one is defensible per scenario."
   - "RPO/RTO are numbers in SECONDS and must be in the defensible band for the topology. A synchronous stretched design has RPO ~0 (<=1s). An async MM2 design has RPO > 0 (seconds-to-minutes), never 0. RTO follows cutover automation: manual-but-rehearsed is minutes, active_active is near-zero."
   - "factors must include every required key for that scenario from the controlled vocabulary in README.md (snake_case, exact spelling): e.g. async_replication, offset_translation, synchronous_replication, three_failure_domains, loop_prevention_prefix, cross_region_latency, warm_standby, local_low_latency."
-cert_objectives: [ccaak:3]

@@ -7,4 +7,3 @@ hints:
   - "tune_for_throughput: return a dict with enable.idempotence=True (which pins acks='all'), a positive linger.ms, a batch.size larger than the 16384 default, a compression.type of lz4/zstd/snappy/gzip, and max.in.flight.requests.per.connection <= 5. Set acks='all' explicitly too."
   - "publish_ordered: build a Producer from tune_for_throughput() PLUS the given bootstrap.servers, then produce every (key, value) in order with the record's key, and flush. Keying each record routes a key to one partition so its order is preserved."
   - "The test consumes the topic back and, for each key, checks the sequence of values equals the order you produced for that key. Idempotence + in-flight<=5 keep that true even if a request is retried."
-cert_objectives: [ccdak:2, dse-found]

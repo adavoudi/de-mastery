@@ -7,4 +7,3 @@ hints:
   - "To write exactly N part files, make the DataFrame have exactly N in-memory partitions before writing: df.repartition(num_files).write.parquet(out_dir)."
   - "repartition(N) gives N balanced partitions (a full shuffle); each writes one part-*.parquet file. Do NOT hard-code coalesce(1) — honor the num_files argument."
   - "Return the output path (str). The test counts the part-*.parquet files written and reads the data back to compare with the input via the DuckDB oracle."
-cert_objectives: [spark-assoc:4.1, spark-assoc:1.5]

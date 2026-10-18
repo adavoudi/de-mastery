@@ -11,7 +11,6 @@
     acks=1 means the leader has persisted the record. If the leader then crashes before any follower
     replicates it, the record is lost even though the producer was acked.
   source: "https://kafka.apache.org/documentation/#producerconfigs_acks"
-  objectives: [ccdak:1]
 
 - id: KFK-02-q2
   type: single
@@ -26,7 +25,6 @@
     With acks=all the leader requires at least min.insync.replicas members in the ISR. ISR=1 < 2, so
     the leader refuses the write rather than acknowledging something that lives on only one broker.
   source: "https://kafka.apache.org/documentation/#topicconfigs_min.insync.replicas"
-  objectives: [ccdak:1, ccaak:1]
 
 - id: KFK-02-q3
   type: single
@@ -42,7 +40,6 @@
     writes refused — you never ack a write that would survive on only one disk. EOS is a separate
     concern (KFK-05).
   source: "https://kafka.apache.org/documentation/#replication"
-  objectives: [ccaak:1, ccdak:1]
 
 - id: KFK-02-q4
   type: single
@@ -58,7 +55,6 @@
     replicas are gone, at the cost of losing records only the dead in-sync replicas had. Default off;
     keep it off for completeness-critical data.
   source: "https://kafka.apache.org/documentation/#brokerconfigs_unclean.leader.election.enable"
-  objectives: [ccaak:1]
 
 - id: KFK-02-q5
   type: multi
@@ -73,7 +69,6 @@
     The ISR is dynamic: it shrinks when replicas lag/die and grows when they catch up; the leader is
     always in it; clean election chooses from it. It is not fixed (D is false).
   source: "https://kafka.apache.org/documentation/#replication"
-  objectives: [ccaak:1, ccdak:1]
 
 - id: KFK-02-q6
   type: single
@@ -88,7 +83,6 @@
     misr must be <= RF. With RF=1 the ISR is at most 1, below misr=2, so acks=all writes always fail.
     Match min.insync.replicas to the replication factor (RF=3 -> misr=2).
   source: "https://kafka.apache.org/documentation/#topicconfigs_min.insync.replicas"
-  objectives: [ccaak:1]
 
 - id: KFK-02-q7
   type: single
@@ -103,4 +97,3 @@
     Kafka 4.x runs KRaft only; the controller quorum maintains cluster metadata (incl. leadership) in
     a replicated log. ZooKeeper is gone.
   source: "https://kafka.apache.org/documentation/#kraft"
-  objectives: [ccaak:1]

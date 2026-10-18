@@ -5,5 +5,4 @@ hours: 3
 requires: [FND-01]
 labs: []
 cost: free
-cert_objectives: []
 from_your_world: "Why Athena never 'loses' an S3 object; durability from replication and quorums vs. a single node"

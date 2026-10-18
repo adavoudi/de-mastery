@@ -5,7 +5,6 @@
   answer: [B]
   explanation: "A continuous Flink SQL query produces a dynamic table — a continuously-updating result — whose changes are a changelog stream of rows tagged with a RowKind."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/concepts/dynamic_tables/"
-  objectives: [dse-flink:sql]
 
 - id: FLK-04-q2
   type: multi
@@ -14,7 +13,6 @@
   answer: [A, B, C]
   explanation: "A key first appears as +I; when its aggregate changes, the query retracts the old value (-U) and emits the new one (+U). It is an updating query, not append-only."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/concepts/dynamic_tables/"
-  objectives: [dse-flink:changelog]
 
 - id: FLK-04-q3
   type: single
@@ -23,7 +21,6 @@
   answer: [B]
   explanation: "A window TVF aggregation emits each window once when it closes, so it is append-only. Unbounded GROUP BY and latest-per-key queries are updating (they retract/revise)."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/window-tvf/"
-  objectives: [dse-flink:changelog]
 
 - id: FLK-04-q4
   type: single
@@ -32,7 +29,6 @@
   answer: [B]
   explanation: "upsert-kafka writes a compacted, keyed changelog (latest value per key; null value = delete), which materialises the updating query's dynamic table. A plain append topic would duplicate every revision."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/connectors/table/upsert-kafka/"
-  objectives: [dse-flink:changelog]
 
 - id: FLK-04-q5
   type: single
@@ -41,7 +37,6 @@
   answer: [B]
   explanation: "The retractions in the changelog are intermediate; once all input is folded, the dynamic table's state equals the batch answer over the same events. This is the streaming/batch agreement oracle (G6)."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/concepts/dynamic_tables/"
-  objectives: [dse-flink:changelog]
 
 - id: FLK-04-q6
   type: single
@@ -50,7 +45,6 @@
   answer: [B]
   explanation: "-D removes a row from the result (e.g. a key no longer qualifies). Together with +I/-U/+U it is how the changelog expresses every mutation of the dynamic table."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/concepts/dynamic_tables/"
-  objectives: [dse-flink:changelog]
 
 - id: FLK-04-q7
   type: single
@@ -59,7 +53,6 @@
   answer: [B]
   explanation: "Flink 2.x uses window table-valued functions: TUMBLE/HOP/CUMULATE produce window_start/window_end columns you GROUP BY. The aggregation is append-only (one row per closed window)."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/window-tvf/"
-  objectives: [dse-flink:sql, dse-flink:windows]
 
 - id: FLK-04-q8
   type: single
@@ -68,4 +61,3 @@
   answer: [B]
   explanation: "Checking RowKinds proves the query updates correctly (retracts and re-emits) and the folded final state matches the batch oracle — catching queries that are wrong about append-vs-update even if a single snapshot looks right."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/concepts/dynamic_tables/"
-  objectives: [dse-flink:changelog]

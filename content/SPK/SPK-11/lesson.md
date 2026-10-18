@@ -20,7 +20,7 @@ long do you keep a dimension "open" waiting for a correction, and what do you do
 shows up after you've already closed the version? The watermark is the streaming formalization of
 that "how long do we wait" decision.
 
-## Event time vs processing time (objective 5.3)
+## Event time vs processing time
 
 **Event time** is when the thing happened (a column in the data: `event_ts`). **Processing time**
 is when Spark happened to see it. Correct streaming analytics use *event time*, because that's the
@@ -40,7 +40,7 @@ Here Spark tracks the max `event_ts` seen; the watermark trails it by 10 minutes
 
 ![A 5-minute window is finalized, emitted once and its state dropped when the watermark (max event time minus 10 min) passes its end; later events for it are late](diagrams/watermark-event-time.svg)
 
-## Stateful aggregation and the output modes it unlocks (objective 5.3)
+## Stateful aggregation and the output modes it unlocks
 
 With a watermark, a windowed aggregation can be written in **append** mode: each window is emitted
 exactly once, when it finalizes. (Without a watermark, only `complete`/`update` are legal — SPK-10.)
@@ -51,7 +51,7 @@ The key testable invariant (docs/TESTING.md): **once all input has arrived and t
 passed every window, the streaming result equals the batch result over the same in-window events.**
 Late events (beyond the watermark) are *not* in that batch answer — they were legitimately dropped.
 
-## Streaming deduplication (objective 5.4)
+## Streaming deduplication
 
 Duplicates are a fact of streaming life (at-least-once sources, retries). Two tools:
 
@@ -61,7 +61,7 @@ Duplicates are a fact of streaming life (at-least-once sources, retries). Two to
   arriving *after* the horizon is no longer recognized (which is fine: that's the same "we don't
   wait forever" contract). This is new in Spark 3.5+/4.x and is the production-correct dedup.
 
-## foreachBatch + Iceberg MERGE INTO: streaming SCD2 (objective 3.8)
+## foreachBatch + Iceberg MERGE INTO: streaming SCD2
 
 The sink for a dimension upsert isn't a plain append — it's a **merge**. `foreachBatch` hands you
 each micro-batch as an ordinary (batch) DataFrame, so you can run any batch code, including an

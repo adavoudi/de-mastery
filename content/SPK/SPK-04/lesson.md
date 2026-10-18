@@ -13,7 +13,7 @@ The two capabilities this module adds are (1) naming data so SQL can refer to it
 views** and **tables** — and (2) **reading and writing data sources** correctly: with explicit
 schemas, the right save mode, and sensible partitioning on disk.
 
-## Temporary views: your `ref()` (objectives 2.4)
+## Temporary views: your `ref()`
 
 In dbt, `{{ ref('stg_orders') }}` gives a model a stable name to depend on. In Spark, you register
 a DataFrame as a **temporary view** so SQL can name it:
@@ -29,7 +29,7 @@ A temp view is **not** a materialization. It stores no bytes; it is a label on a
 re-runs that plan (laziness, SPK-02). If you need the data persisted, you write a table (below) —
 the Spark equivalent of a dbt `materialized='table'` model.
 
-## SQL directly on files (objective 2.2)
+## SQL directly on files
 
 Spark can query a file path with no prior registration:
 
@@ -41,7 +41,7 @@ The `format.\`path\`` syntax works for `parquet`, `orc`, `json`, `csv`, and `tex
 for ad-hoc exploration — the equivalent of pointing Athena at an S3 prefix without a Glue table.
 For anything reused, register a temp view instead so the name is stable.
 
-## Reading with an explicit schema (objective 3.6)
+## Reading with an explicit schema
 
 Reading is where silent data-quality bugs are born. Two rules:
 
@@ -59,7 +59,7 @@ schema = StructType([StructField("company_id", StringType()), StructField("order
 spark.read.schema(schema).option("header", True).csv(path)
 ```
 
-## Save modes (objectives 2.1)
+## Save modes
 
 When you write, the **save mode** decides what happens if the target already exists:
 
@@ -74,7 +74,7 @@ The classic production bug is using **`append` where you meant `overwrite`**: a 
 should replace yesterday's partition instead stacks a second copy on top, doubling every metric.
 One of the exercises makes exactly this mistake fail.
 
-## partitionBy and persistent tables (objectives 2.1, 2.3)
+## partitionBy and persistent tables
 
 `df.write.partitionBy("company_id").parquet(path)` writes one sub-directory per partition value
 (`company_id=C001/`, `company_id=C002/`, …). At read time, a filter on the partition column prunes

@@ -7,4 +7,3 @@ hints:
   - "Build a ProcessFunction over the orders: emit valid orders (currency in the allowlist) to the main Collector and invalid ones to a side output via ctx.output(rejectsTag, order)."
   - "Enrich each valid order by looking up its company name from the provided map; keep the companyId too. Declare the OutputTag as an anonymous subclass: new OutputTag<...>(\"rejects\"){}."
   - "Collect the main stream and the getSideOutput(rejectsTag) stream separately with executeAndCollect(), and return both lists."
-cert_objectives: [dse-flink:datastream]

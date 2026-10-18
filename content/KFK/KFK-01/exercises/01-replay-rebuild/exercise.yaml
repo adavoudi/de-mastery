@@ -7,4 +7,3 @@ hints:
   - "To replay from an offset: create a Consumer with a fresh group.id and enable.auto.commit=False, then assign([TopicPartition(topic, p, start_offset)]) for every partition. Read forward until you reach each partition's high watermark (get_watermark_offsets)."
   - "To replay from a timestamp: call offsets_for_times([TopicPartition(topic, p, ts_ms) for each p]); it returns the first offset whose record timestamp is >= ts_ms (or the end offset). Seek there, then fold the same way."
   - "Rebuilding the table = fold the records into a dict keyed by the record key, keeping the LAST value seen per key (events are already in offset order within a partition). Decode key/value from bytes. Stop when every partition has reached its high watermark so you read exactly [start, high) and no more."
-cert_objectives: [ccdak:1, dse-found]

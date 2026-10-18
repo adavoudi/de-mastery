@@ -5,6 +5,4 @@ hours: 5
 requires: [KFK-03, KFK-04]
 labs: []
 cost: free
-cert_objectives:
-  - ccdak:2
 from_your_world: "SOX accuracy & completeness: no duplicated or dropped ledger entries"

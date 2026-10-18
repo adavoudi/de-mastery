@@ -9,7 +9,6 @@
   answer: [A]
   explanation: "A watermark is a completeness claim on event time: all events with event time <= W are assumed to have arrived."
   source: "https://nightlies.apache.org/flink/flink-docs-stable/docs/concepts/time/"
-  objectives: []
 - id: FND-04-q2
   type: single
   prompt: "A late event with a small timestamp arrives. What must a correct watermark do?"
@@ -21,7 +20,6 @@
   answer: [A]
   explanation: "Watermarks are monotonic non-decreasing; a late small-timestamp event must not pull the watermark back, or already-closed windows would re-open."
   source: "https://nightlies.apache.org/flink/flink-docs-stable/docs/dev/datastream/event-time/generating_watermarks/"
-  objectives: []
 - id: FND-04-q3
   type: single
   prompt: "Bounded-out-of-orderness watermark with allowedLateness=5s. The max event time seen is 100s. The current watermark is:"
@@ -33,7 +31,6 @@
   answer: [A]
   explanation: "W = maxEventTime - allowedLateness = 100 - 5 = 95. It lags the newest event by the grace period."
   source: "https://nightlies.apache.org/flink/flink-docs-stable/docs/dev/datastream/event-time/generating_watermarks/"
-  objectives: []
 - id: FND-04-q4
   type: single
   prompt: "An event with time t arrives beyond the watermark's grace period. The audit-safe handling is to:"
@@ -45,7 +42,6 @@
   answer: [A]
   explanation: "For auditable (e.g. SOX) totals, late events must be captured for reconciliation; silently dropping them breaks completeness."
   source: "https://nightlies.apache.org/flink/flink-docs-stable/docs/concepts/time/"
-  objectives: []
 - id: FND-04-q5
   type: single
   prompt: "A dbt incremental model that reprocesses 'the last 3 days' is the batch equivalent of:"
@@ -57,7 +53,6 @@
   answer: [A]
   explanation: "Reprocessing a trailing window is exactly a coarse watermark with a 3-day lateness grace; the day you stop restating a period is the watermark advancing past it."
   source: "https://research.google/pubs/pub43864/"
-  objectives: []
 - id: FND-04-q6
   type: multi
   prompt: "Why not just set allowedLateness very large 'to be safe'? (select all)"
@@ -69,4 +64,3 @@
   answer: [A, B]
   explanation: "Large lateness inflates state and delays results. It does not reverse the watermark (still monotonic) nor change which clock you use."
   source: "https://www.oreilly.com/radar/the-world-beyond-batch-streaming-101/"
-  objectives: []

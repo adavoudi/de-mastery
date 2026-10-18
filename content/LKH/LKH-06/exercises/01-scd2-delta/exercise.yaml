@@ -7,4 +7,3 @@ hints:
   - "SCD2 is TWO steps. First close changed current rows: MERGE ... ON t.bkey=u.bkey AND t.valid_to IS NULL WHEN MATCHED AND t.attr <> u.attr THEN UPDATE SET t.valid_to = u.eff."
   - "Then insert the new current versions for changed AND new keys: a second MERGE whose ON also requires t.attr = u.attr, so unchanged keys stay MATCHED (no insert) while changed/new keys are NOT MATCHED and get inserted with valid_to NULL."
   - "Never UPDATE SET t.attr = u.attr — that is SCD Type 1 and destroys history. Only set valid_to on the old row; the new attribute arrives via the INSERT."
-cert_objectives: [databricks-de-pro:1]

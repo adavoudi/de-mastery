@@ -16,7 +16,7 @@ are the numbers every DR plan lives or dies by:
 This is the same DR discipline you'd apply to a warehouse or data mart, now for the log that feeds
 them. The architecture you choose is a direct trade of **cost and complexity against RPO/RTO**.
 
-## How multi-region Kafka works (objective ccaak:3)
+## How multi-region Kafka works
 
 **Async replication (the common case): MirrorMaker 2.** MM2 is a Kafka Connect-based tool that
 consumes from a **source** cluster and produces to a **target** cluster in another region,

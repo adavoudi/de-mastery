@@ -5,5 +5,4 @@ hours: 5
 requires: [LKH-03]
 labs: []
 cost: free
-cert_objectives: []
 from_your_world: "Your SCD2 dimension snapshots and Redshift upserts"

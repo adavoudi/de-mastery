@@ -7,4 +7,3 @@ hints:
   - "Use a record for the value type and Map.merge(key, value, Double::sum) to accumulate per key."
   - "For 'maybe absent', return Optional<T>; use Optional.empty() and Optional.of(...). Compare strings with .equals(), never ==."
   - "Throw IllegalArgumentException for a bad argument (unchecked). For dedup on a business key, build the key from BOTH fields, not one."
-cert_objectives: [dse-found, ccdak:2]

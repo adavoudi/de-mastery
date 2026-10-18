@@ -7,4 +7,3 @@ hints:
   - "create_table must set format-version=2 and the write modes. For CoW use TBLPROPERTIES('format-version'='2','write.delete.mode'='copy-on-write','write.update.mode'='copy-on-write','write.merge.mode'='copy-on-write'); for MoR use 'merge-on-read' for the same three."
   - "files_by_content reads the metadata table {ident}.files: SELECT content, count(*) GROUP BY content. content 0 = data files, 1 = position deletes, 2 = equality deletes. Return a dict {content: count}."
   - "data_file_paths reads {ident}.files WHERE content=0 and returns the set of file_path values. After a DELETE, MoR adds a content=1 file and keeps the same data files; CoW adds no delete file but REPLACES the data file (the content=0 path set changes)."
-cert_objectives: []

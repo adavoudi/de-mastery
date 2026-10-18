@@ -14,7 +14,6 @@
     commits a new snapshot. expire_snapshots only deletes files referenced solely by expired
     snapshots; it does not combine live small files. This is the small-files problem.
   source: "https://iceberg.apache.org/docs/1.10.0/spark-procedures/#rewrite_data_files"
-  objectives: [databricks-de-pro:6]
 
 - id: LKH-05-q2
   type: single
@@ -32,7 +31,6 @@
     retain_last. To reclaim recent snapshots in a maintenance run you must pass older_than with a
     cutoff. retain_last is a floor on how many to keep, not a command to drop the rest.
   source: "https://iceberg.apache.org/docs/1.10.0/spark-procedures/#expire_snapshots"
-  objectives: [databricks-de-pro:6]
 
 - id: LKH-05-q3
   type: single
@@ -50,7 +48,6 @@
     column, so file pruning can skip files that cannot match. That is exactly what a SORTKEY buys
     you on Redshift. Partitioning is a different (coarser) mechanism and must stay low-cardinality.
   source: "https://iceberg.apache.org/docs/1.10.0/spark-ddl/#alter-table--write-ordered-by"
-  objectives: [databricks-de-pro:6]
 
 - id: LKH-05-q4
   type: single
@@ -68,7 +65,6 @@
     per distinct value, exploding file and manifest counts and crushing planning. Partition on a
     low-cardinality transform (days(ts), bucket(N,key)); use sort order for high-cardinality columns.
   source: "https://iceberg.apache.org/docs/1.10.0/partitioning/"
-  objectives: [databricks-de-pro:6]
 
 - id: LKH-05-q5
   type: single
@@ -86,7 +82,6 @@
     Iceberg derives the partition predicate and prunes. No physical partition column leaks into the
     query — the Hive mistake that hidden partitioning removes.
   source: "https://iceberg.apache.org/docs/1.10.0/partitioning/"
-  objectives: [databricks-de-pro:6]
 
 - id: LKH-05-q6
   type: single
@@ -104,7 +99,6 @@
     partition evolution. Existing files keep their original spec; new writes use the new spec. No
     rewrite of historical data is required — unlike Hive, where the path encodes the partitioning.
   source: "https://iceberg.apache.org/docs/1.10.0/partitioning/#partition-evolution"
-  objectives: [databricks-de-pro:6]
 
 - id: LKH-05-q7
   type: single
@@ -123,4 +117,3 @@
     scans the directory and deletes them, using a conservative older_than to avoid racing in-flight
     commits.
   source: "https://iceberg.apache.org/docs/1.10.0/spark-procedures/#remove_orphan_files"
-  objectives: [databricks-de-pro:6]

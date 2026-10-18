@@ -16,7 +16,7 @@ no two replicas of one partition on the same broker, and — in a multi-rack/AZ 
 replicas across racks so one rack failure can't take a partition offline). This is the Redshift WLM
 instinct applied to storage: shift just enough work to fix the imbalance, not more.
 
-## How reassignment works (objective ccaak:5)
+## How reassignment works
 
 **The replica list.** For each partition, Kafka stores an ordered replica list, e.g. `[2, 0, 1]`.
 Broker `2` is the preferred leader; `0` and `1` are followers. Rules every valid assignment obeys:
@@ -42,7 +42,7 @@ once the new replica is in the ISR.
 
 ![A new replica copies the partition, joins the ISR, and only then is the old replica dropped](diagrams/reassign-catch-up.svg)
 
-## Broker & topic configuration you tune alongside (objective ccaak:3, ccaak:5)
+## Broker & topic configuration you tune alongside
 
 - **`min.insync.replicas`** + producer `acks=all`: how many replicas must acknowledge for a write to
   be considered committed (durability vs availability).

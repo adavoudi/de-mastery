@@ -7,4 +7,3 @@ hints:
   - "Build a StructType with the right types: company_id/first_name/last_name/email/signup_date as StringType, customer_id as LongType. Then spark.read.schema(schema)."
   - "The CSV has a header row and renders NULLs as empty strings. Use .option('header', True) and .option('nullValue', '') so empty email becomes NULL, not ''."
   - "Do NOT use inferSchema. Return the DataFrame as read; the test compares it to the Parquet version of the same data (the typed source of truth)."
-cert_objectives: [spark-assoc:3.6, spark-assoc:2.2]

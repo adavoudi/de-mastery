@@ -12,7 +12,6 @@
     files (copy-on-write) or by writing a separate delete file that logically removes rows merged in
     at read time (merge-on-read).
   source: "https://iceberg.apache.org/spec/#row-level-deletes"
-  objectives: []
 
 - id: LKH-04-q2
   type: single
@@ -28,7 +27,6 @@
     MoR writes a small delete file instead, so writes are cheap but every read merges deletes
     against data until compaction folds them in.
   source: "https://iceberg.apache.org/docs/latest/spark-writes/"
-  objectives: []
 
 - id: LKH-04-q3
   type: single
@@ -45,7 +43,6 @@
     MoR records the delete as a position-delete file (content=1) and leaves the data files
     (content=0) untouched. CoW, by contrast, would rewrite the data file and show only content=0.
   source: "https://iceberg.apache.org/spec/#row-level-deletes"
-  objectives: []
 
 - id: LKH-04-q4
   type: single
@@ -61,7 +58,6 @@
     (a new file replaces the old) while content stays 0 throughout. That is the measurable property
     the tests assert — not timing.
   source: "https://iceberg.apache.org/docs/latest/spark-writes/"
-  objectives: []
 
 - id: LKH-04-q5
   type: single
@@ -77,7 +73,6 @@
     (valid_to NULL, is_current=true) is inserted. Overwriting the row in place destroys history —
     the whole purpose of Type 2.
   source: "https://iceberg.apache.org/docs/latest/spark-writes/"
-  objectives: []
 
 - id: LKH-04-q6
   type: multi
@@ -92,7 +87,6 @@
     A, B and C are real SCD2 defects. D is the correct behavior, not a bug: a changed attribute
     should produce a new current version.
   source: "https://iceberg.apache.org/docs/latest/spark-writes/"
-  objectives: []
 
 - id: LKH-04-q7
   type: single
@@ -107,7 +101,6 @@
     The oracle recomputes the SCD2 result independently in DuckDB over the same batches. Agreement
     between two engines guards against a wrong hand-authored expectation — the G6 validity gate.
   source: "https://iceberg.apache.org/docs/latest/spark-writes/"
-  objectives: []
 
 - id: LKH-04-q8
   type: single
@@ -122,4 +115,3 @@
     MoR optimizes write cost at the expense of read cost. A dimension read constantly but written
     rarely is better served by copy-on-write, which keeps every read against clean data files.
   source: "https://iceberg.apache.org/docs/latest/configuration/"
-  objectives: []

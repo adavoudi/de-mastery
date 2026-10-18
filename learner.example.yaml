@@ -23,23 +23,8 @@ pace:
     # SPK: 2027-03-01
 
 tracks:
-  order: [FND, SPK, LKH, CDW, JVM, KFK, FLK, STH, ARC]  # ARC modules run in parallel; see ROADMAP
+  order: [FND, SPK, LKH, JVM, KFK, FLK, STH]
   skip_modules: []          # e.g. [LKH-01] if already mastered (placement quiz can suggest these)
-
-certs:
-  # status: planned | studying | booked | passed | skipped
-  - id: confluent-dse-foundations
-    status: planned
-  - id: databricks-spark-developer-associate
-    status: planned
-  - id: confluent-ccdak
-    status: planned
-  - id: confluent-dse-flink
-    status: planned
-  - id: confluent-ccaak
-    status: planned
-  - id: databricks-de-professional
-    status: skipped          # optional; Databricks-specific. DEA prep lives in a separate project
 
 machine:
   ram_gb: 32

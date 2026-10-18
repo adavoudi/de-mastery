@@ -5,9 +5,4 @@ hours: 6
 requires: [SPK-05]
 labs: []
 cost: free
-cert_objectives:
-  - spark-assoc:3.5
-  - spark-assoc:3.9
-  - spark-assoc:3.10
-  - spark-assoc:4.1
 from_your_world: "Redshift DISTSTYLE ALL ≈ broadcast; distribution keys and skew"

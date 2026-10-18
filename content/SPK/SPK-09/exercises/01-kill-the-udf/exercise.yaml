@@ -7,4 +7,3 @@ hints:
   - "The starter multiplies amount by a rate looked up in a Python UDF — that becomes a BatchEvalPython node. The fx_rates table already has one usd_per_unit per (rate_date, currency); join to it instead of looking it up in Python."
   - "Convert paid_ts_utc to a date to match fx_rates.rate_date, join on (currency, rate_date), then usd_amount = amount * usd_per_unit using plain Column arithmetic. No pyspark UDF needed at all."
   - "Keep every payment row even when a rate or amount is NULL: use a LEFT join (broadcast is fine) so you don't silently drop rows. A pandas_udf or Arrow udf is an acceptable alternative, but a plain Python udf is not — the test rejects BatchEvalPython."
-cert_objectives: [spark-assoc:3.8]

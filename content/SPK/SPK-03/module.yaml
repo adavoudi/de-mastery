@@ -5,10 +5,4 @@ hours: 7
 requires: [SPK-02]
 labs: []
 cost: free
-cert_objectives:
-  - spark-assoc:3.1
-  - spark-assoc:3.2
-  - spark-assoc:3.3
-  - spark-assoc:3.4
-  - spark-assoc:3.7
 from_your_world: "dbt staging models, written in PySpark"

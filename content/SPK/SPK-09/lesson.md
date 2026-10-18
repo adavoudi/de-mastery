@@ -15,7 +15,7 @@ instead of one row at a time. It is also where the **Pandas API on Spark** lives
 already know, running distributed, so you don't have to collect a billion rows to a driver to call
 `.groupby()`.
 
-## How a Python UDF actually runs (objective 3.8)
+## How a Python UDF actually runs
 
 A scalar Python UDF, e.g.
 
@@ -51,7 +51,7 @@ The fix, in order of preference:
 So the test that matters is not "which API did you use?" but **"is there a `BatchEvalPython` in the
 plan?"** A correct solution — native functions, a pandas UDF, or an Arrow UDF — has none.
 
-## Pandas UDF flavors (objective 7.2)
+## Pandas UDF flavors
 
 - **Series → Series** (scalar): vectorized element-wise, e.g. a custom numeric transform.
 - **Iterator[Series] → Iterator[Series]**: same, but lets you amortize an expensive setup (loading
@@ -63,7 +63,7 @@ plan?"** A correct solution — native functions, a pandas UDF, or an Arrow UDF 
 
 All of these cross the boundary in Arrow batches, so none produce `BatchEvalPython`.
 
-## Pandas API on Spark (objective 7.1)
+## Pandas API on Spark
 
 `import pyspark.pandas as ps` gives you a pandas-shaped API (`ps.DataFrame`, `.groupby()`,
 `.merge()`, `.describe()`) that compiles down to Spark jobs. The advantage over real pandas is that

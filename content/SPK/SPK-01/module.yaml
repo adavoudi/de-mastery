@@ -5,10 +5,4 @@ hours: 5
 requires: []
 labs: []
 cost: free
-cert_objectives:
-  - spark-assoc:1.1
-  - spark-assoc:1.2
-  - spark-assoc:1.7
-  - spark-assoc:6.1
-  - spark-assoc:6.2
 from_your_world: "Redshift leader/compute nodes vs. Spark driver/executors"

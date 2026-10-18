@@ -9,7 +9,6 @@
   answer: [B]
   explanation: "A version is closed by the next version's effective time: valid_to = LEAD(effective_from) PARTITION BY key ORDER BY effective_from. The last version per key has no successor, so its valid_to is left open (a sentinel) and is_current = true."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/over-agg/"
-  objectives: [streamhouse:scd2-streaming]
 
 - id: STH-05-q2
   type: single
@@ -22,7 +21,6 @@
   answer: [B]
   explanation: "The as-of rule values a fact with the dimension version effective at the fact's event time. The order at t=30 falls in Alice's std interval [0,100), so it must be stamped std regardless of when it is reprocessed. Recording gold would silently restate history."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/concepts/versioned_tables/"
-  objectives: [streamhouse:temporal-join]
 
 - id: STH-05-q3
   type: single
@@ -35,7 +33,6 @@
   answer: [B]
   explanation: "The as-of match selects the single version whose validity interval [valid_from, valid_to) contains the fact's event time. Joining on is_current gives the latest version (wrong for history); joining on the key alone matches every version (fan-out)."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/joins/"
-  objectives: [streamhouse:temporal-join]
 
 - id: STH-05-q4
   type: single
@@ -48,7 +45,6 @@
   answer: [B]
   explanation: "Validity intervals are a function of business/event time, so a late-arriving change still slots into the correct interval. Ordering by processing/arrival time would place a late change after events that are actually later in business time, corrupting the intervals."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/concepts/versioned_tables/"
-  objectives: [streamhouse:scd2-streaming]
 
 - id: STH-05-q5
   type: single
@@ -61,7 +57,6 @@
   answer: [B]
   explanation: "The streaming invariant is that once all input has arrived, the streaming result equals the batch answer over the same events. Reconciling the dim/fct against an independent engine's as-of join is the acceptance gate — the streaming analogue of a dbt reconciliation test."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/joins/"
-  objectives: [streamhouse:scd2-streaming, streamhouse:temporal-join]
 
 - id: STH-05-q6
   type: single
@@ -74,7 +69,6 @@
   answer: [B]
   explanation: "is_current = true selects the latest version, so a reprocessed historical order gets today's attributes rather than the version effective then. That is the 'latest, not as-of' bug — a point-in-time accuracy defect."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/concepts/versioned_tables/"
-  objectives: [streamhouse:temporal-join]
 
 - id: STH-05-q7
   type: multi
@@ -87,7 +81,6 @@
   answer: [A, B, C]
   explanation: "A changelog event = a version; the latest version per key is open and current; a fact's event time falls in exactly one [valid_from, valid_to) interval. Only one version per key can be current, so D is false."
   source: "https://paimon.apache.org/docs/master/primary-key-table/overview/"
-  objectives: [streamhouse:scd2-streaming]
 
 - id: STH-05-q8
   type: single
@@ -100,4 +93,3 @@
   answer: [B]
   explanation: "A versioned table needs a primary key (version identity) and an event-time attribute/watermark so the planner can order versions per key and answer FOR SYSTEM_TIME AS OF. This is the engine form of the explicit SCD2 validity-interval join."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/concepts/versioned_tables/"
-  objectives: [streamhouse:temporal-join]

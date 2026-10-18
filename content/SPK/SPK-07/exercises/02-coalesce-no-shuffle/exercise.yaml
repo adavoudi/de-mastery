@@ -7,4 +7,3 @@ hints:
   - "A selective filter leaves data spread over many partitions. To merge down to num_files WITHOUT a shuffle, use coalesce(num_files), not repartition(num_files)."
   - "coalesce is a NARROW transformation: it adds no Exchange to the plan. repartition would add one. The test counts Exchange nodes added by your reduction step."
   - "Return the filtered-and-coalesced DataFrame with num_files partitions and the same rows as the filtered input (currency == 'USD')."
-cert_objectives: [spark-assoc:1.5, spark-assoc:4.1]

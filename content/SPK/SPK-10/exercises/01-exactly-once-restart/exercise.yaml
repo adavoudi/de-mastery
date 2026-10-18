@@ -7,4 +7,3 @@ hints:
   - "Read the directory as a stream: spark.readStream.schema('event_id INT, company_id STRING, amount DOUBLE, event_ts STRING').format('json').load(source_dir). Write it to the Iceberg table with .writeStream.toTable(table)."
   - "Pass .option('checkpointLocation', checkpoint) and .trigger(availableNow=True); the SAME checkpoint must be reused on every call so a restart resumes from committed offsets. After start(), call processAllAvailable() then stop()."
   - "Use output mode append (no aggregation) and the native table sink (toTable) — it tracks committed batches, so a redone batch does not duplicate. Do NOT collect rows and insert them yourself (not idempotent). Return nothing; the test reads the table."
-cert_objectives: [spark-assoc:5.1, spark-assoc:5.2]

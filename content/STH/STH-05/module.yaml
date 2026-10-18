@@ -5,5 +5,4 @@ hours: 6
 requires: [STH-04]
 labs: []
 cost: free
-cert_objectives: [streamhouse:scd2-streaming, streamhouse:temporal-join]
 from_your_world: "Your core strength: Kimball SCD2 dimensions and point-in-time fact enrichment, now built on a streaming CDC feed"

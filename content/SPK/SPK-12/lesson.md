@@ -14,7 +14,7 @@ as good as the wrong code it rejects.** A test suite that passes your correct pi
 passes a buggy one is worthless. So in this module *you* are graded the way our exercises are: your
 tests must pass a known-good pipeline **and fail every planted buggy one.**
 
-## Testing Spark transformations (objective 4.3)
+## Testing Spark transformations
 
 - **Make transformations pure functions of DataFrames.** `def clean(orders: DataFrame) -> DataFrame`
   is testable; a function that reads a hard-coded path and writes another is not. Inject inputs,

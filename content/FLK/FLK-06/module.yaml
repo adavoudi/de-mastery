@@ -5,5 +5,4 @@ hours: 7
 requires: [FLK-05]
 labs: []
 cost: free
-cert_objectives: [dse-flink:checkpoints]
 from_your_world: "SOX accuracy & completeness: a ledger with no dropped and no double-posted entries, even across a crash"

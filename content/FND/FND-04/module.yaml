@@ -5,5 +5,4 @@ hours: 3
 requires: [FND-01]
 labs: []
 cost: free
-cert_objectives: []
 from_your_world: "Late-arriving facts and dimensions in Kimball; how long to hold a window open before you trust the number"

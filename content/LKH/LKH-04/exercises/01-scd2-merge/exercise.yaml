@@ -7,4 +7,3 @@ hints:
   - "Two steps. Step 1 CLOSES changed current rows: MERGE INTO {dim} t USING ({src}) u ON t.nk=u.nk AND t.is_current=true WHEN MATCHED AND t.attr<>u.attr THEN UPDATE SET t.valid_to=DATE'{batch_date}', t.is_current=false."
   - "Step 2 INSERTS a new open version for changed AND brand-new keys: INSERT the source rows whose nk is not among the still-current rows, with valid_from=DATE'{batch_date}', valid_to=NULL, is_current=true. A LEFT ANTI JOIN (or NOT IN) against the current rows selects them."
   - "Do step 1 before step 2 (otherwise the just-inserted new version looks 'current' and blocks the close). Never UPDATE the attr in place (that is SCD1). Close date == new valid_from (contiguous, no gap/overlap)."
-cert_objectives: []

@@ -5,8 +5,4 @@ hours: 3
 requires: []
 labs: []
 cost: free
-cert_objectives:
-  - dse-found
-  - ccdak:1
-  - ccaak:1
 from_your_world: "Iceberg snapshots as log positions; replay to rebuild a table"

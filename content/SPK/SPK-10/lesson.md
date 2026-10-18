@@ -15,7 +15,7 @@ as new rows arrive.** The engine, not you, remembers the high-water mark (the so
 guarantees that a failed-and-restarted run produces the same result as if it had never failed. That
 guarantee is **exactly-once**, and the thing that makes it real is the **checkpoint**.
 
-## The micro-batch model (objective 5.1)
+## The micro-batch model
 
 By default Structured Streaming runs as a sequence of small **micro-batches**. Each micro-batch:
 
@@ -33,7 +33,7 @@ the merge idempotent?"
 
 ![One micro-batch: read offsets, process, write, then commit to the checkpoint; a crash on either side of the commit recovers exactly-once](diagrams/micro-batch-checkpoint.svg)
 
-## Sources, sinks, triggers, output modes (objective 5.2)
+## Sources, sinks, triggers, output modes
 
 - **Sources:** files (a directory you drop files into), Kafka (KFK track — not until Phase 3 here),
   sockets (toy), and the `rate` source (synthetic rows, for testing). In this module we use a
@@ -44,7 +44,7 @@ the merge idempotent?"
 - **Triggers:** how often a micro-batch fires. `processingTime="10 seconds"`, `once`, and
   `availableNow` (process everything available right now, in one or more batches, then stop —
   perfect for deterministic tests and for "incremental batch" jobs).
-- **Output modes** (objective 5.3) decide what the sink receives each batch:
+- **Output modes** decide what the sink receives each batch:
   - **append** — only brand-new result rows. Correct for a stream with no aggregation (every input
     row maps to one output row) and for windowed aggregations once a window is finalized.
   - **complete** — the *entire* updated result table every batch. Only valid for aggregations, and
@@ -55,7 +55,7 @@ the merge idempotent?"
   (the aggregate rows keep changing, so there is nothing final to append) unless a watermark lets
   windows close (SPK-11).
 
-## Checkpoints and exactly-once in practice (objective 5.1)
+## Checkpoints and exactly-once in practice
 
 The **`checkpointLocation`** is the whole game. It stores the source offsets, the committed batch
 log, and (for stateful queries) the state store. Rules that the exercises make you feel:

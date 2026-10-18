@@ -5,7 +5,4 @@ hours: 6
 requires: [KFK-02]
 labs: []
 cost: free
-cert_objectives:
-  - dse-found
-  - ccdak:2
 from_your_world: "SOX completeness: a crash must never drop an unprocessed event"

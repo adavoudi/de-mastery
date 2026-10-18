@@ -5,8 +5,4 @@ hours: 4
 requires: [SPK-05]
 labs: []
 cost: free
-cert_objectives:
-  - spark-assoc:3.8
-  - spark-assoc:7.1
-  - spark-assoc:7.2
 from_your_world: "dbt Python models, and the pandas you reach for out of habit"

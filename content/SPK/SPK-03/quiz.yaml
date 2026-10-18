@@ -14,7 +14,6 @@
     an equality filter. This is SQL three-valued logic, identical to Redshift. To include NULLs you
     must test isNull() explicitly.
   source: "https://spark.apache.org/docs/4.2.0/api/python/reference/pyspark.sql/functions.html"
-  objectives: [spark-assoc:3.1]
 
 - id: SPK-03-q2
   type: single
@@ -32,7 +31,6 @@
     differ on any key component. Deduping on order_item_id alone would wrongly collapse the
     cross-company collisions; distinct() only removes fully identical rows (misses partial dups).
   source: "https://spark.apache.org/docs/4.2.0/api/python/reference/pyspark.sql/api/pyspark.sql.DataFrame.dropDuplicates.html"
-  objectives: [spark-assoc:3.2]
 
 - id: SPK-03-q3
   type: single
@@ -47,7 +45,6 @@
     SUM over all-NULL input is NULL, not 0 (same as SQL). If you need 0, wrap with coalesce(sum,
     lit(0)). count('amount') would also ignore the NULLs, unlike count('*').
   source: "https://spark.apache.org/docs/4.2.0/api/python/reference/pyspark.sql/functions.html"
-  objectives: [spark-assoc:3.3]
 
 - id: SPK-03-q4
   type: single
@@ -65,7 +62,6 @@
     timestamp honors the offset; slicing the first 10 characters ignores it and returns the wrong
     day. This is the timezone-naive date-extraction bug.
   source: "https://spark.apache.org/docs/4.2.0/sql-ref-datetime-pattern.html"
-  objectives: [spark-assoc:3.4]
 
 - id: SPK-03-q5
   type: multi
@@ -81,7 +77,6 @@
     for null/empty arrays). split only produces an array column (still one row); size returns the
     array length (one row).
   source: "https://spark.apache.org/docs/4.2.0/api/python/reference/pyspark.sql/functions.html"
-  objectives: [spark-assoc:3.1]
 
 - id: SPK-03-q6
   type: single
@@ -96,7 +91,6 @@
     count of a specific column skips NULLs in that column, while count(*) / count(lit(1)) counts
     rows regardless. Same semantics as SQL COUNT(col) vs COUNT(*).
   source: "https://spark.apache.org/docs/4.2.0/api/python/reference/pyspark.sql/functions.html"
-  objectives: [spark-assoc:3.3]
 
 - id: SPK-03-q7
   type: single
@@ -111,7 +105,6 @@
     Reduce to the small distinct set with DataFrame ops first, then collect() that tiny result.
     Collecting the whole table or using a side-effecting UDF defeats Spark and risks the driver OOM.
   source: "https://spark.apache.org/docs/4.2.0/api/python/reference/pyspark.sql/api/pyspark.sql.DataFrame.collect.html"
-  objectives: [spark-assoc:3.7]
 
 - id: SPK-03-q8
   type: single
@@ -126,4 +119,3 @@
     withColumn is a lazy transformation returning a new DataFrame; using an existing name replaces
     that column. Nothing mutates in place and nothing runs until an action.
   source: "https://spark.apache.org/docs/4.2.0/api/python/reference/pyspark.sql/api/pyspark.sql.DataFrame.withColumn.html"
-  objectives: [spark-assoc:3.1]

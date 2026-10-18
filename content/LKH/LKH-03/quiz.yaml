@@ -12,7 +12,6 @@
     that is a commit, and (Glue/Lake Formation, Unity, Polaris, Nessie, Lakekeeper) governs access.
     The data files are portable across catalogs; the catalog is the control plane.
   source: "https://iceberg.apache.org/docs/latest/branching/"
-  objectives: []
 
 - id: LKH-03-q2
   type: single
@@ -27,7 +26,6 @@
     A tag names a fixed snapshot (a point in time). A branch is a movable reference, like a git
     branch, that you can write to without affecting readers of main.
   source: "https://iceberg.apache.org/spec/#snapshot-references"
-  objectives: []
 
 - id: LKH-03-q3
   type: single
@@ -42,7 +40,6 @@
     Writing to a branch isolates the new data from main. Readers of main continue to see the last
     published state while you validate the branch. Only a passing audit publishes it to main.
   source: "https://iceberg.apache.org/docs/latest/branching/"
-  objectives: []
 
 - id: LKH-03-q4
   type: single
@@ -58,7 +55,6 @@
     read the AUDIT branch's snapshot. Auditing main (which doesn't contain the new data yet) is a
     classic WAP mistake that passes bad data straight through.
   source: "https://iceberg.apache.org/docs/latest/branching/"
-  objectives: []
 
 - id: LKH-03-q5
   type: single
@@ -74,7 +70,6 @@
     'publish' step of WAP; cherrypick_snapshot is the alternative when you want to apply a single
     branch snapshot onto a main that has moved.
   source: "https://iceberg.apache.org/docs/latest/spark-procedures/"
-  objectives: []
 
 - id: LKH-03-q6
   type: single
@@ -90,7 +85,6 @@
     check, or checking a snapshot that doesn't contain the candidate data, lets bad rows reach
     production — exactly the failure the audited-publish control exists to prevent.
   source: "https://iceberg.apache.org/docs/latest/branching/"
-  objectives: []
 
 - id: LKH-03-q7
   type: single
@@ -105,4 +99,3 @@
     Branching adds snapshots and maintenance overhead. It pays off when a bad publish is costly or
     must be approved; for cheap, low-risk appends the overhead isn't justified.
   source: "https://iceberg.apache.org/docs/latest/branching/"
-  objectives: []

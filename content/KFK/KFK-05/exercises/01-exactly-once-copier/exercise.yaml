@@ -7,4 +7,3 @@ hints:
   - "Build a transactional Producer: {'bootstrap.servers':..., 'transactional.id': transactional_id, 'enable.idempotence': True}. Call init_transactions() once. Build a Consumer with the group.id, enable.auto.commit=False, auto.offset.reset='earliest', isolation.level='read_committed'; subscribe to src_topic."
   - "copy loop: begin_transaction(); poll and produce each source record to dst_topic (same key/value); when you have the batch, call producer.send_offsets_to_transaction(consumer.position(consumer.assignment()), consumer.consumer_group_metadata()) then commit_transaction(). This makes the output writes AND the input offset commit atomic."
   - "copy_then_abort does the same begin+produce but calls abort_transaction() instead of commit — a read_committed consumer must then see NONE of those records. Keep transactional_id STABLE (as given), never random, so zombie fencing works."
-cert_objectives: [ccdak:2]

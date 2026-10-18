@@ -9,7 +9,6 @@
   answer: [B]
   explanation: "op='r' is emitted for every existing row during the initial snapshot, before streaming begins. Downstream logic should treat it like an initial insert. c/u/d are create/update/delete."
   source: "https://debezium.io/documentation/reference/3.0/connectors/postgresql.html#postgresql-events"
-  objectives: [ccdak:2, ccaak:4]
 
 - id: KFK-07-q2
   type: single
@@ -22,7 +21,6 @@
   answer: [B]
   explanation: "After a delete, Debezium emits a tombstone (key present, value null) so a log-compacted topic can physically drop the key. It carries no new state; SCD2 derivation skips it because the preceding op='d' already closed the row."
   source: "https://debezium.io/documentation/reference/3.0/connectors/postgresql.html#postgresql-delete-events"
-  objectives: [ccdak:2]
 
 - id: KFK-07-q3
   type: single
@@ -35,7 +33,6 @@
   answer: [B]
   explanation: "A connector is a configured integration; it divides the work into tasks (e.g. per table or per partition range) that the workers execute. tasks.max bounds how many run."
   source: "https://kafka.apache.org/documentation/#connect_concepts"
-  objectives: [ccdak:2, ccaak:4]
 
 - id: KFK-07-q4
   type: single
@@ -48,7 +45,6 @@
   answer: [A]
   explanation: "Logical decoding (which Debezium uses) requires wal_level=logical plus a replication slot. The slot retains WAL until consumed, so a stalled consumer can fill the disk — a key operational caveat."
   source: "https://debezium.io/documentation/reference/3.0/connectors/postgresql.html#setting-up-postgresql"
-  objectives: [ccaak:4]
 
 - id: KFK-07-q5
   type: single
@@ -61,7 +57,6 @@
   answer: [B]
   explanation: "SCD2 keeps history: an update closes the prior version (valid_to = change ts, is_current=false) and opens a new current version from the after image. Overwriting loses history; leaving the old row open gives two current versions."
   source: "https://debezium.io/documentation/reference/3.0/connectors/postgresql.html#postgresql-update-events"
-  objectives: [ccdak:2]
 
 - id: KFK-07-q6
   type: single
@@ -74,7 +69,6 @@
   answer: [B]
   explanation: "Services write domain events to an outbox table in the SAME transaction as the business change; Debezium streams the outbox. Consumers get a stable, curated event contract instead of raw internal tables, and the write is atomic with the state change."
   source: "https://debezium.io/documentation/reference/3.0/transformations/outbox-event-router.html"
-  objectives: [ccdak:2, ccaak:4]
 
 - id: KFK-07-q7
   type: single
@@ -87,7 +81,6 @@
   answer: [B]
   explanation: "A DLQ routes records that fail (e.g. deserialization) to a separate topic, letting the connector keep running. You then inspect/replay the DLQ instead of blocking the whole task on a poison record."
   source: "https://kafka.apache.org/documentation/#connect_errorreporting"
-  objectives: [ccdak:2, ccaak:4]
 
 - id: KFK-07-q8
   type: multi
@@ -100,4 +93,3 @@
   answer: [A, B, C, D]
   explanation: "The envelope carries op, before, after and source. before is null for inserts/reads; after is null for deletes; source holds the LSN, commit timestamp and table identity used to order and audit events."
   source: "https://debezium.io/documentation/reference/3.0/connectors/postgresql.html#postgresql-events"
-  objectives: [ccdak:2]

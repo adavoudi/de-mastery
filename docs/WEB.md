@@ -1,7 +1,7 @@
 # Course website
 
 `de web` serves the whole course as a website on your machine: the curriculum, every track
-syllabus, lessons, exercise statements with starter code and hints, quizzes, interview drills,
+overview, lessons, exercise statements with starter code and hints, quizzes, interview drills,
 build-your-own stages, and the guides. It is read-only. It has no accounts and no database, and it
 only reads the files in this repo, so `git pull` and a refresh is all it takes to see new lessons.
 

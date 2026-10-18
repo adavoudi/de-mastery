@@ -5,7 +5,4 @@ hours: 3
 requires: [JVM-01]
 labs: []
 cost: free
-cert_objectives:
-  - dse-found
-  - ccdak:2
 from_your_world: "the on-the-wire/at-rest format of a table or a Kafka topic (Avro/Parquet) vs an opaque pickle"

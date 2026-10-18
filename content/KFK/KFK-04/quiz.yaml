@@ -11,7 +11,6 @@
     Committing after processing means the committed offset only advances past records you handled, so
     a crash reprocesses (at-least-once). Committing before processing risks loss (at-most-once).
   source: "https://kafka.apache.org/documentation/#semantics"
-  objectives: [ccdak:2, dse-found]
 
 - id: KFK-04-q2
   type: single
@@ -26,7 +25,6 @@
     Auto-commit advanced the offset before the work finished, so the resuming consumer starts past the
     unprocessed records — they are lost. This is the at-most-once trap of auto-commit.
   source: "https://kafka.apache.org/documentation/#consumerconfigs"
-  objectives: [ccdak:2]
 
 - id: KFK-04-q3
   type: single
@@ -41,7 +39,6 @@
     Within a group each partition is owned by one consumer; adding/removing consumers triggers a
     rebalance that reassigns partitions. This is how groups scale and fail over.
   source: "https://kafka.apache.org/documentation/#semantics"
-  objectives: [ccdak:2, dse-found]
 
 - id: KFK-04-q4
   type: single
@@ -56,7 +53,6 @@
     KIP-848 is a broker-driven, incremental rebalance protocol that shortens and reduces the
     disruptive pauses of the old client-driven protocol. The subscribe/poll/commit API is unchanged.
   source: "https://cwiki.apache.org/confluence/display/KAFKA/KIP-848%3A+The+Next+Generation+of+the+Consumer+Rebalance+Protocol"
-  objectives: [ccdak:2]
 
 - id: KFK-04-q5
   type: single
@@ -71,7 +67,6 @@
     Lag measures how far behind a group is: records written but not yet committed-as-consumed. Rising
     lag means the consumers can't keep up and is the key alerting metric.
   source: "https://kafka.apache.org/documentation/#consumerconfigs"
-  objectives: [ccdak:2]
 
 - id: KFK-04-q6
   type: single
@@ -86,7 +81,6 @@
     An idempotent sink (upsert by business key) absorbs the rare reprocessed duplicate; if no
     downstream dedup is possible, escalate to transactional exactly-once (KFK-05).
   source: "https://kafka.apache.org/documentation/#semantics"
-  objectives: [ccdak:2, dse-found]
 
 - id: KFK-04-q7
   type: single
@@ -101,4 +95,3 @@
     Share groups add SQS-like queue semantics (shared consumption + per-record ack). They are early
     access in this Kafka line; classic groups keep the one-partition-per-consumer rule.
   source: "https://cwiki.apache.org/confluence/display/KAFKA/KIP-932%3A+Queues+for+Kafka"
-  objectives: [ccdak:2]

@@ -42,7 +42,7 @@ statements. Exercises are still run and graded in the terminal. See [docs/WEB.md
 | | |
 |---|---|
 | [docs/TUTORIAL.md](docs/TUTORIAL.md) | **Start here:** the study loop and every command |
-| [ROADMAP.md](ROADMAP.md) | Track order and why |
+| [ROADMAP.md](ROADMAP.md) | Track order and why  |
 | `content/<TRACK>/<MODULE>/` | The lessons, exercises and quizzes |
 | `byo/` | The build-your-own challenges |
 | [docs/TESTING.md](docs/TESTING.md) | How exercise tests are proven valid (for contributors) |

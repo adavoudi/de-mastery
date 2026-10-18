@@ -5,8 +5,4 @@ hours: 3
 requires: [JVM-01, JVM-02]
 labs: []
 cost: free
-cert_objectives:
-  - dse-found
-  - ccdak:2
-  - ccdak:4
 from_your_world: "dbt tests + a Spark pipeline integration test, but as JUnit/AssertJ and reading JVM stack traces"

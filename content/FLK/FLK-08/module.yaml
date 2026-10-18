@@ -5,5 +5,4 @@ hours: 4
 requires: [FLK-04]
 labs: []
 cost: free
-cert_objectives: [dse-flink:tableapi]
 from_your_world: "a dbt model expressed as a relational pipeline, written once and runnable from Java or Python (like dbt SQL vs dbt Python models)"

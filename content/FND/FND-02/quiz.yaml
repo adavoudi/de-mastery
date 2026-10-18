@@ -9,7 +9,6 @@
   answer: [A]
   explanation: "Equal keys hash to the same partition on both sides, so each partition joins its local slice — no network redistribution. This is Redshift's collocated DISTKEY join."
   source: "https://docs.aws.amazon.com/redshift/latest/dg/c_choosing_dist_sort.html"
-  objectives: []
 - id: FND-02-q2
   type: single
   prompt: "You hash-partition orders on company_id, but one of three companies has 90% of the rows. What happens?"
@@ -21,7 +20,6 @@
   answer: [A]
   explanation: "Hashing spreads distinct keys, not row volume. A low-cardinality, skewed key puts most rows in one partition. Use a high-cardinality key or salt the hot value."
   source: "https://spark.apache.org/docs/latest/sql-performance-tuning.html"
-  objectives: []
 - id: FND-02-q3
   type: single
   prompt: "What is the best practical signal that a partitioning is skewed?"
@@ -33,7 +31,6 @@
   answer: [A]
   explanation: "Skew shows up as an uneven partition-size distribution; max/mean >> 1 means one task does far more work and becomes a straggler."
   source: "https://spark.apache.org/docs/latest/sql-performance-tuning.html"
-  objectives: []
 - id: FND-02-q4
   type: single
   prompt: "Why is a shuffle expensive?"
@@ -45,7 +42,6 @@
   answer: [A]
   explanation: "The map side spills partitioned records; the reduce side pulls its slice from every source. Serialization, disk, and network — the three slowest operations — all happen."
   source: "https://research.google/pubs/pub62/"
-  objectives: []
 - id: FND-02-q5
   type: multi
   prompt: "Which are valid fixes for a single hot key causing skew? (select all)"
@@ -57,7 +53,6 @@
   answer: [A, B, C]
   explanation: "Salting, a better key, and broadcasting all help. Increasing P does NOT help a single hot key: hash(k) % P is still one value, so all its rows still collide."
   source: "https://spark.apache.org/docs/latest/sql-performance-tuning.html"
-  objectives: []
 - id: FND-02-q6
   type: single
   prompt: "Range partitioning picks boundaries best by:"
@@ -69,4 +64,3 @@
   answer: [A]
   explanation: "Range partitioners sample the data so each range gets a similar number of rows; evenly spaced boundaries skew when the data is non-uniform."
   source: "https://spark.apache.org/docs/latest/sql-performance-tuning.html"
-  objectives: []

@@ -14,7 +14,6 @@
     touches only the needed files instead of scanning/joining the whole table, and its timeline powers
     incremental "what changed since T" queries. Hidden partitioning is Iceberg; Unity is Databricks/Delta.
   source: "https://hudi.apache.org/docs/indexes/"
-  objectives: [databricks-de-pro:6]
 
 - id: LKH-07-q2
   type: single
@@ -32,7 +31,6 @@
     rewrite), and it is read by the widest set of engines. Delta leans Databricks; Hudi's upsert/index
     machinery is overhead for an engine-neutral, mostly-analytic lake.
   source: "https://iceberg.apache.org/docs/1.10.0/partitioning/"
-  objectives: [databricks-de-pro:6]
 
 - id: LKH-07-q3
   type: single
@@ -50,7 +48,6 @@
     clustering (CLUSTER BY), and Lakeflow pipelines. Iceberg and Hudi are supported but Delta is the
     first-class citizen there.
   source: "https://docs.delta.io/latest/delta-clustering.html"
-  objectives: [databricks-de-pro:6]
 
 - id: LKH-07-q4
   type: single
@@ -67,7 +64,6 @@
     Iceberg, Delta or Hudi. Interop solves the "another engine must read it" need without a costly
     migration or duplicated storage.
   source: "https://xtable.apache.org/"
-  objectives: [databricks-de-pro:6]
 
 - id: LKH-07-q5
   type: single
@@ -83,7 +79,6 @@
     append-only analytics you pay for machinery you don't need; Iceberg/Delta give a simpler path.
     Choose the format whose strength matches your write/read pattern.
   source: "https://hudi.apache.org/docs/concepts/"
-  objectives: [databricks-de-pro:6]
 
 - id: LKH-07-q6
   type: single
@@ -99,7 +94,6 @@
     fast but reads do extra work (until compaction). Copy-on-Write rewrites data files on update:
     pricier writes, cheaper reads. Same trade-off concept across formats.
   source: "https://hudi.apache.org/docs/concepts/"
-  objectives: [databricks-de-pro:6]
 
 - id: LKH-07-q7
   type: single
@@ -114,4 +108,3 @@
     XTable (formerly OneTable) writes the metadata of one format from another, so the same underlying
     data files can be exposed as Iceberg, Delta or Hudi. It is interop, not a competing format.
   source: "https://xtable.apache.org/"
-  objectives: [databricks-de-pro:6]

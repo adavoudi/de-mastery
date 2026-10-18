@@ -9,7 +9,6 @@
   answer: [B]
   explanation: "The Table API is a programmatic form of the same relational model; it shares the optimizer and changelog semantics with SQL and can be freely mixed with it, so equivalent queries give identical results."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/tableapi/"
-  objectives: [dse-flink:tableapi]
 
 - id: FLK-08-q2
   type: single
@@ -22,7 +21,6 @@
   answer: [B]
   explanation: "PyFlink is a Python surface over the same Table API; it builds the same plan and executes on the same runtime, so the two are effectively the same job and must agree over the same input."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/python/table/intro_to_table_api/"
-  objectives: [dse-flink:tableapi]
 
 - id: FLK-08-q3
   type: single
@@ -35,7 +33,6 @@
   answer: [B]
   explanation: "A dbt Python model is a relational transformation written in Python; PyFlink's Table API is the streaming analogue — the same declarative model, Python surface, JVM execution."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/python/table/intro_to_table_api/"
-  objectives: [dse-flink:tableapi]
 
 - id: FLK-08-q4
   type: single
@@ -48,7 +45,6 @@
   answer: [B]
   explanation: "Per docs/TESTING.md, tests assert behavior/data against an independent oracle, not which API was called, not code shape, and not timing. Any surface (SQL, Table API, DataStream) that yields the correct result passes."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/tableapi/"
-  objectives: [dse-flink:tableapi]
 
 - id: FLK-08-q5
   type: single
@@ -61,7 +57,6 @@
   answer: [A]
   explanation: "Scalar UDF: one row in → one value out. Table UDF: one row in → zero or more rows out (used with a lateral join). Aggregate UDF: many rows in → one value out."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/functions/udfs/"
-  objectives: [dse-flink:tableapi]
 
 - id: FLK-08-q6
   type: single
@@ -74,7 +69,6 @@
   answer: [B]
   explanation: "Row-at-a-time Python UDFs serialize across the Python/JVM boundary. Staying in relational Table API/SQL keeps the work in the JVM; vectorized (pandas) UDFs batch the crossing. The relational parts run at JVM speed regardless of language."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/python/table/intro_to_table_api/"
-  objectives: [dse-flink:tableapi]
 
 - id: FLK-08-q7
   type: single
@@ -87,7 +81,6 @@
   answer: [B]
   explanation: "The Table API is declarative/relational and does not give per-record timer/state control. That is what KeyedProcessFunction (DataStream, FLK-07) is for."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/tableapi/"
-  objectives: [dse-flink:tableapi]
 
 - id: FLK-08-q8
   type: multi
@@ -100,4 +93,3 @@
   answer: [A, B, C, D]
   explanation: "All four express the same relational aggregation and (over the same bounded input) yield the same final per-currency totals. The grader accepts any of them as long as the result matches the oracle."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/tableapi/"
-  objectives: [dse-flink:tableapi]

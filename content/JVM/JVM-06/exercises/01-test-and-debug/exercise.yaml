@@ -9,4 +9,3 @@ hints:
   - "StackTraces.rootCause: scan lines for 'Caused by:'; the LAST one holds the root cause — return the exception class name before the first ':' after 'Caused by:'. topAppFrame: the first '\tat <fqcn>(...)' line whose class starts with the given package prefix."
   - "KafkaRoundTrip.main(args): args are bootstrap, topic, then the values. Produce each value (key=value) with acks=all and flush; then consume with a fresh group.id, auto.offset.reset=earliest, polling until you have all values or a deadline. Print lines 'value=count' after a 'TALLY' header."
   - "Do not sleep(): poll in a loop with a deadline. Use StringSerializer/StringDeserializer. Close the producer/consumer (try-with-resources)."
-cert_objectives: [dse-found, ccdak:2, ccdak:4]

@@ -41,7 +41,7 @@ def _ordered_exercises(croot: Path | None = None):
     """Exercises ordered by (track order from learner.yaml, module id, exercise dir)."""
     import yaml
     root = repo_root()
-    order = ["FND", "SPK", "LKH", "CDW", "JVM", "KFK", "FLK", "STH", "ARC"]
+    order = ["FND", "SPK", "LKH", "JVM", "KFK", "FLK", "STH"]
     lp = learner_path(root)
     if lp.exists():
         learner = yaml.safe_load(lp.read_text()) or {}
@@ -559,37 +559,6 @@ def lab_status(profile: str):
     cmd = _compose_base() + ["--profile", profile, "ps"]
     console.print(f"[dim]{' '.join(cmd)}[/]")
     raise typer.Exit(subprocess.call(cmd))
-
-
-# ---------------------------------------------------------------------------
-# Phase-N stubs
-# ---------------------------------------------------------------------------
-def _stub(name: str, phase: int):
-    console.print(f"[yellow]`de {name}` is coming in Phase {phase}.[/]")
-
-
-@app.command()
-def mock(cert: str = typer.Argument("")):
-    """(Phase 6) Timed mock exam."""
-    _stub("mock", 6)
-
-
-@app.command()
-def review():
-    """(Phase 6) Spaced-repetition review queue."""
-    _stub("review", 6)
-
-
-@app.command()
-def cost():
-    """(Phase 2+) 💲 lab estimates and spend."""
-    _stub("cost", 2)
-
-
-@app.command()
-def dispute():
-    """(Phase 2) Report a test you think is wrong."""
-    _stub("dispute", 2)
 
 
 if __name__ == "__main__":

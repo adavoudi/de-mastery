@@ -29,7 +29,7 @@ The rule of thumb that matches your warehouse intuition: **broadcast the small d
 two big facts.** Broadcasting the *large* side is a classic, expensive mistake — it tries to pull a
 huge table to the driver and ship it everywhere.
 
-## Broadcast variables and accumulators (objective 3.9)
+## Broadcast variables and accumulators
 
 Separate from the join operator, Spark exposes two low-level shared-state primitives:
 
@@ -42,7 +42,7 @@ Separate from the join operator, Spark exposes two low-level shared-state primit
   **actions**, not transformations that may re-run, so treat them as approximate monitoring, not as
   business logic.
 
-## Skew: when one key dominates (objective 4.1)
+## Skew: when one key dominates
 
 If one join key value owns a huge share of the rows (one giant customer, a NULL key, a default
 company), the partition holding that key becomes a straggler: every other task finishes and one

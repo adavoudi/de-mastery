@@ -11,7 +11,6 @@
     groupingBy with a summingDouble downstream collector is the stream analogue of GROUP BY currency
     with SUM(amount). Option A doesn't group; D sums everything into one number; C is a type error.
   source: "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/stream/Collectors.html"
-  objectives: [dse-found]
 
 - id: JVM-02-q2
   type: single
@@ -27,7 +26,6 @@
     operation is invoked. This mirrors Spark's transformation/action split and Python generator
     laziness.
   source: "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/stream/package-summary.html"
-  objectives: [dse-found]
 
 - id: JVM-02-q3
   type: single
@@ -42,7 +40,6 @@
     map is a 1:1 projection. flatMap maps each element to a stream and concatenates the results,
     turning one element into zero or more — the UNNEST/explode operation.
   source: "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/stream/Stream.html#flatMap(java.util.function.Function)"
-  objectives: [dse-found]
 
 - id: JVM-02-q4
   type: single
@@ -57,7 +54,6 @@
     merge(key, 1, Integer::sum) inserts 1 if absent, otherwise applies the remapping function to the
     old and new values. Option A throws NullPointerException on the first occurrence; D never writes.
   source: "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Map.html#merge(K,V,java.util.function.BiFunction)"
-  objectives: [dse-found]
 
 - id: JVM-02-q5
   type: single
@@ -72,7 +68,6 @@
     List.of / Map.of / Set.of create immutable collections; mutating them throws
     UnsupportedOperationException. Wrap in new ArrayList<>(...) when you need to modify.
   source: "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html#of()"
-  objectives: [dse-found]
 
 - id: JVM-02-q6
   type: single
@@ -88,7 +83,6 @@
     associative (and the identity be a true identity). This is the same associativity rule as
     parallel aggregation in Spark/MapReduce.
   source: "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/stream/Stream.html#reduce(T,java.util.function.BinaryOperator)"
-  objectives: [dse-found]
 
 - id: JVM-02-q7
   type: single
@@ -103,7 +97,6 @@
     max returns Optional<Order> because the stream may be empty; the comparator orders by amount.
     Using Optional forces the caller to handle the empty case.
   source: "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/stream/Stream.html#max(java.util.Comparator)"
-  objectives: [dse-found]
 
 - id: JVM-02-q8
   type: single
@@ -118,4 +111,3 @@
     Order::amount is a method reference equivalent to the lambda o -> o.amount(); it is passed where
     a functional interface (e.g. Function or ToDoubleFunction) is expected.
   source: "https://docs.oracle.com/javase/tutorial/java/javaOO/methodreferences.html"
-  objectives: [dse-found]

@@ -5,5 +5,4 @@ hours: 4
 requires: [KFK-05]
 labs: []
 cost: free
-cert_objectives: [ccdak:4, ccdak:5]
 from_your_world: "dbt test + CI gates, and the lag/freshness monitors you already run on a warehouse"

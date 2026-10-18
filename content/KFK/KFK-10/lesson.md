@@ -15,7 +15,7 @@ confirmed processing. Summed across partitions it is the single most important h
 streaming consumer. A steadily rising lag means the consumer is falling behind; a lag that never
 drains means it is stuck (a poison record, a slow downstream, a dead member).
 
-## How you test and observe a Kafka app (objective ccdak:4, ccdak:5)
+## How you test and observe a Kafka app
 
 **The testing pyramid for Kafka apps.**
 
@@ -81,5 +81,3 @@ Official docs only:
   <https://kafka.apache.org/documentation/#basic_ops_consumer_lag>
 - librdkafka / confluent-kafka statistics:
   <https://github.com/confluentinc/librdkafka/blob/master/STATISTICS.md>
-- Confluent CCDAK exam page (domains: testing, observability):
-  <https://www.confluent.io/certification/>

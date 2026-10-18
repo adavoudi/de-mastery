@@ -7,4 +7,3 @@ hints:
   - "Register a Jar task 'fatJar' with archiveClassifier 'all'; set the Main-Class in its manifest from the provided -PmainClass property."
   - "Add the dependency classes: from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) }) plus from(sourceSets.main.get().output)."
   - "Set duplicatesStrategy = DuplicatesStrategy.EXCLUDE and exclude META-INF/*.SF, *.DSA, *.RSA so the merged jar verifies and has no duplicate entries. Depend on the avro jar in labs/.jars/java via the -PdepsDir property."
-cert_objectives: [dse-found, ccdak:2]

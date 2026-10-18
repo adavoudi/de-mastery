@@ -5,6 +5,4 @@ hours: 6
 requires: [FLK-02, FLK-06]
 labs: []
 cost: free
-cert_objectives:
-  - dse-flink:perf
 from_your_world: "Spark skew and shuffle tuning: one busy task holding up the stage, fixed by redistributing work across more parallel subtasks"

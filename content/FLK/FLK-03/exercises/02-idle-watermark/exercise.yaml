@@ -7,4 +7,3 @@ hints:
   - "Start from WatermarkStrategy.forBoundedOutOfOrderness(Duration.ofMillis(outOfOrdernessMs)) and attach a timestamp assigner that returns event.tsMs."
   - "Add .withIdleness(Duration.ofMillis(idleMs)) so a partition that produces no events for idleMs is marked idle and excluded from the watermark minimum."
   - "The order matters: withTimestampAssigner then withIdleness both return a composed WatermarkStrategy; return the final one."
-cert_objectives: [dse-flink:watermarks]

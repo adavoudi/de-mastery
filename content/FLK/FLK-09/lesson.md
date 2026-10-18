@@ -2,8 +2,8 @@
 
 ## Why these patterns exist
 
-Most streaming SQL you will ever write is a handful of shapes repeated. The Confluent DSE – Flink
-exam and the Flink SQL tutorials keep returning to five of them because they are the building
+Most streaming SQL you will ever write is a handful of shapes repeated. The Flink SQL tutorials
+keep returning to five of them because they are the building
 blocks of real pipelines:
 
 - **Deduplication** — the same event arrives twice (a retried producer, an at-least-once source,
@@ -20,7 +20,7 @@ OVER are **append-only** (`+I` only). Top-N and dedup-keep-last are **updating**
 or `-D`/`+I` as the answer changes). Knowing which is which is the single most tested idea in Flink
 SQL, because it decides whether you can write to an append sink or need `upsert-kafka`.
 
-## How each pattern works (objective dse-flink:patterns)
+## How each pattern works
 
 ### 1. Deduplication — `ROW_NUMBER() … = 1`
 

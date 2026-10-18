@@ -52,7 +52,7 @@ the same way a good partitioning (or a broadcast join) avoids a shuffle in Spark
 
 ## Jobs → stages → tasks
 
-The execution hierarchy (objective 1.4) is strict and worth memorizing:
+The execution hierarchy is strict and worth memorizing:
 
 - **Job**: one action triggers one job (sometimes more for multi-output writes).
 - **Stage**: a job is split into stages at every **shuffle boundary**. All the narrow

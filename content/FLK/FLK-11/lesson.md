@@ -13,7 +13,7 @@ This is exactly the Spark skew story in streaming clothes. In Spark, one straggl
 stage; in Flink, one busy subtask backpressures the source. The fix is the same shape: **spread the
 work across more parallel subtasks, and redistribute records so the work is balanced.**
 
-## How to find and fix it (objective dse-flink:perf)
+## How to find and fix it
 
 ### 1. Locate the bottleneck
 

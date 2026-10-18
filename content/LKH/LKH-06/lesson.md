@@ -65,7 +65,7 @@ world) and the engine behind incremental pipelines. Iceberg has an equivalent vi
 clustering*, replaces hive-style partitioning + ZORDER with a single `CLUSTER BY` that it maintains
 incrementally — the Delta counterpart to Iceberg sort orders + hidden partitioning (LKH-05).
 *UniForm* writes Iceberg-compatible metadata alongside the Delta log so Iceberg readers can read a
-Delta table. These matter for the Databricks exams; they are described in Further reading.
+Delta table. They are described in Further reading.
 
 ## From your world
 

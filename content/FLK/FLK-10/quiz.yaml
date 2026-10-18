@@ -9,7 +9,6 @@
   answer: [B]
   explanation: "The debezium-json format turns an update into a retract of the old row (-U) and an insert of the new row (+U), so downstream operators and sinks apply it correctly."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/connectors/table/formats/debezium/"
-  objectives: [dse-flink:cdc]
 
 - id: FLK-10-q2
   type: single
@@ -22,7 +21,6 @@
   answer: [B]
   explanation: "Applying -U/+U/-D requires row-level deletes (Iceberg v2) keyed by a primary key; v1 is append-only."
   source: "https://iceberg.apache.org/docs/latest/flink-writes/"
-  objectives: [dse-flink:cdc]
 
 - id: FLK-10-q3
   type: single
@@ -35,7 +33,6 @@
   answer: [B]
   explanation: "The sink buffers writes and commits an Iceberg snapshot on checkpoint completion. This commit-on-checkpoint is what gives exactly-once: snapshots are not double-committed or lost on recovery."
   source: "https://iceberg.apache.org/docs/latest/flink-writes/"
-  objectives: [dse-flink:cdc, dse-flink:sql]
 
 - id: FLK-10-q4
   type: single
@@ -48,7 +45,6 @@
   answer: [B]
   explanation: "Iceberg schema evolution is a metadata operation: existing data files are untouched and old rows read NULL for the new column."
   source: "https://iceberg.apache.org/docs/latest/evolution/"
-  objectives: [dse-flink:cdc]
 
 - id: FLK-10-q5
   type: single
@@ -61,7 +57,6 @@
   answer: [B]
   explanation: "The upsert applies the changelog: id=1 is updated to its latest values, id=2 is deleted. The table reflects current source state."
   source: "https://iceberg.apache.org/docs/latest/flink-writes/"
-  objectives: [dse-flink:cdc]
 
 - id: FLK-10-q6
   type: single
@@ -74,7 +69,6 @@
   answer: [B]
   explanation: "The debezium-json format reads Debezium envelopes from a file or Kafka topic with no containers, giving a fully deterministic, reconcilable changelog. The live Postgres→Debezium path is an optional lab layer."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/connectors/table/formats/debezium/"
-  objectives: [dse-flink:cdc]
 
 - id: FLK-10-q7
   type: single
@@ -87,7 +81,6 @@
   answer: [B]
   explanation: "Commit-on-checkpoint plus an idempotent committer keyed on checkpoint id means recovery replays uncommitted work only; already-committed snapshots are not duplicated."
   source: "https://iceberg.apache.org/docs/latest/flink-writes/"
-  objectives: [dse-flink:cdc]
 
 - id: FLK-10-q8
   type: multi
@@ -100,4 +93,3 @@
   answer: [A, B, D]
   explanation: "Continuous currency, exactly-once snapshots and key-based upserts favour streaming CDC. For tiny, rarely-changing tables a periodic batch MERGE is often cheaper to operate, so C is false."
   source: "https://iceberg.apache.org/docs/latest/flink-writes/"
-  objectives: [dse-flink:cdc]

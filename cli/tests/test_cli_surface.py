@@ -6,7 +6,7 @@ import sys
 import pytest
 
 COMMANDS = ["status", "next", "start", "test", "hint", "solution", "validate", "plan",
-            "quiz", "doctor", "lab", "mock", "review", "cost", "dispute"]
+            "quiz", "doctor", "lab"]
 
 
 def _de(*args: str) -> subprocess.CompletedProcess:

@@ -8,7 +8,7 @@ slots and watched queries spill, this is the same world — bounded memory, work
 spill, and a planner (now AQE) that adapts. The skills here are: read the memory model well enough
 to diagnose an OOM from a log, cache deliberately, and know what AQE changes in the plan.
 
-## The unified memory model (objective 1.3)
+## The unified memory model
 
 Each executor's heap is split by Spark into regions:
 
@@ -31,9 +31,9 @@ Common causes, each with a signature:
 - **Too few shuffle partitions** → each partition too big to fit → spill or OOM.
 - **A cartesian/exploding join** → unbounded intermediate.
 
-## Diagnosing from logs (objective 4.3)
+## Diagnosing from logs
 
-You will not have the UI in an exam or a 2 a.m. page — you have a log line. Learn the signatures:
+You will not have the UI on a 2 a.m. page — you have a log line. Learn the signatures:
 
 - `java.lang.OutOfMemoryError: Java heap space` **on the driver** + a `collect`/`toPandas` in the
   stack → driver-side OOM; fix by not collecting the whole dataset.
@@ -47,7 +47,7 @@ You will not have the UI in an exam or a 2 a.m. page — you have a log line. Le
 The exercise turns this into a machine-gradable task: given a log excerpt, return a structured
 diagnosis (where the OOM happened and the single best fix).
 
-## Caching and storage levels (objective 1.3)
+## Caching and storage levels
 
 `df.cache()` = `persist(MEMORY_AND_DISK)`. Other `StorageLevel`s trade memory for CPU/disk:
 `MEMORY_ONLY` (fast, may recompute if evicted), `MEMORY_AND_DISK` (spill cached blocks to disk
@@ -59,7 +59,7 @@ Rules of thumb, same instincts as materializing a CTE in your warehouse:
 - `unpersist()` when done; stale cached blocks waste storage memory and can force eviction/spill.
 - Caching a wide intermediate can **defeat pushdown/pruning** (SPK-05) — read the plan.
 
-## Adaptive Query Execution (objectives 4.2)
+## Adaptive Query Execution
 
 AQE (`spark.sql.adaptive.enabled`) re-optimizes the plan **at runtime** using actual shuffle
 statistics, something the static Catalyst plan cannot do. Three big wins, each visible in the final

@@ -6,7 +6,7 @@ You already think in SQL and Python. So why learn Java? Because the tools you ar
 *written in Java and only speak Java at their core*. Kafka Streams has no Python API. The Flink
 DataStream API, its state backends, and almost all production Flink code are Java. When a Kafka
 producer throws, you read a Java stack trace. When a Flink job runs out of memory, you tune a JVM
-heap. The CCDAK sample questions show Java. The goal of this track is **productive Java for data
+heap. Most Kafka client examples are in Java. The goal of this track is **productive Java for data
 work** — enough to read the source, write a connector or a Streams topology, and package a job —
 *not* enterprise Java with Spring and reflection magic.
 

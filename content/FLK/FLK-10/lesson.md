@@ -18,7 +18,7 @@ Iceberg so your dbt/Spark models can read a current, queryable table. The clean 
 This is the SOX-grade loading path: no double-applied change, no dropped change, and a full snapshot
 history on the target.
 
-## How it works (objective dse-flink:cdc)
+## How it works
 
 ### 1. Read the change stream as a changelog
 

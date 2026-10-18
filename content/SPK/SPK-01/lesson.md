@@ -61,7 +61,7 @@ a client crash no longer kills the job. Conceptually it is the same move Redshif
 a thin SQL client talking to a big remote engine — except the "query" you send is a whole
 DataFrame plan, not a SQL string.
 
-## Spark's modules (objective 1.7)
+## Spark's modules
 
 Spark is one engine with several libraries layered on **Spark Core** (the RDD execution engine,
 the scheduler, shuffle, memory management):
@@ -75,7 +75,7 @@ the scheduler, shuffle, memory management):
 - **MLlib** and **GraphX/GraphFrames** — machine learning and graph analytics. Out of scope here,
   but know they exist and that they ride on the same Core.
 
-The exam expects you to know *that these modules exist and sit on Core*, not their internals.
+You only need to know *that these modules exist and sit on Core*, not their internals.
 
 ## From your world
 

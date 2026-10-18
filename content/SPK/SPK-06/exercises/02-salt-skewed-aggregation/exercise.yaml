@@ -7,4 +7,3 @@ hints:
   - "Two-phase salted aggregation: add a salt column salt = pmod(hash(...), N) (or a random int 0..N-1), group by (key, salt) and partial-sum, then group by key and sum the partial sums. The two phases must give the SAME total as a plain groupBy."
   - "The salt must spread the hot key across partitions but NOT change the result: never drop or duplicate rows, and always re-aggregate the partials back to one row per key."
   - "Return columns company_id, total (sum of line_amount per company). The salt is an internal detail; the output has one row per company. Use num_salts salts (parameter, default given)."
-cert_objectives: [spark-assoc:4.1]

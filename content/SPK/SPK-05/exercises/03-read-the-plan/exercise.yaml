@@ -7,4 +7,3 @@ hints:
   - "df.explain('formatted') (or de_testkit.plan_of) returns the physical plan as a string. Parse it: PushedFilters: [...] non-empty means pushdown; ReadSchema: struct<...> lists the columns read; count 'Exchange' for shuffles."
   - "pushed_down is True iff any PushedFilters list in the plan is non-empty. pruned_columns is the SET of column names in the scan's ReadSchema. num_shuffles is the count of 'Exchange' nodes."
   - "Return a dict {'pushed_down': bool, 'pruned_columns': set[str], 'num_shuffles': int}. Read everything from the plan string of the DataFrame you are handed; do not hard-code."
-cert_objectives: [spark-assoc:1.3]

@@ -7,4 +7,3 @@ hints:
   - "Read the Parquet file, then filter on a native column (currency == 'USD') and select only the two columns you need. Both must happen on the DataFrame so Catalyst can rewrite them into the scan."
   - "Do NOT wrap the filter column in a Python UDF or a non-pushable function — that empties PushedFilters. Use F.col('currency') == 'USD' (or a SQL string filter)."
   - "Return the filtered+pruned DataFrame with exactly columns order_id and currency. The test reads the physical plan: PushedFilters must mention currency and ReadSchema must list only those two columns."
-cert_objectives: [spark-assoc:1.3]

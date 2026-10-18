@@ -14,7 +14,6 @@
     BatchScan) and appears only as a Filter node, the engine read everything and filtered late. The
     fix is to enable/allow pushdown (and prune partitions) so fewer bytes are read.
   source: "https://spark.apache.org/docs/4.0.0/sql-performance-tuning.html"
-  objectives: [databricks-de-pro:6]
 
 - id: LKH-08-q2
   type: single
@@ -30,7 +29,6 @@
     Pushdown pushes the predicate into the scan so file/row-group min-max stats skip chunks within the
     partitions still read. Both reduce bytes scanned; they operate at different granularities.
   source: "https://iceberg.apache.org/docs/1.10.0/spark-queries/"
-  objectives: [databricks-de-pro:6]
 
 - id: LKH-08-q3
   type: single
@@ -46,7 +44,6 @@
     predicate can then exclude files whose [min,max] cannot contain matching rows — the same
     statistics-driven skipping as Redshift zone maps / SORTKEY.
   source: "https://iceberg.apache.org/docs/1.10.0/spark-queries/"
-  objectives: [databricks-de-pro:6]
 
 - id: LKH-08-q4
   type: single
@@ -62,7 +59,6 @@
     Trino/Spark read them to choose join order and strategy. Without stats the optimizer guesses —
     the same reason ANALYZE mattered on Redshift.
   source: "https://iceberg.apache.org/puffin-spec/"
-  objectives: [databricks-de-pro:6]
 
 - id: LKH-08-q5
   type: single
@@ -78,7 +74,6 @@
     sub-second interactive queries. Trino/Athena (MPP SQL) or DuckDB (in-process, vectorized) are
     better fits for small, latency-sensitive BI on the same table.
   source: "https://trino.io/docs/current/connector/iceberg.html"
-  objectives: [databricks-de-pro:6]
 
 - id: LKH-08-q6
   type: single
@@ -93,7 +88,6 @@
     Athena is Trino/Presto-as-a-service: you run SQL over Iceberg/Parquet on S3 without operating a
     cluster, billed by bytes scanned — which is exactly why pushdown and pruning matter for cost.
   source: "https://trino.io/docs/current/connector/iceberg.html"
-  objectives: [databricks-de-pro:6]
 
 - id: LKH-08-q7
   type: single
@@ -110,4 +104,3 @@
     NULL semantics, casting), not the format. This agreement is exactly why a second engine makes a
     good oracle.
   source: "https://duckdb.org/docs/stable/core_extensions/iceberg/overview.html"
-  objectives: [databricks-de-pro:6]

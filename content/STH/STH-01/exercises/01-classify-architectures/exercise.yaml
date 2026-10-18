@@ -7,4 +7,3 @@ hints:
   - "Apply the signals in priority order. Two parallel pipelines merged at serving beats everything else -> Lambda. Decide one label per architecture; never return more than one."
   - "A streamhouse is the ONLY shape where one stream-native copy serves BOTH a streaming/changelog read AND a batch/OLAP read. A lakehouse serves only the batch/OLAP read from a transactional lake table. Kappa's system of record is an append-only log with replay, not a transactional lake table."
   - "Order matters: check Lambda (two pipelines) first, then streamhouse (dual-read stream-native store), then lakehouse (transactional lake table, batch latency), then Kappa (log as system of record). A system that uses Kafka only as an ingestion bus is NOT Kappa."
-cert_objectives: [sth:architecture]

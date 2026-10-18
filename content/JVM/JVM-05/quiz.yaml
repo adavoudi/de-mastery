@@ -12,7 +12,6 @@
     Full GCs free little, then OOM. A flat floor (even with frequent minor GCs) is healthy churn,
     not a leak.
   source: "https://docs.oracle.com/en/java/javase/21/troubleshoot/troubleshooting-memory-leaks.html"
-  objectives: [dse-found]
 
 - id: JVM-05-q2
   type: single
@@ -27,7 +26,6 @@
     The format is before->after(total): 820M used before, reclaimed to 410M after, out of a 1024M
     heap. Tracking the 'after' value over time reveals the live-set trend.
   source: "https://docs.oracle.com/en/java/javase/21/docs/specs/man/java.html#enable-logging-with-the-jvm-unified-logging-framework"
-  objectives: [dse-found]
 
 - id: JVM-05-q3
   type: single
@@ -42,7 +40,6 @@
     A leak fills any heap. Raising -Xmx postpones the crash and increases pause times. The fix is to
     stop retaining objects (bounded caches, remove listeners, close resources).
   source: "https://docs.oracle.com/en/java/javase/21/troubleshoot/troubleshooting-memory-leaks.html"
-  objectives: [dse-found]
 
 - id: JVM-05-q4
   type: single
@@ -57,7 +54,6 @@
     GC logs only cover the managed heap. If the live set is flat but RSS grows, suspect off-heap/
     direct/native memory (common with Netty, Flink managed memory, mmap).
   source: "https://docs.oracle.com/en/java/javase/21/gctuning/introduction-garbage-collection-tuning.html"
-  objectives: [dse-found]
 
 - id: JVM-05-q5
   type: single
@@ -72,7 +68,6 @@
     ExecutorService pools and reuses threads, returns Futures for results, and bounds concurrency —
     far safer than new Thread() per task, which can exhaust resources.
   source: "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/concurrent/ExecutorService.html"
-  objectives: [dse-found]
 
 - id: JVM-05-q6
   type: single
@@ -87,7 +82,6 @@
     Java has no GIL; threads execute concurrently on multiple cores. Shared mutable state must be
     protected (synchronized/atomic/concurrent collections) or results are non-deterministic.
   source: "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/concurrent/package-summary.html"
-  objectives: [dse-found]
 
 - id: JVM-05-q7
   type: single
@@ -103,4 +97,3 @@
     allocation rate; the fix is to allocate less (reuse buffers, avoid per-record garbage), not to
     grow the heap.
   source: "https://docs.oracle.com/en/java/javase/21/gctuning/introduction-garbage-collection-tuning.html"
-  objectives: [dse-found]

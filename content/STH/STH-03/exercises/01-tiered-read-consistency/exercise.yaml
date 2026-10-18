@@ -7,4 +7,3 @@ hints:
   - "The lake tier Fluss writes into is a Paimon PK table. For a streaming read and a batch read to return the SAME final state, the table must collapse multiple writes per key to the latest value: declare PRIMARY KEY(id) NOT ENFORCED and 'bucket'='1'. An append-only (no-PK) table keeps every version, so a streaming scan shows duplicates a batch scan does not."
   - "Use the deduplicate merge engine (the default for a PK table) so the latest write per key wins, and set 'changelog-producer'='input' so a streaming scan is well defined. 'bucket'='1' makes the small table deterministic."
   - "Each account id is upserted several times; the final state is the last value per id. Your DDL + upserts are run twice: once read in BATCH, once read as a bounded STREAMING scan. The two results must be identical (the read-consistency invariant)."
-cert_objectives: [sth:fluss, sth:tiering]

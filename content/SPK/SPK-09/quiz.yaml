@@ -14,7 +14,6 @@
     worker and back. ArrowEvalPython is the vectorized (pandas/Arrow UDF) counterpart; the other
     nodes are unrelated to Python evaluation.
   source: "https://spark.apache.org/docs/4.0.0/api/python/user_guide/sql/python_udf.html"
-  objectives: [spark-assoc:3.8]
 
 - id: SPK-09-q2
   type: single
@@ -30,7 +29,6 @@
     pushdown and whole-stage codegen through the opaque UDF. It still runs distributed on
     executors and does not force caching or a shuffle by itself.
   source: "https://spark.apache.org/docs/4.0.0/api/python/user_guide/sql/python_udf.html"
-  objectives: [spark-assoc:3.8]
 
 - id: SPK-09-q3
   type: single
@@ -48,7 +46,6 @@
     ArrowEvalPython, crossing the boundary once per batch instead of once per row. The default
     scalar udf path is BatchEvalPython.
   source: "https://spark.apache.org/docs/4.0.0/api/python/user_guide/sql/arrow_pandas.html"
-  objectives: [spark-assoc:7.2]
 
 - id: SPK-09-q4
   type: single
@@ -65,7 +62,6 @@
     applyInPandas is the grouped-map function API: each group is delivered as a pandas.DataFrame and
     you return a pandas.DataFrame. It is the natural shape for a per-group dbt Python model.
   source: "https://spark.apache.org/docs/4.0.0/api/python/user_guide/sql/arrow_pandas.html"
-  objectives: [spark-assoc:7.2, spark-assoc:3.8]
 
 - id: SPK-09-q5
   type: single
@@ -81,7 +77,6 @@
     machine's memory. It is not fully pandas-compatible, some operations shuffle, and it does not
     replace the DataFrame/SQL API.
   source: "https://spark.apache.org/docs/4.0.0/api/python/user_guide/pandas_on_spark/index.html"
-  objectives: [spark-assoc:7.1]
 
 - id: SPK-09-q6
   type: single
@@ -99,7 +94,6 @@
     A declarative join plus arithmetic is fully optimizable and vectorized; the per-row UDF is a
     BatchEvalPython fence. Correctness is the same, but the native plan is the performant one.
   source: "https://spark.apache.org/docs/4.0.0/api/python/user_guide/sql/python_udf.html"
-  objectives: [spark-assoc:3.8]
 
 - id: SPK-09-q7
   type: multi
@@ -114,4 +108,3 @@
     Arrow batching, iterator-form setup amortization, and vectorized Series operations are all real
     advantages. Vectorization does not make wrong logic correct.
   source: "https://spark.apache.org/docs/4.0.0/api/python/user_guide/sql/arrow_pandas.html"
-  objectives: [spark-assoc:7.2]

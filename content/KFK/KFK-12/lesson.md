@@ -20,7 +20,7 @@ independent layers that map exactly onto that:
 This is the Kafka version of your SOX access model: an authenticated identity, and an explicit grant
 per object, with deny-by-default.
 
-## How you lock down a cluster (objective ccaak:2)
+## How you lock down a cluster
 
 **1. Turn on an authenticated listener.** Add a listener whose security protocol is
 `SASL_PLAINTEXT` (dev) or `SASL_SSL` (prod), enable a mechanism
@@ -65,7 +65,7 @@ for an idempotent or transactional producer.
   opposite of least privilege. Reserve it for the trusted internal/admin path.
 - **Don't rely on `SASL_PLAINTEXT` in production.** It authenticates but does not encrypt; use
   `SASL_SSL` so credentials and data are not on the wire in the clear. (The native lab uses
-  `SASL_PLAINTEXT` purely to keep the exercise certificate-free.)
+  `SASL_PLAINTEXT` purely to keep the exercise free of TLS certificates.)
 - **Don't forget the group ACL for consumers.** A consumer needs `Read` on the topic **and** `Read`
   on its consumer group; granting only the topic silently fails the group join.
 - **Don't grant topic-wide `All`** when the service only produces — grant `Write`+`Describe`, not

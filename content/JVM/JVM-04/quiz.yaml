@@ -12,7 +12,6 @@
     returning Object; SpecificRecord is code-generated for compile-time-typed access and is the
     production path.
   source: "https://avro.apache.org/docs/1.12.0/getting-started-java/"
-  objectives: [dse-found]
 
 - id: JVM-04-q2
   type: single
@@ -27,7 +26,6 @@
     Flink uses efficient serializers for recognized types (Avro, Tuple) and valid POJOs; anything
     else falls back to Kryo, which is slower and more brittle across schema changes.
   source: "https://nightlies.apache.org/flink/flink-docs-release-1.20/docs/dev/datastream/fault-tolerance/serialization/types_serialization/"
-  objectives: [dse-found]
 
 - id: JVM-04-q3
   type: multi
@@ -43,7 +41,6 @@
     public or exposed via public getters/setters. Finality is not required, and a custom
     Serializable writeObject is not what qualifies a POJO.
   source: "https://nightlies.apache.org/flink/flink-docs-release-1.20/docs/dev/datastream/fault-tolerance/serialization/types_serialization/"
-  objectives: [dse-found]
 
 - id: JVM-04-q4
   type: single
@@ -59,7 +56,6 @@
     encoding does NOT embed the schema per record (that's why Schema Registry or a container file
     supplies it) — which is also why reader/writer schema management matters.
   source: "https://avro.apache.org/docs/1.12.0/specification/"
-  objectives: [dse-found]
 
 - id: JVM-04-q5
   type: single
@@ -75,7 +71,6 @@
     today may not deserialize after a class change, and non-JVM consumers can't read it. Avro/Parquet
     solve this.
   source: "https://avro.apache.org/docs/1.12.0/specification/"
-  objectives: [dse-found]
 
 - id: JVM-04-q6
   type: single
@@ -91,7 +86,6 @@
     comes from an Object Container File header or from Schema Registry by id — the basis for KFK-06
     compatibility checks.
   source: "https://avro.apache.org/docs/1.12.0/specification/"
-  objectives: [dse-found]
 
 - id: JVM-04-q7
   type: single
@@ -107,4 +101,3 @@
     Avro type either, Flink uses Kryo — larger, slower state. Fixing the POJO rules (or using Avro)
     restores the efficient serializer.
   source: "https://nightlies.apache.org/flink/flink-docs-release-1.20/docs/dev/datastream/fault-tolerance/serialization/types_serialization/"
-  objectives: [dse-found]

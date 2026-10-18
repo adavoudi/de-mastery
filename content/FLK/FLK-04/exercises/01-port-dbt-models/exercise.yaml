@@ -7,4 +7,3 @@ hints:
   - "stg_valid_orders is a filter/project (append-only): SELECT the columns WHERE currency IN ('USD','EUR','GBP','JPY'). It must emit only +I."
   - "count_per_customer and gmv_per_company are unbounded aggregations: SELECT key, COUNT(*)/SUM(amount) FROM orders GROUP BY key. They are UPDATING queries — expect +I then -U/+U as more rows for a key arrive."
   - "All three queries read the table named `orders` (the test creates it). Write each query in its own .sql file under queries/. Do not add a trailing semicolon."
-cert_objectives: [dse-flink:sql, dse-flink:changelog]

@@ -9,7 +9,6 @@
   answer: [B]
   explanation: "A process function exposes direct keyed state, registerable timers, and time/watermark access — the building blocks the windowing API wraps up. You use it when you need custom timer logic or per-event control."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/operators/process_function/"
-  objectives: [dse-flink:process]
 
 - id: FLK-07-q2
   type: single
@@ -22,7 +21,6 @@
   answer: [B]
   explanation: "The session end is 'gap after the last event'. Register an event-time timer at last_event+gap and delete the previous one so only the latest fires; when the watermark reaches it with no newer event, the session has timed out. No sleep, deterministic."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/operators/process_function/"
-  objectives: [dse-flink:process]
 
 - id: FLK-07-q3
   type: single
@@ -35,7 +33,6 @@
   answer: [B]
   explanation: "Broadcast state holds a control stream (e.g. fraud rules) that is replicated to all parallel subtasks via processBroadcastElement, so processElement on any key can read the current rule. It is the broadcast state pattern."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/fault-tolerance/broadcast_state/"
-  objectives: [dse-flink:process]
 
 - id: FLK-07-q4
   type: single
@@ -48,7 +45,6 @@
   answer: [B]
   explanation: "The two inputs are not ordered relative to each other. An event might be processed before or after the rule update that should apply to it, so immediate evaluation gives run-dependent results. Buffer and evaluate as-of the event's time instead."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/fault-tolerance/broadcast_state/"
-  objectives: [dse-flink:process]
 
 - id: FLK-07-q5
   type: single
@@ -61,7 +57,6 @@
   answer: [B]
   explanation: "This is the as-of rule again: keep rule versions, and evaluate each event against the version effective at or before the event's time, deciding on an event-time timer so the watermark guarantees the right version is known. Correct business semantics and deterministic."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/fault-tolerance/broadcast_state/"
-  objectives: [dse-flink:process]
 
 - id: FLK-07-q6
   type: single
@@ -74,7 +69,6 @@
   answer: [B]
   explanation: "A timed-out session is complete: emit its result and clear the per-key state so memory is reclaimed and the next session for that key starts fresh. Leaving state around leaks memory and can corrupt the next session."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/operators/process_function/"
-  objectives: [dse-flink:process]
 
 - id: FLK-07-q7
   type: multi
@@ -87,7 +81,6 @@
   answer: [A, B, D]
   explanation: "Event-time timers fire by watermark progress, so replays and out-of-order data produce the same result and can be reconciled with a batch answer. Processing-time timers fire on wall clock, which is NOT reproducible — the opposite of what C claims."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/concepts/time/"
-  objectives: [dse-flink:process]
 
 - id: FLK-07-q8
   type: single
@@ -100,4 +93,3 @@
   answer: [B]
   explanation: "Broadcast state must stay identical across all parallel instances. Allowing per-key writes would diverge the copies. So only processBroadcastElement (which runs for the replicated stream) can modify it; processElement gets a read-only view."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/fault-tolerance/broadcast_state/"
-  objectives: [dse-flink:process]

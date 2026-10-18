@@ -5,7 +5,6 @@
   answer: [B]
   explanation: "The JobManager builds the execution graph, schedules subtasks into slots, drives checkpoint barriers and restarts the job on failure. TaskManagers do the actual data processing and hold state."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/concepts/flink-architecture/"
-  objectives: [dse-flink:architecture]
 
 - id: FLK-01-q2
   type: single
@@ -14,7 +13,6 @@
   answer: [B]
   explanation: "With default slot sharing, subtasks of different operators of the same job share a slot. One slot holds one parallel slice of the whole pipeline, so the job needs slots equal to its MAX operator parallelism (4), not the sum (16)."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/concepts/flink-architecture/#task-slots-and-resources"
-  objectives: [dse-flink:architecture]
 
 - id: FLK-01-q3
   type: single
@@ -23,7 +21,6 @@
   answer: [B]
   explanation: "A slot is a fixed share of a TaskManager's resources. A TM with N slots can run N parallel pipeline slices. Slot sharing lets subtasks of different operators of one job share a slot."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/concepts/flink-architecture/#task-slots-and-resources"
-  objectives: [dse-flink:architecture]
 
 - id: FLK-01-q4
   type: single
@@ -32,7 +29,6 @@
   answer: [B]
   explanation: "Flink chains adjacent operators that don't need a network shuffle. A keyBy (or rebalance/rescale) hash-partitions records and breaks the chain — the streaming analogue of a Spark stage boundary at a shuffle."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/concepts/flink-architecture/#tasks-and-operator-chains"
-  objectives: [dse-flink:architecture]
 
 - id: FLK-01-q5
   type: single
@@ -41,7 +37,6 @@
   answer: [B]
   explanation: "A standalone session cluster has a fixed number of slots. If the job needs more slots than are available, scheduling fails and the job stays in SCHEDULED/CREATED (eventually failing), never RUNNING, until more slots exist."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/execution/parallel/"
-  objectives: [dse-flink:architecture]
 
 - id: FLK-01-q6
   type: single
@@ -50,7 +45,6 @@
   answer: [B]
   explanation: "Flink treats streaming as the primitive and a bounded dataset as a stream that ends. A batch job is a special case of a streaming job on the same runtime."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/concepts/flink-architecture/"
-  objectives: [dse-flink:architecture, dse-foundations:flink101]
 
 - id: FLK-01-q7
   type: multi
@@ -59,7 +53,6 @@
   answer: [A, B, D]
   explanation: "Daily batch (A) suits dbt/Spark; stateless routing (B) suits Connect SMTs; without streaming-ops maturity (D) a simpler tool wins. (C) is exactly where Flink's event-time + large managed state + exactly-once pay off."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/concepts/flink-architecture/"
-  objectives: [dse-flink:architecture]
 
 - id: FLK-01-q8
   type: single
@@ -68,4 +61,3 @@
   answer: [A]
   explanation: "When every source of a bounded job is exhausted, the job transitions RUNNING → FINISHED. An unbounded job stays RUNNING until cancelled or failed."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/concepts/glossary/"
-  objectives: [dse-flink:architecture]

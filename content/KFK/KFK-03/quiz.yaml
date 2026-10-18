@@ -11,7 +11,6 @@
     The idempotent producer uses a producer id + per-partition sequence numbers so the broker drops
     duplicates and out-of-order sequences. It also pins acks=all and bounds in-flight requests.
   source: "https://kafka.apache.org/documentation/#producerconfigs_enable.idempotence"
-  objectives: [ccdak:2, dse-found]
 
 - id: KFK-03-q2
   type: single
@@ -26,7 +25,6 @@
     Idempotence preserves ordering only up to 5 in-flight requests per connection. Above 5 a retried
     request can be reordered relative to later successful ones.
   source: "https://kafka.apache.org/documentation/#producerconfigs_max.in.flight.requests.per.connection"
-  objectives: [ccdak:2]
 
 - id: KFK-03-q3
   type: multi
@@ -41,7 +39,6 @@
     Larger, compressed batches (linger + batch.size + compression) raise throughput; idempotence +
     a per-record key keep order per key and prevent duplicates on retry. All four apply.
   source: "https://developer.confluent.io/courses/architecture/producer-hardware/"
-  objectives: [ccdak:2, dse-found]
 
 - id: KFK-03-q4
   type: single
@@ -56,7 +53,6 @@
     Without idempotence and with >1 in-flight request, a retry can land after a subsequent successful
     request. Idempotence (and in-flight <= 5) prevents this via sequence numbers.
   source: "https://kafka.apache.org/documentation/#semantics"
-  objectives: [ccdak:2]
 
 - id: KFK-03-q5
   type: single
@@ -71,7 +67,6 @@
     Keyed records are hash-partitioned, so one key consistently maps to one partition — the basis of
     per-key ordering. Keyless records use sticky batching across partitions for throughput.
   source: "https://kafka.apache.org/documentation/#producerconfigs"
-  objectives: [ccdak:2]
 
 - id: KFK-03-q6
   type: single
@@ -86,4 +81,3 @@
     Idempotence requires and sets the safe defaults: acks=all, effectively-infinite bounded retries,
     and in-flight <= 5. Compression and linger are independent throughput knobs you choose.
   source: "https://kafka.apache.org/documentation/#producerconfigs_enable.idempotence"
-  objectives: [ccdak:2]

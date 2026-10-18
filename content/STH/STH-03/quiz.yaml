@@ -9,7 +9,6 @@
   answer: [B]
   explanation: "A Kafka log is cheap and low-latency but poor for keyed latest-value lookups or OLAP; a lakehouse is cheap OLAP but batch-latency. Fluss stores recent data hot and tiers history to the lake as one logical table, serving both latencies."
   source: "https://fluss.apache.org/docs/intro/"
-  objectives: [sth:fluss]
 
 - id: STH-03-q2
   type: single
@@ -22,7 +21,6 @@
   answer: [B]
   explanation: "A log table is append-only, like a columnar Kafka topic. A PK table (PRIMARY KEY NOT ENFORCED) is upsertable: it serves the latest value per key and can be read as a changelog or a point-in-time snapshot."
   source: "https://fluss.apache.org/docs/intro/"
-  objectives: [sth:fluss]
 
 - id: STH-03-q3
   type: single
@@ -35,7 +33,6 @@
   answer: [B]
   explanation: "Lake tiering is opt-in per table via 'table.datalake.enabled'='true'; a Flink tiering service then continuously moves committed data from Fluss's hot store into the configured lake format."
   source: "https://fluss.apache.org/docs/maintenance/tiered-storage/lakehouse-storage/"
-  objectives: [sth:tiering]
 
 - id: STH-03-q4
   type: single
@@ -48,7 +45,6 @@
   answer: [B]
   explanation: "Reading the table name gives the real-time view (hot + tiered). Reading the `table$lake` system table gives just the tiered Paimon data, readable in batch by Flink or by pypaimon with no Flink at all."
   source: "https://fluss.apache.org/docs/maintenance/tiered-storage/lakehouse-storage/"
-  objectives: [sth:tiering]
 
 - id: STH-03-q5
   type: single
@@ -61,7 +57,6 @@
   answer: [B]
   explanation: "The streamhouse promise is one copy, two latencies, the same answer. Once tiering has caught up, the streaming view and the batch lake-tier view must agree on the set of rows — the G6 streaming-vs-batch oracle applied to tiered storage."
   source: "https://fluss.apache.org/docs/maintenance/tiered-storage/lakehouse-storage/"
-  objectives: [sth:tiering]
 
 - id: STH-03-q6
   type: single
@@ -74,7 +69,6 @@
   answer: [B]
   explanation: "Tiering lands asynchronously (~30-40 s) and an unbounded read would never return. Reading with a wall-clock deadline and a bounded scan lets the job finish once the data is present instead of blocking on a live stream."
   source: "https://fluss.apache.org/docs/maintenance/tiered-storage/lakehouse-storage/"
-  objectives: [sth:tiering]
 
 - id: STH-03-q7
   type: multi
@@ -87,7 +81,6 @@
   answer: [A, B, C]
   explanation: "Tiering needs the per-table opt-in, a server-side lake format + warehouse, and paimon-flink on the classpath for the `$lake` read. A PK table (not a log table) is what gives a well-defined latest value per key to tier, so D is false."
   source: "https://fluss.apache.org/docs/maintenance/tiered-storage/lakehouse-storage/"
-  objectives: [sth:tiering, sth:fluss]
 
 - id: STH-03-q8
   type: single
@@ -100,4 +93,3 @@
   answer: [B]
   explanation: "If nothing reads the hot tier, Fluss and the tiering job are pure overhead; writing directly to Paimon/Iceberg is simpler. Fluss earns its cost only when one copy must serve both latencies at scale or under strict freshness SLAs."
   source: "https://fluss.apache.org/docs/intro/"
-  objectives: [sth:fluss]

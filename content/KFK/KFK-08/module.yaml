@@ -5,5 +5,4 @@ hours: 7
 requires: [KFK-07]
 labs: []
 cost: free
-cert_objectives: [dse-found, ccdak:3]
 from_your_world: "dbt joins between a fact and a dimension, but continuous"

@@ -7,4 +7,3 @@ hints:
   - "Join orders to order_items on (company_id, order_id), and keep only USD orders. Write the currency filter against the orders DataFrame as a native predicate."
   - "Return columns order_id, order_item_id, line_amount for USD orders only. Keep the filter a Column/SQL predicate so Catalyst can push it below the join and into the orders scan."
   - "The test reads the plan: the orders-side scan must carry PushedFilters mentioning currency (the filter reached the scan, so fewer rows enter the join)."
-cert_objectives: [spark-assoc:1.3]

@@ -10,7 +10,7 @@ stay in sync. If the leader's broker dies, a follower is promoted. The whole mod
 question: *under which settings does an acknowledged write actually survive a broker failure, and
 under which do you only think it did?*
 
-## How durability is configured (objective ccdak:1 / ccaak:1)
+## How durability is configured
 
 Three knobs decide the guarantee. You must reason about them **together**, not one at a time.
 

@@ -7,4 +7,3 @@ hints:
   - "Build valid_to with a window function: valid_to = COALESCE(LEAD(effective_from) OVER (PARTITION BY cid ORDER BY effective_from), <far-future sentinel>). The newest version per key keeps the open sentinel and is_current = true; all older versions get is_current = false."
   - "The as-of join picks exactly one version per order: o.cid = d.cid AND o.order_ts >= d.valid_from AND o.order_ts < d.valid_to. Use >= on valid_from and < on valid_to so an order exactly on a change boundary lands in the NEW version, with no gaps or overlaps."
   - "Do NOT join on d.is_current = true — that stamps every order with the customer's LATEST tier (the 'latest, not as-of' bug). is_current is only for a 'current customers' view, not for valuing historical facts."
-cert_objectives: [streamhouse:scd2-streaming, streamhouse:temporal-join]

@@ -15,7 +15,7 @@ recovers from the latest checkpoint. **Savepoints** are the *manual*, you-own-th
 **upgrades and migrations** — they are not expired automatically and are the hand-off between job
 versions.
 
-## How a stateful upgrade works (objective dse-flink:savepoints)
+## How a stateful upgrade works
 
 ### 1. Keep state in Flink-managed state, not instance fields
 

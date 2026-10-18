@@ -5,5 +5,4 @@ hours: 2
 requires: []
 labs: []
 cost: free
-cert_objectives: []
 from_your_world: "Why Redshift has a leader node and compute nodes; when one big box + DuckDB beats a cluster"

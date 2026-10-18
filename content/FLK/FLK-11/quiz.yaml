@@ -9,7 +9,6 @@
   answer: [B]
   explanation: "Backpressure is Flink's built-in flow control; sustained backpressure points at the bottleneck operator."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/ops/monitoring/back_pressure/"
-  objectives: [dse-flink:perf]
 
 - id: FLK-11-q2
   type: single
@@ -22,7 +21,6 @@
   answer: [A]
   explanation: "More subtasks plus a redistributing edge (rebalance) spreads the load evenly. keyBy on a constant would funnel everything to one subtask — the opposite of what you want."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/operators/overview/"
-  objectives: [dse-flink:perf]
 
 - id: FLK-11-q3
   type: single
@@ -35,7 +33,6 @@
   answer: [A]
   explanation: "FORWARD requires equal up/down parallelism and does no redistribution; to feed more subtasks you need a redistributing strategy (REBALANCE/RESCALE/HASH)."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/operators/overview/"
-  objectives: [dse-flink:perf]
 
 - id: FLK-11-q4
   type: single
@@ -48,7 +45,6 @@
   answer: [A]
   explanation: "keyBy routes a key to one subtask regardless of parallelism, so a hot key stays a bottleneck. The fix is changing the key (salting), not more subtasks."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/operators/overview/"
-  objectives: [dse-flink:perf]
 
 - id: FLK-11-q5
   type: single
@@ -57,7 +53,6 @@
   answer: [B]
   explanation: "REBALANCE round-robins records across all downstream subtasks, evening out a skew-free load."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/operators/overview/"
-  objectives: [dse-flink:perf]
 
 - id: FLK-11-q6
   type: single
@@ -70,7 +65,6 @@
   answer: [B]
   explanation: "A real fix shows up structurally: higher parallelism on the bottleneck and a redistributing edge feeding it. That is deterministic and robust to machine load."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/execution/parallel/"
-  objectives: [dse-flink:perf]
 
 - id: FLK-11-q7
   type: single
@@ -83,7 +77,6 @@
   answer: [B]
   explanation: "RESCALE distributes to a subset of downstream subtasks (local where possible), cheaper than REBALANCE's all-to-all when the parallelism ratio is integral."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/operators/overview/"
-  objectives: [dse-flink:perf]
 
 - id: FLK-11-q8
   type: multi
@@ -96,4 +89,3 @@
   answer: [A, B, C]
   explanation: "Skew, a slow sink, and state/checkpoint cost all limit the benefit of raw parallelism. FORWARD does NOT redistribute, so D is false."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/execution/parallel/"
-  objectives: [dse-flink:perf]

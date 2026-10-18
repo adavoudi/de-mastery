@@ -5,5 +5,4 @@ hours: 5
 requires: [LKH-04]
 labs: []
 cost: free
-cert_objectives: [databricks-de-pro:6]
 from_your_world: "Redshift VACUUM / SORTKEY, and the small-files problem on Athena"

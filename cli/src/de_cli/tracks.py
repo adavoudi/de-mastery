@@ -12,7 +12,7 @@ from pathlib import Path
 
 from de_cli.paths import tracks_root
 
-# Module IDs look like FND-01, SPK-12, ARC-03.
+# Module IDs look like FND-01, SPK-12, KFK-03.
 _ID_RE = re.compile(r"^[A-Z]{2,4}-\d{2}$")
 
 

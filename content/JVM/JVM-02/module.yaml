@@ -5,7 +5,4 @@ hours: 3
 requires: [JVM-01]
 labs: []
 cost: free
-cert_objectives:
-  - dse-found
-  - ccdak:2
 from_your_world: "a GROUP BY / window aggregation you'd write in SQL, expressed as a typed stream pipeline"

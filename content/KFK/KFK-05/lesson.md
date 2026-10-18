@@ -11,7 +11,7 @@ gets a duplicate. Kafka **transactions** make the write to B *and* the offset co
 **exactly once**. This is the SOX ledger property: every entry is written once and only once, and no
 entry is dropped.
 
-## How exactly-once works (objective ccdak:2)
+## How exactly-once works
 
 Three mechanisms stack up:
 
@@ -34,7 +34,7 @@ record contributes to the output exactly once, even across crashes and retries.
 
 ![One read-process-write transaction: output records and input offsets commit together via the commit marker](diagrams/eos-read-process-write.svg)
 
-## Zombie fencing (objective ccdak:2)
+## Zombie fencing
 
 The dangerous failure is a **zombie**: a producer everyone thinks is dead (so a replacement took
 over) but which is still alive and tries to commit. If both wrote, you'd duplicate. Kafka prevents

@@ -5,7 +5,4 @@ hours: 4
 requires: [JVM-01, JVM-02]
 labs: []
 cost: free
-cert_objectives:
-  - dse-found
-  - ccdak:2
 from_your_world: "diagnosing a Spark driver OOM from logs, but for a plain JVM heap/GC log"

@@ -7,4 +7,3 @@ hints:
   - "plan_reassignment works per partition. Keep every current replica that is still in the target broker set AND does not violate rack-distinctness; only those kept replicas cost zero data movement. Count how many slots you still need (rf minus kept)."
   - "Fill the remaining slots from brokers NOT already chosen for that partition, preferring brokers on a rack not yet used by this partition (when racks are given), and spreading load (prefer the least-used broker across all partitions). Never place two replicas on the same broker; never exceed rf."
   - "to_assignment_json(plan, topic) builds the {'version':1,'partitions':[...]} dict that kafka-reassign-partitions.sh --execute expects: one entry per partition with 'topic','partition','replicas'. apply_reassignment writes it to a temp file and runs the tool via cluster.run_tool, then polls --verify until complete."
-cert_objectives: [ccaak:3, ccaak:5]

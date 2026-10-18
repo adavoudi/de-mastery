@@ -7,4 +7,3 @@ hints:
   - "Key BOTH the orders stream and each dimension stream by their join key (currency for FX, customer id for address), then connect them with a KeyedCoProcessFunction so related rows share keyed state."
   - "Buffer dimension versions as (value, effective_from) in ListState. For each order, buffer it and register an event-time timer at the order's timestamp; emit only when the timer fires (watermark reached it)."
   - "In onTimer, the as-of version is the one with the GREATEST effective_from that is <= the order timestamp. A strict '<' or picking the newest version is the classic bug."
-cert_objectives: [dse-flink:joins]

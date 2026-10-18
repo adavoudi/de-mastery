@@ -7,4 +7,3 @@ hints:
   - "compute_lag: for each partition, lag = end_offset - committed_offset. A partition with no committed offset (committed is None or < 0) has lag equal to its whole end_offset (everything is unread). Never return a negative lag."
   - "evaluate_alerts: look at the per-partition lags. Return 'page' if ANY partition is at/above page_threshold, else 'warn' if ANY is at/above warn_threshold, else 'ok'. The highest severity wins; thresholds are inclusive."
   - "measure_group_lag: read the group's committed offsets (AdminClient.list_consumer_group_offsets with ConsumerGroupTopicPartitions, or Consumer.committed) and each partition's end offset (AdminClient.list_offsets with OffsetSpec.latest, or Consumer.get_watermark_offsets), then call compute_lag. A partition the group never committed to counts as fully unread."
-cert_objectives: [ccdak:4, ccdak:5]

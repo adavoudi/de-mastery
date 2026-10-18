@@ -5,7 +5,6 @@
   answer: [C]
   explanation: "keyBy is the only operator that changes the key; it hash-partitions the stream (the streaming shuffle) so per-key state and aggregation are possible."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/operators/overview/"
-  objectives: [dse-flink:datastream]
 
 - id: FLK-02-q2
   type: single
@@ -14,7 +13,6 @@
   answer: [B]
   explanation: "A ProcessFunction can emit to the main collector AND to a side output via ctx.output(tag, value); getSideOutput(tag) reads the extra stream. This routes rejects without re-reading the input."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/side_output/"
-  objectives: [dse-flink:datastream]
 
 - id: FLK-02-q3
   type: single
@@ -23,7 +21,6 @@
   answer: [B]
   explanation: "Java erases generics at runtime. The trailing {} creates an anonymous subclass whose supertype retains the type argument, letting Flink extract the TypeInformation for the side output."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/side_output/"
-  objectives: [dse-flink:datastream]
 
 - id: FLK-02-q4
   type: single
@@ -32,7 +29,6 @@
   answer: [B]
   explanation: "Flink 2.x uses the FLIP-27 unified Source API: build a KafkaSource and add it via env.fromSource(source, watermarkStrategy, name). The old FlinkKafkaConsumer is removed."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/connectors/datastream/kafka/"
-  objectives: [dse-flink:datastream]
 
 - id: FLK-02-q5
   type: single
@@ -41,7 +37,6 @@
   answer: [B]
   explanation: "union requires the same type. connect joins two differently-typed streams into a ConnectedStreams, processed by a CoProcessFunction/CoMapFunction with access to both and (if keyed) shared state."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/operators/overview/"
-  objectives: [dse-flink:datastream]
 
 - id: FLK-02-q6
   type: single
@@ -50,7 +45,6 @@
   answer: [C]
   explanation: "flatMap is 1→N: it calls out.collect() any number of times per input (including zero), unlike map (strictly 1→1) and filter (1→0-or-1)."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/operators/overview/"
-  objectives: [dse-flink:datastream]
 
 - id: FLK-02-q7
   type: single
@@ -59,7 +53,6 @@
   answer: [B]
   explanation: "SQL is shorter and easier to evolve for standard logic and compiles down to DataStream operators anyway. Reach for DataStream when you need imperative control (state, timers, side outputs) or a connector SQL lacks."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/overview/"
-  objectives: [dse-flink:datastream]
 
 - id: FLK-02-q8
   type: single
@@ -68,4 +61,3 @@
   answer: [B]
   explanation: "sinkTo attaches a FLIP-143 unified Sink such as KafkaSink, whose delivery guarantee (none/at-least-once/exactly-once via 2PC) is configured on the builder."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/connectors/datastream/kafka/"
-  objectives: [dse-flink:datastream]

@@ -9,7 +9,6 @@
   answer: [B]
   explanation: "The raw fact is laid out for ingestion (small files, LSM levels, delete files). Serving reads a small pre-aggregated rollup and prunes it, exactly like a BI rollup / materialized view in a batch warehouse."
   source: "https://paimon.apache.org/docs/2.0/"
-  objectives: [sth:serving]
 
 - id: STH-07-q2
   type: single
@@ -22,7 +21,6 @@
   answer: [B]
   explanation: "A batch snapshot read applies the merge (dedup / partial-update / aggregation) and returns the merged latest-per-key state. Iterating the changelog is for downstream pipelines and would double-count superseded versions."
   source: "https://paimon.apache.org/docs/2.0/"
-  objectives: [sth:serving]
 
 - id: STH-07-q3
   type: single
@@ -35,7 +33,6 @@
   answer: [B]
   explanation: "The durable proof is structural: the plan shows the rollup table is read and the predicate prunes it. Wall-clock is only a generous guardrail (warm cache, median of N) because it depends on cache state, GC and a possibly loaded machine."
   source: "https://iceberg.apache.org/docs/latest/"
-  objectives: [sth:serving]
 
 - id: STH-07-q4
   type: single
@@ -48,7 +45,6 @@
   answer: [B]
   explanation: "Reading the changelog or un-merged versions double-counts superseded rows. Serving must read the merged snapshot (latest per key). The G6 invariant: the OLAP answer over the merged snapshot equals a batch rebuild of the same events."
   source: "https://paimon.apache.org/docs/2.0/"
-  objectives: [sth:serving]
 
 - id: STH-07-q5
   type: single
@@ -61,7 +57,6 @@
   answer: [B]
   explanation: "The Flink hadoop catalog stores manifest paths with a file: scheme DuckDB's iceberg extension rejects. Read via pyiceberg (StaticTable.from_metadata -> scan().to_arrow()), register the Arrow table in DuckDB, then query."
   source: "https://iceberg.apache.org/docs/latest/"
-  objectives: [sth:serving]
 
 - id: STH-07-q6
   type: multi
@@ -74,7 +69,6 @@
   answer: [A, C, D]
   explanation: "Rollups help interactive aggregate reads over large facts (B). A single-key drill-down is a point lookup (A); a downstream pipeline should read the changelog, not an OLAP snapshot (C); and a tiny merged table doesn't need the extra rollup to maintain (D)."
   source: "https://paimon.apache.org/docs/2.0/"
-  objectives: [sth:serving]
 
 - id: STH-07-q7
   type: single
@@ -87,4 +81,3 @@
   answer: [B]
   explanation: "A predicate (one company, a date range) plus column projection lets a columnar engine skip row groups and unneeded columns, reading only what the tile requires — the core of interactive serving latency."
   source: "https://iceberg.apache.org/docs/latest/"
-  objectives: [sth:serving]

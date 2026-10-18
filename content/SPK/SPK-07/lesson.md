@@ -17,7 +17,7 @@ The number of **output files** per write equals (roughly) the number of in-memor
 write time, multiplied across the on-disk partition folders. So the two concepts meet precisely at
 write time, and that is where the small-file problem is born or avoided.
 
-## repartition vs coalesce (objective 1.5)
+## repartition vs coalesce
 
 - **`repartition(n)`** does a full shuffle to produce exactly `n` evenly-sized partitions (wide,
   adds an `Exchange`). Use it to *increase* parallelism or to rebalance skew.
@@ -27,12 +27,12 @@ write time, and that is where the small-file problem is born or avoided.
 - `repartition(n, col)` / `repartitionByRange` let you control the partitioning *expression*, which
   matters for bucketing-like effects and for writing one file per key group.
 
-The exam loves the contrast: *to reduce files cheaply after a selective filter, use `coalesce`; to
+The key contrast: *to reduce files cheaply after a selective filter, use `coalesce`; to
 rebalance or grow partitions, use `repartition`.*
 
 ![coalesce merges neighbouring partitions with no shuffle and may stay uneven; repartition shuffles every partition into even ones](diagrams/repartition-vs-coalesce.svg)
 
-## The small-file problem (objective 4.1)
+## The small-file problem
 
 Thousands of tiny files cripple a query: each file costs a metadata lookup and an open, listing
 dominates, and readers can't align to row-group boundaries. The symptom in your Athena world is a
@@ -45,7 +45,7 @@ A trap: `coalesce(1)` to "get one file" forces *all* data through one task — f
 result, catastrophic for 100 GB. The right habit is to compute the count from the data size, not to
 hard-code 1.
 
-## Bucketing (objectives 2.3, 4.1)
+## Bucketing
 
 **Bucketing** pre-shuffles a table on a key into a fixed number of buckets *at write time*
 (`write.bucketBy(n, "key").sortBy("key").saveAsTable(...)`). Two bucketed tables joined on the

@@ -7,4 +7,3 @@ hints:
   - "grant_vote: deny if the request term is older than the node's current term; deny if the node already voted for someone else in that term; deny if the candidate's log is less up to date (compare (last_log_term, last_log_index) as a tuple). Otherwise grant and record the vote + term."
   - "A candidate's log is 'at least as up to date' if its (last_log_term, last_log_index) tuple is >= the voter's. Compare the pair, not just the index — a higher last term always wins regardless of index."
   - "elect_leader: run grant_vote against every node (including the candidate voting for itself), count grants, and declare the candidate elected iff grants form a strict majority: grants > len(nodes) // 2. Return whether elected and the vote count."
-cert_objectives: []

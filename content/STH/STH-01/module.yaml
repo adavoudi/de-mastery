@@ -5,5 +5,4 @@ hours: 3
 requires: []
 labs: []
 cost: free
-cert_objectives: [sth:architecture]
 from_your_world: "Your current batch lakehouse: where a streamhouse would and would not change it"

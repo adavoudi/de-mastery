@@ -7,4 +7,3 @@ hints:
   - "The baseline runs the heavy map at parallelism 1 with a FORWARD edge, so one subtask does all the work. Give the map more subtasks with .setParallelism(n) (n>1)."
   - "Parallelism alone is not enough — a FORWARD edge can't feed more subtasks. Insert a redistributing edge before the map: source.rebalance().map(...). rescale() also works."
   - "Keep the operator named \"heavy\" (.name(\"heavy\")) and keep the computation Work::busy so the result is unchanged. Do NOT keyBy a constant — that funnels everything to one subtask."
-cert_objectives: [dse-flink:perf]

@@ -11,7 +11,6 @@
     RPO is the maximum tolerable data loss, measured in time: an RPO of 5 minutes means you may lose
     up to the last 5 minutes of events. RTO, by contrast, is the tolerable downtime.
   source: "https://kafka.apache.org/documentation/#georeplication"
-  objectives: [ccaak:3]
 
 - id: KFK-13-q2
   type: single
@@ -27,7 +26,6 @@
     Whatever has not yet replicated when the source dies is lost — that lag is the RPO. RPO ≈ 0
     needs a synchronous (stretched) design.
   source: "https://kafka.apache.org/documentation/#georeplication"
-  objectives: [ccaak:3]
 
 - id: KFK-13-q3
   type: single
@@ -42,7 +40,6 @@
     The passive region is kept warm, so recovery time is mostly the cutover: redirect producers and
     consumers to the target, translate consumer offsets, and resume. More automation ⇒ lower RTO.
   source: "https://kafka.apache.org/documentation/#georeplication-mirrormaker"
-  objectives: [ccaak:3]
 
 - id: KFK-13-q4
   type: single
@@ -57,7 +54,6 @@
     The DefaultReplicationPolicy prefixes mirrored topics with the source alias (us-east.orders) so
     that, especially in active/active, data does not loop back and forth between clusters.
   source: "https://kafka.apache.org/documentation/#georeplication-mirrormaker"
-  objectives: [ccaak:3]
 
 - id: KFK-13-q5
   type: single
@@ -73,7 +69,6 @@
     already in both — RPO ≈ 0. The price is higher write latency and the need for an odd number
     (>=3) of failure domains to keep quorum.
   source: "https://kafka.apache.org/documentation/#basic_ops_racks"
-  objectives: [ccaak:3]
 
 - id: KFK-13-q6
   type: single
@@ -89,7 +84,6 @@
     preserved offsets) let a failed-over consumer resume where it left off; without translation it
     would re-read or skip records.
   source: "https://kafka.apache.org/documentation/#georeplication-mirrormaker"
-  objectives: [ccaak:3]
 
 - id: KFK-13-q7
   type: single
@@ -104,7 +98,6 @@
     KRaft (and replication) quorum needs a majority. With two regions, losing one leaves half the
     nodes — no majority — so the cluster can't elect a controller. Use >=3 failure domains.
   source: "https://kafka.apache.org/documentation/#basic_ops_racks"
-  objectives: [ccaak:3]
 
 - id: KFK-13-q8
   type: single
@@ -120,4 +113,3 @@
     translation. Cluster Linking preserves offsets byte-for-byte and needs no separate Connect
     cluster. Both are asynchronous.
   source: "https://kafka.apache.org/documentation/#georeplication"
-  objectives: [ccaak:3]

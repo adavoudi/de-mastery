@@ -7,4 +7,3 @@ hints:
   - "Create the staging branch first: spark.sql(f\"ALTER TABLE {t} CREATE OR REPLACE BRANCH {branch}\"). Write the new rows to it with INSERT INTO {t}.branch_{branch} {insert_values_sql} — NOT into {t} (which is main)."
   - "Audit the BRANCH data: read spark.sql(f\"SELECT * FROM {t}.branch_{branch}\") and pass that DataFrame to audit_fn. Only if audit_fn returns True do you publish."
   - "Publish with CALL local.system.fast_forward('<db.table>','main','{branch}'). Identifier for the CALL is the table without the catalog prefix. Always drop the branch at the end. Return published / main_count / branch_count."
-cert_objectives: []

@@ -9,7 +9,6 @@
   answer: [B]
   explanation: "Checkpoints are periodic and owned by Flink for fault tolerance; savepoints are triggered by you for planned upgrades/rescales and persist until you delete them."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/ops/state/savepoints/"
-  objectives: [dse-flink:savepoints]
 
 - id: FLK-12-q2
   type: single
@@ -22,7 +21,6 @@
   answer: [B]
   explanation: "Only Flink-managed state (keyed/operator state) is snapshotted. A plain field is reinitialized on restore, so the accumulated value is lost."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/fault-tolerance/state/"
-  objectives: [dse-flink:savepoints]
 
 - id: FLK-12-q3
   type: single
@@ -35,7 +33,6 @@
   answer: [B]
   explanation: "Stable, explicit UIDs let an upgraded job find its state in the savepoint. Auto-generated UIDs change with the graph and can orphan state."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/ops/production_ready/"
-  objectives: [dse-flink:savepoints, dse-flink:ops]
 
 - id: FLK-12-q4
   type: single
@@ -48,7 +45,6 @@
   answer: [B]
   explanation: "stop-with-savepoint snapshots state; starting the new jar from that savepoint restores each operator's state by UID."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/ops/upgrading/"
-  objectives: [dse-flink:savepoints, dse-flink:ops]
 
 - id: FLK-12-q5
   type: single
@@ -61,7 +57,6 @@
   answer: [B]
   explanation: "allowNonRestoredState lets you intentionally discard state that no longer has a matching operator; without it, unmatched state is an error."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/ops/state/savepoints/"
-  objectives: [dse-flink:savepoints]
 
 - id: FLK-12-q6
   type: single
@@ -74,7 +69,6 @@
   answer: [B]
   explanation: "Keyed state is organized in key groups; a savepoint lets Flink redistribute those groups to the new number of subtasks on restore."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/ops/state/savepoints/"
-  objectives: [dse-flink:savepoints, dse-flink:ops]
 
 - id: FLK-12-q7
   type: single
@@ -87,7 +81,6 @@
   answer: [B]
   explanation: "Managed runtimes (K8s Operator, AWS MSF, Confluent Cloud Flink) automate the savepoint upgrade cycle. The same guarantee is taught locally."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/ops/upgrading/"
-  objectives: [dse-flink:ops]
 
 - id: FLK-12-q8
   type: single
@@ -100,4 +93,3 @@
   answer: [B]
   explanation: "A source's per-subtask offset is operator state: declare it as ListState through CheckpointedFunction, snapshot it, and reload it when the context isRestored()."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/fault-tolerance/state/"
-  objectives: [dse-flink:savepoints]

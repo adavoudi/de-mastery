@@ -7,4 +7,3 @@ hints:
   - "The running count must survive a savepoint, so it has to live in Flink-managed KEYED state, not a plain instance field. Get a ValueState<Long> from the runtime context in open(...)."
   - "In open(OpenContext): cnt = getRuntimeContext().getState(new ValueStateDescriptor<>(\"count\", Long.class)); In processElement: read cnt.value() (null -> 0), add 1, cnt.update(n), and write n to the output file."
   - "Do NOT use a transient long field — it is reinitialized on restore and the count resets. The provided Job.java already assigns a stable .uid() so your state can be mapped back from the savepoint."
-cert_objectives: [dse-flink:savepoints, dse-flink:ops]

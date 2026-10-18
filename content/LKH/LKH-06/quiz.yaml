@@ -12,7 +12,6 @@
     actions). Iceberg instead keeps a catalog pointer to a single metadata.json. Both are append-only
     with atomic optimistic-concurrency commits; the metadata shape differs.
   source: "https://github.com/delta-io/delta/blob/master/PROTOCOL.md"
-  objectives: [databricks-de-pro:6]
 
 - id: LKH-06-q2
   type: single
@@ -28,7 +27,6 @@
     that captures the full live-file set at a version. Readers load the latest checkpoint and replay
     only the commits after it. It is Delta's scaling mechanism, analogous to Iceberg manifest lists.
   source: "https://docs.delta.io/latest/delta-utility.html#history"
-  objectives: [databricks-de-pro:6]
 
 - id: LKH-06-q3
   type: single
@@ -46,7 +44,6 @@
     version (valid_to NULL). Overwriting the attribute in place is SCD Type 1 and destroys history —
     the classic mistake. Deleting the old row also loses history.
   source: "https://docs.delta.io/latest/delta-update.html#upsert-into-a-table-using-merge"
-  objectives: [databricks-de-pro:1]
 
 - id: LKH-06-q4
   type: single
@@ -62,7 +59,6 @@
     exact before/after. Inserts emit 'insert', deletes emit 'delete'. Each change row also carries
     _commit_version.
   source: "https://docs.delta.io/latest/delta-change-data-feed.html"
-  objectives: [databricks-de-pro:1]
 
 - id: LKH-06-q5
   type: single
@@ -77,7 +73,6 @@
     CDF must be enabled (delta.enableChangeDataFeed=true) before the changes you want to read; it adds
     write cost and change files. Changes written before it was on are not available via the feed.
   source: "https://docs.delta.io/latest/delta-change-data-feed.html"
-  objectives: [databricks-de-pro:1]
 
 - id: LKH-06-q6
   type: single
@@ -93,7 +88,6 @@
     CLUSTER BY, improving data-skipping without the pitfalls of fixed partition columns. It plays the
     role Iceberg fills with sort orders and hidden partitioning.
   source: "https://docs.delta.io/latest/delta-clustering.html"
-  objectives: [databricks-de-pro:6]
 
 - id: LKH-06-q7
   type: single
@@ -109,4 +103,3 @@
     engines that speak those formats can read the same underlying data — interoperability without
     copying the data.
   source: "https://docs.delta.io/latest/delta-uniform.html"
-  objectives: [databricks-de-pro:6]

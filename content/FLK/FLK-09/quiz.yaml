@@ -9,7 +9,6 @@
   answer: [B]
   explanation: "Keep-first dedup (ascending ORDER BY) is append-only: the first row per key is final; later duplicates are simply dropped."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/deduplication/"
-  objectives: [dse-flink:patterns]
 
 - id: FLK-09-q2
   type: single
@@ -22,7 +21,6 @@
   answer: [B]
   explanation: "Keep-last dedup must retract the previously-emitted last row when a newer row arrives, so it is an updating query (needs an upsert-capable sink)."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/deduplication/"
-  objectives: [dse-flink:patterns]
 
 - id: FLK-09-q3
   type: single
@@ -35,7 +33,6 @@
   answer: [B]
   explanation: "Top-N retracts the row it displaces, so the sink must apply updates/deletes. upsert-kafka keyed by the entity handles that; a plain append kafka sink would double-count."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/topn/"
-  objectives: [dse-flink:patterns, dse-flink:sql]
 
 - id: FLK-09-q4
   type: single
@@ -48,7 +45,6 @@
   answer: [A]
   explanation: "UNION must maintain state to deduplicate across an unbounded stream (updating); UNION ALL simply concatenates and is append-only."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/set-ops/"
-  objectives: [dse-flink:patterns]
 
 - id: FLK-09-q5
   type: single
@@ -61,7 +57,6 @@
   answer: [B]
   explanation: "MATCH_RECOGNIZE evaluates the pattern over rows ordered by time, so ORDER BY must be an ascending time attribute."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/match_recognize/"
-  objectives: [dse-flink:patterns]
 
 - id: FLK-09-q6
   type: single
@@ -74,7 +69,6 @@
   answer: [B]
   explanation: "OVER computes the aggregate per row over a window of preceding rows and emits one row per input (append-only); GROUP BY groups rows away and emits an updating aggregate."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/over-agg/"
-  objectives: [dse-flink:patterns, dse-flink:sql]
 
 - id: FLK-09-q7
   type: multi
@@ -87,7 +81,6 @@
   answer: [A, C, D]
   explanation: "Keep-first dedup, OVER aggregation and UNION ALL are append-only. Top-N retracts displaced rows, so it is updating."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/over-agg/"
-  objectives: [dse-flink:patterns]
 
 - id: FLK-09-q8
   type: single
@@ -100,4 +93,3 @@
   answer: [B]
   explanation: "Keep-first dedup emits the first occurrence and drops subsequent duplicates with no retraction, which is exactly why it is append-only."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/deduplication/"
-  objectives: [dse-flink:patterns]

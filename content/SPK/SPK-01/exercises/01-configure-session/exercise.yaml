@@ -7,4 +7,3 @@ hints:
   - "spark.sparkContext.master is a string like 'local[2]'. The number inside the brackets is the executor-thread (core) count."
   - "Parse the N out of local[N]; handle local[*] by falling back to os.cpu_count(). Do NOT use defaultParallelism — it can be overridden and won't equal N."
   - "shuffle_partitions: spark.conf.get(...) returns a str, so wrap it in int(). peak_parallelism is just min(num_partitions, cores)."
-cert_objectives: [spark-assoc:1.2, spark-assoc:6.2]

@@ -10,6 +10,7 @@
     <button class="btn small mark-done" type="button" data-done-id="{{ module.id }}" aria-pressed="false">Mark as done</button>
     <ul class="chips">
       <li>{{ module.hours|round|int }} h</li>
+      {% if module.meta.get('cost') and module.meta.cost != 'free' %}<li>{{ module.meta.cost }}</li>{% endif %}
       {% if module.meta.get('labs') %}<li>lab: {{ module.meta.labs|join(', ') }}</li>{% endif %}
       {% for r in module.meta.get('requires', []) %}<li>requires <a href="/m/{{ r }}">{{ r }}</a></li>{% endfor %}
     </ul>

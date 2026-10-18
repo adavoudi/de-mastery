@@ -8,7 +8,7 @@ creates a duplicate. This module is about tuning for throughput **without** sacr
 guarantees a SOX-style financial feed needs: **no duplicates** and **no reordering per key**, even
 when the network hiccups and the client retries.
 
-## How the producer works (objective ccdak:2)
+## How the producer works
 
 A record you `produce()` is not sent immediately. It is appended to a per-partition **batch** in an
 in-memory buffer (`buffer.memory`), and a background I/O thread sends batches to brokers.
@@ -29,7 +29,7 @@ in-memory buffer (`buffer.memory`), and a background I/O thread sends batches to
 Tuning for throughput is therefore: raise `linger.ms` a little, raise `batch.size`, turn on `lz4`
 compression — send fewer, bigger, compressed batches.
 
-## Retries, ordering, and idempotence (objective ccdak:2)
+## Retries, ordering, and idempotence
 
 Here is the trap. A produce request can fail transiently (leader moved, timeout). The producer
 **retries**. Two bad things can happen:

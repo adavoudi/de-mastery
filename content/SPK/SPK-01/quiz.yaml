@@ -15,7 +15,6 @@
     executors are released. Executors can be lost and re-requested, but the driver is a
     single point of control.
   source: "https://spark.apache.org/docs/4.2.0/cluster-overview.html"
-  objectives: [spark-assoc:1.2]
 
 - id: SPK-01-q2
   type: single
@@ -34,7 +33,6 @@
     at once and the other 4 queue. More partitions than cores does not increase peak
     parallelism; it just means tasks run in waves.
   source: "https://spark.apache.org/docs/4.2.0/cluster-overview.html"
-  objectives: [spark-assoc:1.2]
 
 - id: SPK-01-q3
   type: single
@@ -53,7 +51,6 @@
     is a cluster manager, not a deploy mode; 'local' collapses driver and executors into
     one JVM.
   source: "https://spark.apache.org/docs/4.2.0/submitting-applications.html"
-  objectives: [spark-assoc:6.2]
 
 - id: SPK-01-q4
   type: single
@@ -70,7 +67,6 @@
     runs server-side), and executes it. A thin client means no local JVM is required and a
     client crash does not kill the job.
   source: "https://spark.apache.org/docs/4.2.0/spark-connect-overview.html"
-  objectives: [spark-assoc:6.1]
 
 - id: SPK-01-q5
   type: multi
@@ -86,7 +82,6 @@
     on Spark Core (the RDD engine, scheduler, shuffle, memory manager). Flink is a separate
     project, not a Spark module.
   source: "https://spark.apache.org/docs/4.2.0/index.html"
-  objectives: [spark-assoc:1.7]
 
 - id: SPK-01-q6
   type: single
@@ -105,7 +100,6 @@
     many stores / arbitrary logic. For ~40 GB of pure-SQL work a warehouse or a single-node
     engine is simpler and often faster; Spark's distributed overhead is unjustified.
   source: "https://spark.apache.org/docs/4.2.0/cluster-overview.html"
-  objectives: [spark-assoc:1.1]
 
 - id: SPK-01-q7
   type: single
@@ -122,4 +116,3 @@
     parallel scanning/aggregating like compute nodes and their slices. The cluster manager
     is a separate layer that allocates the machines.
   source: "https://spark.apache.org/docs/4.2.0/cluster-overview.html"
-  objectives: [spark-assoc:1.2, spark-assoc:1.1]

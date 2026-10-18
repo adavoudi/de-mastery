@@ -7,4 +7,3 @@ hints:
   - "Use a KeyedBroadcastProcessFunction keyed by account. Store the fraud-rule versions in broadcast state (processBroadcastElement) and buffer each event in keyed ListState; drive everything with event-time timers."
   - "Session timeout: track the session's events and register an event-time timer at event_ts + GAP, deleting the previous timer so only the latest event's timer fires. When onTimer fires, the session is complete."
   - "Apply the rule as-of each event: the threshold is the rule version with the greatest effFrom <= the event's ts. Always using the newest threshold, or the live 'current' broadcast value, is the bug (and is non-deterministic)."
-cert_objectives: [dse-flink:process]

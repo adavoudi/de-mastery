@@ -5,5 +5,4 @@ hours: 4
 requires: [STH-05]
 labs: []
 cost: free
-cert_objectives: [streamhouse:dq-contracts, streamhouse:quarantine-dlq]
 from_your_world: "dbt tests and SOX controls: not-null, accepted-values and relationship tests, but applied in-flight with a quarantine instead of failing the run"

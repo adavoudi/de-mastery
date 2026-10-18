@@ -12,7 +12,6 @@
     end_offset - committed_offset. It is computed from the committed offset (what survives a crash),
     not the in-memory position.
   source: "https://kafka.apache.org/documentation/#basic_ops_consumer_lag"
-  objectives: [ccdak:5]
 
 - id: KFK-10-q2
   type: single
@@ -28,7 +27,6 @@
     committed offset therefore measures real, durable backlog; the in-memory position can be ahead of
     what has been safely committed.
   source: "https://kafka.apache.org/documentation/#consumerconfigs"
-  objectives: [ccdak:5]
 
 - id: KFK-10-q3
   type: single
@@ -43,7 +41,6 @@
     A bursty producer makes instantaneous lag spikes normal. The real signal is lag that stays high
     and does not drain — a stuck or too-slow consumer. Alert on non-draining lag or on liveness.
   source: "https://kafka.apache.org/documentation/#basic_ops_consumer_lag"
-  objectives: [ccdak:5]
 
 - id: KFK-10-q4
   type: single
@@ -58,7 +55,6 @@
     TopologyTestDriver drives a Streams topology in-process with deterministic event time and no
     external broker or state-store disk, so it is the fast, deterministic layer for Streams logic.
   source: "https://kafka.apache.org/documentation/streams/developer-guide/testing.html"
-  objectives: [ccdak:4]
 
 - id: KFK-10-q5
   type: multi
@@ -74,7 +70,6 @@
     Proving the app truly commits to a broker is wiring that needs a real (or embedded) broker — the
     slow integration layer, used sparingly.
   source: "https://kafka.apache.org/documentation/#monitoring"
-  objectives: [ccdak:4]
 
 - id: KFK-10-q6
   type: single
@@ -90,7 +85,6 @@
     AdminClient.list_offsets with the LATEST spec returns each partition's end offset. Lag is their
     difference. No group membership needed — the same thing kafka-consumer-groups.sh --describe does.
   source: "https://kafka.apache.org/documentation/#basic_ops_consumer_lag"
-  objectives: [ccdak:5]
 
 - id: KFK-10-q7
   type: single
@@ -106,7 +100,6 @@
     triggers a rebalance; the churn prevents progress and lag grows. Fix by processing faster, polling
     smaller batches, or raising the interval.
   source: "https://kafka.apache.org/documentation/#consumerconfigs"
-  objectives: [ccdak:5]
 
 - id: KFK-10-q8
   type: single
@@ -122,4 +115,3 @@
     test the boundaries (just under vs just over threshold, warn vs page), exactly like asserting a
     dbt test's severity.
   source: "https://kafka.apache.org/documentation/#monitoring"
-  objectives: [ccdak:4, ccdak:5]

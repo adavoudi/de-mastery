@@ -12,7 +12,6 @@
     grow or shrink. coalesce is narrow (no Exchange), only reduces, and may leave uneven partitions
     because it just concatenates existing ones.
   source: "https://spark.apache.org/docs/4.0.0/sql-performance-tuning.html"
-  objectives: [spark-assoc:1.5]
 
 - id: SPK-07-q2
   type: single
@@ -30,7 +29,6 @@
     after a filter. repartition(4) would needlessly shuffle; coalesce(1) would funnel everything
     through one task.
   source: "https://spark.apache.org/docs/4.0.0/api/python/reference/pyspark.sql/api/pyspark.sql.DataFrame.coalesce.html"
-  objectives: [spark-assoc:1.5, spark-assoc:4.1]
 
 - id: SPK-07-q3
   type: single
@@ -45,7 +43,6 @@
     Each in-memory partition writes (up to) one file per on-disk partition folder. So controlling
     the partition count (repartition/coalesce) and partitionBy together controls the file count.
   source: "https://spark.apache.org/docs/4.0.0/sql-data-sources-load-save-functions.html"
-  objectives: [spark-assoc:4.1]
 
 - id: SPK-07-q4
   type: single
@@ -61,7 +58,6 @@
     files, crushing listing and metadata performance. Partition on low-cardinality, frequently
     filtered columns (date, company).
   source: "https://spark.apache.org/docs/4.0.0/sql-data-sources-load-save-functions.html"
-  objectives: [spark-assoc:4.1]
 
 - id: SPK-07-q5
   type: single
@@ -77,7 +73,6 @@
     buckets. A later join on the bucket key finds matching keys colocated, so no shuffle is needed —
     the analogue of a Redshift DISTKEY making joins local.
   source: "https://spark.apache.org/docs/4.0.0/sql-data-sources-load-save-functions.html#bucketing-sorting-and-partitioning"
-  objectives: [spark-assoc:2.3, spark-assoc:4.1]
 
 - id: SPK-07-q6
   type: single
@@ -93,7 +88,6 @@
     high memory pressure. Target a file size and derive the partition count; don't hard-code 1 for
     big data.
   source: "https://spark.apache.org/docs/4.0.0/api/python/reference/pyspark.sql/api/pyspark.sql.DataFrame.coalesce.html"
-  objectives: [spark-assoc:4.1]
 
 - id: SPK-07-q7
   type: single
@@ -109,4 +103,3 @@
     repartition/coalesce control how many in-memory partitions (tasks) exist; partitionBy controls
     the col=value/ directory structure on disk. Confusing them is a common error.
   source: "https://spark.apache.org/docs/4.0.0/sql-data-sources-load-save-functions.html"
-  objectives: [spark-assoc:1.5, spark-assoc:2.3]

@@ -7,4 +7,3 @@ hints:
   - "Dedup keep-first: ROW_NUMBER() OVER (PARTITION BY key ORDER BY <time> ASC) and keep rn = 1. For Top-N use ORDER BY <value> DESC and keep rn <= n."
   - "Split = two SELECTs with different WHEREs; merge = UNION ALL. MATCH_RECOGNIZE needs PARTITION BY, ORDER BY a time attribute, PATTERN (A B), DEFINE B AS B.v > A.v, MEASURES ... ONE ROW PER MATCH."
   - "OVER running sum: SUM(v) OVER (PARTITION BY g ORDER BY ts ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW). Return the SQL as a string; the source table/view names are fixed by the test (see README)."
-cert_objectives: [dse-flink:patterns, dse-flink:sql]

@@ -7,4 +7,3 @@ hints:
   - "flatMap each CSV line into its fields, or build Order records first, then run a single stream pipeline."
   - "Collectors.groupingBy(Order::currency, Collectors.summingDouble(Order::amount)) is SUM ... GROUP BY. Validate (allowlist) BEFORE aggregating."
   - "For the top currency, stream the grouped Map's entrySet and max by value; return Optional.empty() when there are no valid rows."
-cert_objectives: [dse-found, ccdak:2]

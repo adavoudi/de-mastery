@@ -9,7 +9,6 @@
   answer: [A]
   explanation: "1/sec x ~3.15e7 s/year ~ 31.5M/year (and ~86k/day). These constants are worth memorizing."
   source: "https://static.googleusercontent.com/media/research.google.com/en//people/jeff/stanford-295-talk.pdf"
-  objectives: []
 - id: FND-07-q2
   type: single
   prompt: "2,000,000 events/sec at 100 bytes/event is what raw throughput?"
@@ -21,7 +20,6 @@
   answer: [A]
   explanation: "2e6 x 100 = 2e8 B/s = 200 MB/s."
   source: "https://static.googleusercontent.com/media/research.google.com/en//people/jeff/stanford-295-talk.pdf"
-  objectives: []
 - id: FND-07-q3
   type: single
   prompt: "Which assumptions MOST change a 'bytes stored per year' estimate and therefore must be stated?"
@@ -33,7 +31,6 @@
   answer: [A]
   explanation: "Stored bytes = raw x (1/compression) x replication. Those two factors move the number by 3-10x each, so they must be explicit."
   source: "https://parquet.apache.org/docs/file-format/"
-  objectives: []
 - id: FND-07-q4
   type: single
   prompt: "Athena-style query cost is driven by:"
@@ -45,7 +42,6 @@
   answer: [A]
   explanation: "Serverless engines bill per TB scanned; pruning (columns, partitions, row groups) directly lowers the bill. Rows returned is not the metric."
   source: "https://aws.amazon.com/athena/pricing/"
-  objectives: []
 - id: FND-07-q5
   type: single
   prompt: "For a 7-year SOX retention estimate of a feed storing Y bytes/year, the storage cost is approximately:"
@@ -57,7 +53,6 @@
   answer: [A]
   explanation: "Storage cost = GB stored x $/GB-month x months. Over 7 years that is x7x12 months. Scanned-TB pricing is for queries, not storage."
   source: "https://aws.amazon.com/s3/pricing/"
-  objectives: []
 - id: FND-07-q6
   type: single
   prompt: "What is the goal of a back-of-envelope estimate?"
@@ -69,7 +64,6 @@
   answer: [A]
   explanation: "Estimates aim for the correct order of magnitude (~2x) with explicit, challengeable assumptions; precision beyond that is wasted because inputs are rough."
   source: "https://static.googleusercontent.com/media/research.google.com/en//people/jeff/stanford-295-talk.pdf"
-  objectives: []
 - id: FND-07-q7
   type: multi
   prompt: "Why can using RAW event bytes mislead a STORAGE estimate? (select all)"
@@ -81,4 +75,3 @@
   answer: [A, B, D]
   explanation: "Stored size differs from raw by compression (down) and replication/overhead (up). Raw bytes do NOT include indexes/overhead (C is false)."
   source: "https://parquet.apache.org/docs/file-format/"
-  objectives: []

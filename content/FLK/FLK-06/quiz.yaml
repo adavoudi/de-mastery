@@ -9,7 +9,6 @@
   answer: [A]
   explanation: "Exactly-once end to end needs all three: the source rewinds to the checkpointed offset (no loss), state is restored from the checkpoint, and the sink only makes data visible once the checkpoint is complete (no duplicates). Missing any one breaks the guarantee."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/concepts/stateful-stream-processing/"
-  objectives: [dse-flink:checkpoints]
 
 - id: FLK-06-q2
   type: single
@@ -22,7 +21,6 @@
   answer: [B]
   explanation: "The barrier is a special record the JobManager injects at the sources. It flows with the data; when an operator has aligned the barrier across all its inputs it snapshots and forwards it. This asynchronous barrier snapshot avoids a global stop-the-world pause."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/concepts/stateful-stream-processing/"
-  objectives: [dse-flink:checkpoints]
 
 - id: FLK-06-q3
   type: single
@@ -35,7 +33,6 @@
   answer: [B]
   explanation: "A consistent checkpoint ties operator state to specific source offsets. On restart the sources rewind to those offsets so the restored state and the replayed input line up exactly — no gap, no overlap."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/fault-tolerance/checkpointing/"
-  objectives: [dse-flink:checkpoints]
 
 - id: FLK-06-q4
   type: single
@@ -48,7 +45,6 @@
   answer: [B]
   explanation: "A 2PC sink pre-commits on checkpoint and finalizes on checkpoint-complete. Data written after the last complete checkpoint is never finalized, so a restart that rewinds and reproduces it does not create a visible duplicate for a downstream reader."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/connectors/datastream/filesystem/"
-  objectives: [dse-flink:checkpoints]
 
 - id: FLK-06-q5
   type: single
@@ -61,7 +57,6 @@
   answer: [B]
   explanation: "Both use the same snapshot mechanism, but savepoints are explicit, self-contained and owned by the operator for lifecycle operations (upgrade, rescale, migrate). Checkpoints are automatic, interval-based and tuned for cheap recovery."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/ops/state/savepoints/"
-  objectives: [dse-flink:checkpoints]
 
 - id: FLK-06-q6
   type: single
@@ -74,7 +69,6 @@
   answer: [B]
   explanation: "The checkpoint stores source positions. Recovery rewinds to them so restored state and replayed input align. A source that cannot rewind (e.g. a plain socket) cannot restore that alignment, so exactly-once is impossible."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/fault-tolerance/checkpointing/"
-  objectives: [dse-flink:checkpoints]
 
 - id: FLK-06-q7
   type: multi
@@ -87,7 +81,6 @@
   answer: [A, B, C]
   explanation: "Fault-tolerance correctness is asserted with invariants: no loss, no duplication, balanced totals. Wall-clock time is used only as a generous timeout, never as a correctness check (recovery timing varies)."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/concepts/stateful-stream-processing/"
-  objectives: [dse-flink:checkpoints]
 
 - id: FLK-06-q8
   type: single
@@ -100,4 +93,3 @@
   answer: [B]
   explanation: "Keyed state is part of each operator's snapshot. On recovery the balances are restored to the values as of the consistent cut, so the ledger continues from the correct point rather than resetting."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/fault-tolerance/state/"
-  objectives: [dse-flink:checkpoints]

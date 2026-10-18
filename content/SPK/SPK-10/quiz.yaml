@@ -12,7 +12,6 @@
     from the same offsets; a crash after it starts the next batch cleanly. This ordering is what
     makes recovery exactly-once with an idempotent/transactional sink.
   source: "https://spark.apache.org/docs/4.0.0/structured-streaming-programming-guide.html#recovering-from-failures-with-checkpointing"
-  objectives: [spark-assoc:5.1]
 
 - id: SPK-10-q2
   type: single
@@ -27,7 +26,6 @@
     The checkpoint stores committed offsets. A fresh directory looks like a never-run query, so it
     re-ingests everything — the most common cause of duplicates on restart. Reuse the same checkpoint.
   source: "https://spark.apache.org/docs/4.0.0/structured-streaming-programming-guide.html#recovering-from-failures-with-checkpointing"
-  objectives: [spark-assoc:5.1]
 
 - id: SPK-10-q3
   type: single
@@ -42,7 +40,6 @@
     append emits each new result row once and is the natural mode for a map-like (non-aggregating)
     stream. complete is only valid for aggregations (it rewrites the whole result each batch).
   source: "https://spark.apache.org/docs/4.0.0/structured-streaming-programming-guide.html#output-modes"
-  objectives: [spark-assoc:5.2, spark-assoc:5.3]
 
 - id: SPK-10-q4
   type: single
@@ -58,7 +55,6 @@
     cannot be appended. complete or update works; a watermark (SPK-11) lets windows finalize and
     then append becomes valid.
   source: "https://spark.apache.org/docs/4.0.0/structured-streaming-programming-guide.html#output-modes"
-  objectives: [spark-assoc:5.3]
 
 - id: SPK-10-q5
   type: single
@@ -73,7 +69,6 @@
     availableNow drains everything currently available and then stops, while still honoring the
     checkpoint. It is ideal for tests (no wall-clock waiting) and for incremental batch jobs.
   source: "https://spark.apache.org/docs/4.0.0/structured-streaming-programming-guide.html#triggers"
-  objectives: [spark-assoc:5.2]
 
 - id: SPK-10-q6
   type: single
@@ -90,7 +85,6 @@
     Exactly-once needs the sink to be idempotent or transactional. A plain append-on-redo
     double-writes. The file and Iceberg table sinks track committed batches to avoid this.
   source: "https://spark.apache.org/docs/4.0.0/structured-streaming-programming-guide.html#recovering-from-failures-with-checkpointing"
-  objectives: [spark-assoc:5.1]
 
 - id: SPK-10-q7
   type: single
@@ -106,4 +100,3 @@
     since last time'. Streaming manages the offsets for you in the checkpoint, rather than relying
     on a column predicate you maintain.
   source: "https://spark.apache.org/docs/4.0.0/structured-streaming-programming-guide.html#basic-concepts"
-  objectives: [spark-assoc:5.1]

@@ -12,7 +12,6 @@
     replicate from the leader and sit in the ISR. Preferred-leader election tries to restore that
     first broker as leader after disruptions.
   source: "https://kafka.apache.org/documentation/#basic_ops_cluster_expansion"
-  objectives: [ccaak:5]
 
 - id: KFK-11-q2
   type: single
@@ -28,7 +27,6 @@
     broker means a single failure takes out two copies, defeating the purpose; assignments must use
     distinct brokers.
   source: "https://kafka.apache.org/documentation/#replication"
-  objectives: [ccaak:5]
 
 - id: KFK-11-q3
   type: single
@@ -44,7 +42,6 @@
     is copied over the network. Minimal-movement reassignment preserves as many current replicas as
     the constraints allow.
   source: "https://kafka.apache.org/documentation/#basic_ops_cluster_expansion"
-  objectives: [ccaak:5]
 
 - id: KFK-11-q4
   type: single
@@ -59,7 +56,6 @@
     Rack awareness spreads replicas across racks. With rf <= number of racks, each replica should be
     on a distinct rack so a whole-rack (or AZ) failure cannot take all replicas of a partition offline.
   source: "https://kafka.apache.org/documentation/#basic_ops_racks"
-  objectives: [ccaak:3]
 
 - id: KFK-11-q5
   type: single
@@ -75,7 +71,6 @@
     not saturate the network and degrade production. Set too low, though, the reassignment may never
     complete (a KFK-14 incident).
   source: "https://kafka.apache.org/documentation/#rep-throttle"
-  objectives: [ccaak:5]
 
 - id: KFK-11-q6
   type: single
@@ -90,7 +85,6 @@
     --verify checks the in-progress reassignment against the target JSON and reports when each
     partition's move is complete (and removes any throttle). You poll it until done.
   source: "https://kafka.apache.org/documentation/#basic_ops_cluster_expansion"
-  objectives: [ccaak:5]
 
 - id: KFK-11-q7
   type: single
@@ -106,7 +100,6 @@
     least 2 in the ISR for the write to be accepted. If the ISR drops below 2, the producer gets
     NOT_ENOUGH_REPLICAS rather than risking an under-durable write.
   source: "https://kafka.apache.org/documentation/#brokerconfigs"
-  objectives: [ccaak:3, ccaak:5]
 
 - id: KFK-11-q8
   type: single
@@ -122,4 +115,3 @@
     copies huge volumes of data at once. Prefer a minimal-movement plan (keep existing replicas) and
     throttle the move.
   source: "https://kafka.apache.org/documentation/#basic_ops_cluster_expansion"
-  objectives: [ccaak:5]

@@ -20,7 +20,7 @@ This module is your "dbt staging in PySpark" module: take the dirty commerce fee
 clean, well-typed, deduplicated, correctly-dated tables, each verified against an independent
 DuckDB oracle.
 
-## Columns and rows (objective 3.1)
+## Columns and rows
 
 Everything revolves around **Column** expressions. `F.col("x")`, `df["x"]`, and `df.x` all name a
 column; you build expressions with operators (`F.col("a") + F.col("b")`), functions
@@ -38,7 +38,7 @@ column; you build expressions with operators (`F.col("a") + F.col("b")`), functi
 A crucial contrast with pandas: these return **new** DataFrames (laziness, SPK-02); nothing
 mutates in place.
 
-## Deduplication and validation (objective 3.2)
+## Deduplication and validation
 
 Real feeds are dirty — the commerce dataset deliberately ships duplicate order-item events, NULL
 emails, NULL payment amounts, bad currency codes (`"XXX"`, lowercase `"usd"`, empty), and
@@ -56,7 +56,7 @@ timestamps rendered in mixed time zones. Cleaning them is the job.
   aggregate, so bad codes don't pollute sums. Validating *then* aggregating is the dbt pattern of
   a staging model that quarantines bad rows before the mart consumes them.
 
-## Aggregations (objective 3.3)
+## Aggregations
 
 `groupBy(keys).agg(...)` with `F.count`, `F.sum`, `F.avg`/`F.mean`, `F.min`, `F.max`,
 `F.countDistinct`, `F.approx_count_distinct`. `df.summary()` / `df.describe()` give quick
@@ -64,7 +64,7 @@ descriptive stats. Two gotchas that match SQL exactly: `count("col")` ignores NU
 `count("*")`/`count(F.lit(1))` counts rows; and `sum` over a column that is entirely NULL is NULL,
 not 0. The commerce `payments.amount` has NULLs on purpose so you feel this.
 
-## Dates (objective 3.4)
+## Dates
 
 The orders feed carries two timestamp columns: `order_ts_utc` (a clean ISO UTC string) and
 `order_ts_raw` (the same instant rendered with a mixed UTC offset like `+00:00` or `-05:00`). Date
@@ -79,7 +79,7 @@ work is where silent bugs live:
   instant, so extracting from the properly parsed timestamp is correct, while naively slicing the
   first 10 characters of the raw string is not. One of the exercises makes this bite.
 
-## Sort, inspect, convert (objective 3.7)
+## Sort, inspect, convert
 
 `df.orderBy(F.col("x").desc())`, `df.sort(...)`; `df.printSchema()` to see types;
 `df.columns`/`df.dtypes` to read them programmatically; `df.collect()` → `list[Row]`,

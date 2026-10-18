@@ -7,4 +7,3 @@ hints:
   - "write_accepted: acks=0 and acks=1 are accepted whenever at least one replica (the leader) is reachable (isr_size>=1). acks='all' is accepted only when isr_size >= min_isr."
   - "durable_after_one_more_loss: a write is safe against losing ONE more broker only if it is known to be on at least two replicas when accepted — i.e. acks=='all' AND the ISR it was accepted into had size >= 2 (which, under acks=all, means min_isr>=2 and isr_size>=min_isr>=2)."
   - "produce_and_verify: build a Producer with the given acks and a short delivery timeout, produce every record with a delivery callback that counts successes, flush, then (for acks!='0') CONSUME the topic back from the beginning and return how many were durably readable. Use a unique group.id."
-cert_objectives: [ccdak:1, ccaak:1]

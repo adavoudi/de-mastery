@@ -9,7 +9,6 @@
   answer: [B]
   explanation: "Ordering is guaranteed only within a partition. To keep all events for one entity ordered, they must share a partition — which is why the key choice (key -> partition) is the ordering contract."
   source: "https://kafka.apache.org/documentation/#intro_concepts_and_terms"
-  objectives: [ccdak:1]
 
 - id: KFK-09-q2
   type: single
@@ -22,7 +21,6 @@
   answer: [B]
   explanation: "The default partitioner uses murmur2(key) % numPartitions for non-null keys, so the same key always goes to the same partition (given a fixed partition count). A null key is distributed round-robin/sticky."
   source: "https://kafka.apache.org/documentation/#producerconfigs_partitioner.class"
-  objectives: [ccdak:1]
 
 - id: KFK-09-q3
   type: single
@@ -35,7 +33,6 @@
   answer: [B]
   explanation: "company_id is low-cardinality and skewed: the biggest tenant's events all hash to one partition, capping its throughput and lag. Key by the high-cardinality entity id so a big tenant's load spreads across partitions while each entity stays ordered."
   source: "https://kafka.apache.org/documentation/#intro_concepts_and_terms"
-  objectives: [ccdak:1]
 
 - id: KFK-09-q4
   type: single
@@ -48,7 +45,6 @@
   answer: [B]
   explanation: "Log compaction retains the most recent value per key, so a compacted topic keyed by customer id is a changelog of current state that a KTable/consumer can rebuild from the beginning. Time-retained event topics keep history, not a clean latest-state view."
   source: "https://kafka.apache.org/documentation/#compaction"
-  objectives: [ccdak:1]
 
 - id: KFK-09-q5
   type: single
@@ -61,7 +57,6 @@
   answer: [B]
   explanation: "key -> partition is murmur2(key) % numPartitions. Changing numPartitions remaps keys, so a key's new events can land on a different partition than its old ones, breaking per-key ordering across the change. Size partitions for future load up front."
   source: "https://kafka.apache.org/documentation/#intro_concepts_and_terms"
-  objectives: [ccdak:1]
 
 - id: KFK-09-q6
   type: single
@@ -74,7 +69,6 @@
   answer: [B]
   explanation: "An event topic records independent facts and is retained by time (your fact feed). An entity topic is a compacted changelog keyed by entity id, keeping the latest state per key (your dimension/KTable source)."
   source: "https://kafka.apache.org/documentation/#compaction"
-  objectives: [ccdak:1]
 
 - id: KFK-09-q7
   type: single
@@ -87,7 +81,6 @@
   answer: [B]
   explanation: "Each topic has partitions with fixed overhead (files, replication, controller metadata). Thousands of tenant topics multiply that overhead and strain the cluster, even though isolation is strong. A shared, well-keyed topic usually scales better."
   source: "https://kafka.apache.org/documentation/#intro_concepts_and_terms"
-  objectives: [ccdak:1]
 
 - id: KFK-09-q8
   type: single
@@ -100,4 +93,3 @@
   answer: [C]
   explanation: "Keying by the entity id co-locates all of one entity's events (ordering) while distributing many entities of a big tenant across partitions (no hot spot). A random key per event destroys ordering; a null key round-robins; company_id hot-spots."
   source: "https://kafka.apache.org/documentation/#producerconfigs_partitioner.class"
-  objectives: [ccdak:1]

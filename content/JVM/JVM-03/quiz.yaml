@@ -11,7 +11,6 @@
     The default jar packages only your compiled classes. The first dependency class referenced is
     absent at runtime unless you build a fat/uber jar that includes the dependency classes.
   source: "https://docs.gradle.org/current/userguide/building_java_projects.html"
-  objectives: [dse-found]
 
 - id: JVM-03-q2
   type: single
@@ -27,7 +26,6 @@
     bundle Flink into the job jar and cause classloader/version conflicts and LinkageErrors on the
     cluster.
   source: "https://nightlies.apache.org/flink/flink-docs-release-1.20/docs/dev/configuration/overview/"
-  objectives: [dse-found]
 
 - id: JVM-03-q3
   type: single
@@ -42,7 +40,6 @@
     Those are signed-jar signature files. After merging, the archive content no longer matches the
     signatures, so the JVM's jar verifier rejects it. Standard fat-jar practice drops them.
   source: "https://docs.oracle.com/javase/tutorial/deployment/jar/signindex.html"
-  objectives: [dse-found]
 
 - id: JVM-03-q4
   type: single
@@ -57,7 +54,6 @@
     java -jar reads Main-Class from META-INF/MANIFEST.MF to find the entry point. Without it you get
     'no main manifest attribute'.
   source: "https://docs.oracle.com/javase/tutorial/deployment/jar/appman.html"
-  objectives: [dse-found]
 
 - id: JVM-03-q5
   type: single
@@ -72,7 +68,6 @@
     Relocation renames packages of bundled libraries so multiple versions can coexist without
     conflict. It is why the Shadow plugin exists; it also merges service descriptor files.
   source: "https://docs.gradle.org/current/userguide/java_library_plugin.html"
-  objectives: [dse-found]
 
 - id: JVM-03-q6
   type: single
@@ -88,7 +83,6 @@
     first deterministically; truly correct handling MERGES service files (what Shadow's
     mergeServiceFiles does).
   source: "https://docs.gradle.org/current/javadoc/org/gradle/api/file/DuplicatesStrategy.html"
-  objectives: [dse-found]
 
 - id: JVM-03-q7
   type: single
@@ -104,4 +98,3 @@
     runtimeClasspath); compileOnly is compile-time only and intentionally excluded from the runtime
     classpath and the fat jar.
   source: "https://docs.gradle.org/current/userguide/java_library_plugin.html"
-  objectives: [dse-found]

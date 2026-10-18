@@ -5,5 +5,4 @@ hours: 4
 requires: [STH-03]
 labs: []
 cost: free
-cert_objectives: [streamhouse:iceberg-streaming, streamhouse:commit-tuning]
 from_your_world: "Your Iceberg tables: the small-files problem you already fight with compaction, now caused by streaming commit frequency"

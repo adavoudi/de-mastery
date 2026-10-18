@@ -21,7 +21,7 @@ was offline, or a brand-new consumer you write next year, can **replay** from an
 whatever view it needs. "Rebuild the orders table from scratch" stops being a scary migration and
 becomes "read the log from offset 0 again."
 
-## How the log works (objective ccdak:1 / ccaak:1)
+## How the log works
 
 - **Events vs. state.** An event is an immutable fact that happened: `order 7 set to $30 at 10:03`.
   State is a projection of the events: `the current total for account k`. The log stores events;

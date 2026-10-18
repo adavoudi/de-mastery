@@ -7,4 +7,3 @@ hints:
   - "throughput_bytes_per_sec = events_per_sec * avg_event_bytes. Keep SI powers of ten (MB = 1e6 B). Seconds per year ~ 3.15e7 (365 days)."
   - "stored_bytes_per_year = raw_bytes_per_year / compression_ratio * replication_factor. Raw bytes per year = throughput_bytes_per_sec * seconds_per_year. The tolerance (+/-20%) covers whether you use 3.15e7 or 3.1536e7 seconds."
   - "storage_cost: convert stored bytes to GB (divide by 1e9), multiply by usd_per_gb_month and by (years * 12) months. query_cost: TB scanned = bytes_scanned / 1e12, times usd_per_tb_scanned; bytes_scanned is the fraction of a column-pruned scan the task gives you."
-cert_objectives: []

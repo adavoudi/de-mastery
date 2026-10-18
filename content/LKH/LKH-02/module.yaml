@@ -5,5 +5,4 @@ hours: 4
 requires: [LKH-01]
 labs: []
 cost: free
-cert_objectives: []
 from_your_world: "Overlapping dbt runs writing the same table"

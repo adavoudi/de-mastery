@@ -7,4 +7,3 @@ hints:
   - "Narrow = each output partition needs one input partition (no data movement). Wide = needs many input partitions (a shuffle)."
   - "filter, select, withColumn, drop, union are narrow. groupBy-agg, distinct, orderBy/sort, repartition, and non-broadcast join are wide."
   - "coalesce only REDUCES partitions and does not shuffle, so it is narrow; repartition shuffles and is wide. The test confirms each answer by checking whether applying the op adds an Exchange to the plan."
-cert_objectives: [spark-assoc:1.5, spark-assoc:1.6]

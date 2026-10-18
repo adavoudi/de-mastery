@@ -9,7 +9,6 @@
   answer: [B]
   explanation: "BACKWARD means a reader on the new schema must read old data. A new field with a default is filled from that default for old records, so it is accepted. A required (no-default) field has nothing to fill from old data and is rejected."
   source: "https://docs.confluent.io/platform/current/schema-registry/fundamentals/schema-evolution.html"
-  objectives: [ccdak:2]
 
 - id: KFK-06-q2
   type: single
@@ -22,7 +21,6 @@
   answer: [B]
   explanation: "BACKWARD lets new-schema consumers read old-schema data, so consumers can be upgraded first and still read what old producers emit. FORWARD is the opposite (producers first)."
   source: "https://docs.confluent.io/platform/current/schema-registry/fundamentals/schema-evolution.html"
-  objectives: [ccdak:2]
 
 - id: KFK-06-q3
   type: single
@@ -35,7 +33,6 @@
   answer: [B]
   explanation: "The format is magic byte (0) + 4-byte schema id + Avro binary. The consumer uses the id to fetch the writer schema from the registry; the schema itself is never embedded per message."
   source: "https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html"
-  objectives: [ccdak:2]
 
 - id: KFK-06-q4
   type: single
@@ -48,7 +45,6 @@
   answer: [B]
   explanation: "TopicNameStrategy names the subject <topic>-value (and <topic>-key for keys). RecordNameStrategy would use the fully-qualified record name instead, allowing multiple event types per topic."
   source: "https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html#subject-name-strategy"
-  objectives: [ccdak:2, dse-found]
 
 - id: KFK-06-q5
   type: multi
@@ -61,7 +57,6 @@
   answer: [A, B]
   explanation: "FORWARD = an old reader reads new data. Adding any field (the old reader ignores it) is fine. Removing a field that the old reader still expects, when it had no default, breaks the old reader. Removing a field that HAD a default is only safe under BACKWARD, not FORWARD, because the old reader never knew about the default."
   source: "https://avro.apache.org/docs/1.12.0/specification/#schema-resolution"
-  objectives: [ccdak:2]
 
 - id: KFK-06-q6
   type: single
@@ -74,7 +69,6 @@
   answer: [A]
   explanation: "NONE turns off the compatibility gate entirely, so the registry accepts any schema. A rename is a drop (amount) plus an add (total) with no default link, which breaks old readers. Keep BACKWARD/FULL so the registry rejects it at registration time."
   source: "https://docs.confluent.io/platform/current/schema-registry/fundamentals/schema-evolution.html"
-  objectives: [ccdak:2]
 
 - id: KFK-06-q7
   type: single
@@ -87,7 +81,6 @@
   answer: [A]
   explanation: "Non-transitive modes compare only against the most recent registered version; the transitive variants require compatibility with every prior version, preventing a chain of individually-OK steps from breaking an old consumer still on version 1."
   source: "https://docs.confluent.io/platform/current/schema-registry/fundamentals/schema-evolution.html"
-  objectives: [ccdak:2]
 
 - id: KFK-06-q8
   type: single
@@ -100,4 +93,3 @@
   answer: [B]
   explanation: "Avro resolution matches fields by name; a field only in the writer schema is simply skipped by the reader. A field only in the reader schema must have a default to be filled. This asymmetry is exactly what makes 'add field with default' backward-safe."
   source: "https://avro.apache.org/docs/1.12.0/specification/#schema-resolution"
-  objectives: [ccdak:2]

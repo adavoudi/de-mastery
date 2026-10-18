@@ -7,4 +7,3 @@ hints:
   - "Compaction is a stored procedure: CALL local.system.rewrite_data_files(table => '<db.name>', options => map('min-input-files','2')). Pass the unqualified name (db.events) inside the CALL, not the full local.db.events."
   - "Set the sort order BEFORE compacting so the rewrite clusters files: ALTER TABLE <full_table> WRITE ORDERED BY <sort_col>. Then rewrite_data_files writes sorted files."
   - "expire_snapshots needs older_than to reclaim recent snapshots (retain_last alone is blocked by max_snapshot_age). Use a near-future TIMESTAMP and retain_last => 1 to keep only the final compacted snapshot. Never change the data."
-cert_objectives: [databricks-de-pro:6]

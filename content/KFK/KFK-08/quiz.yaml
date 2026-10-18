@@ -9,7 +9,6 @@
   answer: [A]
   explanation: "A KStream models an unbounded sequence of independent facts (each record stands alone). A KTable models the current value per key, interpreting the topic as a changelog — a new record for an existing key replaces it."
   source: "https://kafka.apache.org/documentation/streams/concepts"
-  objectives: [ccdak:3, dse-found]
 
 - id: KFK-08-q2
   type: single
@@ -22,7 +21,6 @@
   answer: [B]
   explanation: "The stream drives the join: each incoming KStream record is enriched with the current KTable value for its key. A KTable update alone produces no output — this is why orders (stream) enriched with customers (table) emit on each order."
   source: "https://kafka.apache.org/documentation/streams/developer-guide/dsl-api.html#kstream-ktable-join"
-  objectives: [ccdak:3]
 
 - id: KFK-08-q3
   type: single
@@ -35,7 +33,6 @@
   answer: [A]
   explanation: "KStream-KTable joins require co-partitioning: identical key and identical partition count, so matching keys land on the same partition/task. A GlobalKTable avoids this requirement but replicates the whole table to every instance."
   source: "https://kafka.apache.org/documentation/streams/developer-guide/dsl-api.html#joining"
-  objectives: [ccdak:3]
 
 - id: KFK-08-q4
   type: single
@@ -48,7 +45,6 @@
   answer: [A]
   explanation: "Each state store is backed by a compacted changelog topic. On restart (or on another instance after a rebalance), the local store is restored by replaying the changelog, which is what makes stateful operations fault-tolerant."
   source: "https://kafka.apache.org/documentation/streams/architecture"
-  objectives: [ccdak:3]
 
 - id: KFK-08-q5
   type: single
@@ -61,7 +57,6 @@
   answer: [A]
   explanation: "TopologyTestDriver executes the full topology in-process without a broker or RocksDB. You pipe inputs and read outputs with controlled event time, so tests are fast and deterministic — no sleeps, no cluster."
   source: "https://kafka.apache.org/documentation/streams/developer-guide/testing.html"
-  objectives: [ccdak:3, ccdak:4]
 
 - id: KFK-08-q6
   type: single
@@ -74,7 +69,6 @@
   answer: [A]
   explanation: "A GlobalKTable is fully replicated to every instance, so a KStream-GlobalKTable join can look up by a key derived from the stream record and needs no co-partitioning. The tradeoff is memory/replication cost, so it suits smaller reference tables."
   source: "https://kafka.apache.org/documentation/streams/developer-guide/dsl-api.html#kstream-globalktable-join"
-  objectives: [ccdak:3]
 
 - id: KFK-08-q7
   type: single
@@ -87,7 +81,6 @@
   answer: [A]
   explanation: "Event-time windowing assigns each record to a window by its own timestamp, so results are correct even when records arrive out of order or late. Processing time makes results depend on nondeterministic arrival timing."
   source: "https://kafka.apache.org/documentation/streams/core-concepts#streams_time"
-  objectives: [ccdak:3]
 
 - id: KFK-08-q8
   type: single
@@ -100,4 +93,3 @@
   answer: [A]
   explanation: "EOS v2 wraps the input offset commit, the output produce and the state-store changelog write in one transaction. On failure the whole unit aborts and is retried, so each input affects the output and state exactly once."
   source: "https://kafka.apache.org/documentation/streams/core-concepts#streams_processing_guarantee"
-  objectives: [ccdak:3]

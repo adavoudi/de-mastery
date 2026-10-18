@@ -12,7 +12,6 @@
     mutants (e.g. sum->avg, missing dedup, inner vs left join). Asserting column order is brittle,
     and full-scale data belongs in a separate run, not a unit test.
   source: "https://spark.apache.org/docs/4.0.0/api/python/tutorial/sql/testing_pyspark.html"
-  objectives: [spark-assoc:4.3]
 
 - id: SPK-12-q2
   type: single
@@ -28,7 +27,6 @@
     a readable diff. Raw collect()== is order-sensitive and float-fragile; count() is far too weak;
     explain() tests the plan, not the data.
   source: "https://spark.apache.org/docs/4.0.0/api/python/tutorial/sql/testing_pyspark.html"
-  objectives: [spark-assoc:4.3]
 
 - id: SPK-12-q3
   type: multi
@@ -43,7 +41,6 @@
     Oracle equality, invariants, and plan properties test behavior and requirements. Column order is
     an incidental detail that makes tests too strict and blocks valid refactors.
   source: "https://spark.apache.org/docs/4.0.0/api/python/tutorial/sql/testing_pyspark.html"
-  objectives: [spark-assoc:4.3]
 
 - id: SPK-12-q4
   type: single
@@ -59,7 +56,6 @@
     same code run locally and on the cluster via injected config. It is the dbt discipline (logic in
     models, I/O configured) applied to PySpark.
   source: "https://spark.apache.org/docs/4.0.0/api/python/tutorial/sql/testing_pyspark.html"
-  objectives: [spark-assoc:4.3]
 
 - id: SPK-12-q5
   type: single
@@ -75,7 +71,6 @@
     overhead, too low yields spill/skew. AQE can coalesce it adaptively. The UI flag and app name
     don't affect this; driver cores alone don't set shuffle width.
   source: "https://spark.apache.org/docs/4.0.0/configuration.html"
-  objectives: [spark-assoc:4.3]
 
 - id: SPK-12-q6
   type: single
@@ -90,7 +85,6 @@
     Tagging enables cost attribution, right-sizing controls spend, and teardown stops ongoing
     charges. Hard-coding credentials is a security bug, and disabling AQE usually hurts, not helps.
   source: "https://docs.aws.amazon.com/emr/latest/EMR-Serverless-UserGuide/what-is-emr-serverless.html"
-  objectives: [spark-assoc:4.3]
 
 - id: SPK-12-q7
   type: single
@@ -105,4 +99,3 @@
     Asserting incidental column order rejects a correct refactor (the 'too strict' failure mode).
     Compare as a set of named columns / row equality instead, unless ordering is a real requirement.
   source: "https://spark.apache.org/docs/4.0.0/api/python/tutorial/sql/testing_pyspark.html"
-  objectives: [spark-assoc:4.3]

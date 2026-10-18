@@ -5,5 +5,4 @@ hours: 4
 requires: [STH-02, STH-04]
 labs: []
 cost: free
-cert_objectives: [sth:serving]
 from_your_world: "Athena/Redshift serving marts: a dashboard reads a small pre-aggregated table, not the raw fact"

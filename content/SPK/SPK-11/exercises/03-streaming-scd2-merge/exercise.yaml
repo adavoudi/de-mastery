@@ -7,4 +7,3 @@ hints:
   - "Read the JSON change stream (schema 'cust_key INT, attr STRING, change_ts TIMESTAMP') and write it with .foreachBatch(fn). Inside fn, make a batch DataFrame view of the micro-batch (one change per cust_key: dropDuplicates(['cust_key'])) and run Iceberg MERGE INTO against the dimension table."
   - "Do it in two MERGE passes. Pass 1 CLOSES the current open row when the attr changed: MATCHED on t.cust_key=c.cust_key AND t.is_current AND t.attr<>c.attr -> UPDATE SET valid_to=c.change_ts, is_current=false. Pass 2 INSERTS a new open row: NOT MATCHED on (cust_key, is_current) -> INSERT valid_from=c.change_ts, valid_to=NULL, is_current=true."
   - "Reuse the checkpoint and trigger(availableNow=True); processAllAvailable(); stop(). Invariants: exactly one open (valid_to IS NULL / is_current) row per cust_key, old versions kept with a closed valid_to (versioning, not overwrite), unchanged repeats change nothing."
-cert_objectives: [spark-assoc:3.8, spark-assoc:5.3]

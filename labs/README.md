@@ -1,16 +1,15 @@
 # Local lab stack
 
-Docker Compose profiles that back the exercises. Phase 1 ships the **`core`**
-profile (lakehouse: object store + Iceberg catalog + Spark + Jupyter + Trino).
-Phase 3 adds the **`streaming`** profile (see below). Later phases add `flink`,
-`streamhouse` and `observability` as new services in the same `compose.yaml`.
+Docker Compose profiles that back the exercises: **`core`** (lakehouse: object store + Iceberg
+catalog + Spark + Jupyter + Trino), **`streaming`**, **`flink`** and **`streamhouse`**. Most
+grading runs natively without Docker; the profiles are optional extras.
 
 Everything binds to **127.0.0.1 only** and uses local-only dev credentials from
 `labs/.env`. Nothing here is reachable from off your machine.
 
 ## native runtimes (no Docker) + the `streaming` profile
 
-Most Phase 3 (Kafka/Java) grading runs **without Docker**, from vendored,
+Most Kafka/Java grading runs **without Docker**, from vendored,
 checksum-verified runtimes under gitignored `labs/` dirs. Run these once (and
 `de doctor` reports each):
 
@@ -55,7 +54,7 @@ using a lab.
 
 ## native Flink (no Docker) + the `flink` profile
 
-Most Phase 4 (Flink / FLK track) grading runs **without Docker**, from a
+Most Flink grading runs **without Docker**, from a
 vendored, checksum-verified Flink 2.x distribution under gitignored `labs/`.
 Run this once (and `de doctor` reports it):
 
@@ -104,7 +103,7 @@ no-Docker path is what the graded tests use.)
 
 ## native streamhouse (no Docker) + the `streamhouse` profile
 
-The Phase 5 (STH track: Apache Paimon, Apache Fluss, Iceberg-as-streaming-storage)
+The STH track (Apache Paimon, Apache Fluss, Iceberg-as-streaming-storage)
 grading runs **without Docker**, reusing the vendored Flink 2.2.1 dist + JDK 21
 and adding the native Fluss server + Paimon/Fluss jars.
 

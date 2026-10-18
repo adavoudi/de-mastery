@@ -5,5 +5,4 @@ hours: 4
 requires: []
 labs: []
 cost: free
-cert_objectives: [dse-flink:architecture, dse-foundations:flink101]
 from_your_world: "the Spark driver/executors model, re-cast for always-on streaming"

@@ -79,17 +79,15 @@ and lets you use any language. Each stage also has a **regression suite**: earli
 
 ## Quizzes
 
-- Each question cites the official documentation section or exam guide objective it is based on.
+- Each question cites the official documentation section it is based on.
 - Distractors are written from real misconceptions (the same idea as mutants).
 - Questions with a miss rate above 70% are flagged for review, since the question may be ambiguous.
-- Mock exams match the real format (count, timing, single/multi-select). They never copy real exam
-  content, which would violate exam NDAs.
 
 ## When you think a test is wrong
 
-Run `de dispute` to record your solution, the failing test and your argument. A disputed test is
-re-checked against G2/G3/G6. If your solution is correct, it becomes a new alternate solution (G3)
-and the test is fixed. Your disagreement becomes part of the test suite.
+Open an issue on the repo with your solution, the failing test and your argument. A disputed test
+is re-checked against G2/G3/G6. If your solution is correct, it becomes a new alternate solution (G3)
+and the test is fixed.
 
 ## Who checks the checker
 

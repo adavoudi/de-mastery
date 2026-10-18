@@ -13,7 +13,6 @@
     commit creates a new metadata.json (new snapshot) and atomically swaps the catalog pointer to
     it. Nothing is mutated in place.
   source: "https://iceberg.apache.org/spec/"
-  objectives: []
 
 - id: LKH-01-q2
   type: single
@@ -29,7 +28,6 @@
     points at manifests; each manifest lists data (and delete) files. Two index levels exist so a
     planner can prune cheaply.
   source: "https://iceberg.apache.org/spec/#table-metadata"
-  objectives: []
 
 - id: LKH-01-q3
   type: single
@@ -45,7 +43,6 @@
     The manifest list carries coarser per-manifest partition ranges. These enable file-level
     pruning during scan planning without opening the data files.
   source: "https://iceberg.apache.org/spec/#manifests"
-  objectives: []
 
 - id: LKH-01-q4
   type: single
@@ -62,7 +59,6 @@
     One manifest lists many data files; after compaction a single manifest can reference thousands
     of files. Equating the two counts is a classic metadata-reading error.
   source: "https://iceberg.apache.org/spec/#manifests"
-  objectives: []
 
 - id: LKH-01-q5
   type: single
@@ -80,7 +76,6 @@
     Counting them is the measured answer to 'which files does this query read', using the manifests'
     per-file min/max.
   source: "https://py.iceberg.apache.org/api/#scanning"
-  objectives: []
 
 - id: LKH-01-q6
   type: single
@@ -96,7 +91,6 @@
     valid and readable (time travel), and switching the current snapshot is a single atomic pointer
     swap at the catalog.
   source: "https://iceberg.apache.org/spec/#snapshots"
-  objectives: []
 
 - id: LKH-01-q7
   type: multi
@@ -112,4 +106,3 @@
     that could match. The two index levels (manifest list, then manifests) give coarse-then-fine
     pruning. (C describes an unsound planner, which is a bug.)
   source: "https://iceberg.apache.org/spec/#scan-planning"
-  objectives: []

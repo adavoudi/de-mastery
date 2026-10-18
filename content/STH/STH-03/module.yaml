@@ -5,5 +5,4 @@ hours: 5
 requires: [STH-02]
 labs: []
 cost: free
-cert_objectives: [sth:fluss, sth:tiering]
 from_your_world: "One copy that serves both a sub-second lookup and a historical batch scan"

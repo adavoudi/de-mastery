@@ -7,4 +7,3 @@ hints:
   - "Build a StreamExecutionEnvironment, set the job-wide parallelism to the requested value, and read it back from env.getParallelism()."
   - "A chain is broken by a keyBy. Build source -> keyBy(...) -> sum/reduce -> sink so the plan has two chained regions (an exchange between them)."
   - "Slot demand under default slot sharing equals the MAX operator parallelism, so return that number for slots_needed; keep every operator at the job parallelism."
-cert_objectives: [dse-flink:architecture]

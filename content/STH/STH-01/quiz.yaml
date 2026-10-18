@@ -9,7 +9,6 @@
   answer: [B]
   explanation: "Lambda runs a batch layer (correct, complete, slow) and a separate speed layer (approximate, low-latency) and merges them in a serving layer. Option A is Kappa, C is a lakehouse, D is a streamhouse."
   source: "https://fluss.apache.org/docs/intro/"
-  objectives: [sth:architecture]
 
 - id: STH-01-q2
   type: single
@@ -22,7 +21,6 @@
   answer: [B]
   explanation: "Lambda's dual code paths implement the same logic twice and drift, forcing reconciliation. Kappa removes the batch layer so there is one pipeline and one code path."
   source: "https://paimon.apache.org/docs/master/concepts/overview/"
-  objectives: [sth:architecture]
 
 - id: STH-01-q3
   type: single
@@ -35,7 +33,6 @@
   answer: [B]
   explanation: "Kappa treats the append-only log as the system of record and replays it to recompute results, which is also the source of its weakness: long-term queryable history in the log is expensive and OLAP over it is awkward."
   source: "https://fluss.apache.org/docs/intro/"
-  objectives: [sth:architecture]
 
 - id: STH-01-q4
   type: single
@@ -48,7 +45,6 @@
   answer: [B]
   explanation: "One transactional lake table format serving SQL/BI is a lakehouse. Its commits land on a batch/micro-batch cadence (minutes at best), so it cannot answer sub-minute streaming questions, and frequent commits create small files."
   source: "https://iceberg.apache.org/docs/latest/flink/"
-  objectives: [sth:architecture]
 
 - id: STH-01-q5
   type: single
@@ -61,7 +57,6 @@
   answer: [B]
   explanation: "A streamhouse puts stream-native storage on the lake so the same copy of the data answers both a low-latency streaming/changelog read and a batch/OLAP read — without a separate speed layer to reconcile (unlike Lambda)."
   source: "https://paimon.apache.org/docs/master/concepts/overview/"
-  objectives: [sth:architecture]
 
 - id: STH-01-q6
   type: single
@@ -74,7 +69,6 @@
   answer: [B]
   explanation: "If hourly/daily freshness is enough, a batch lakehouse is simpler, cheaper and more mature; adding Paimon/Fluss, Flink and a tiering job to serve a nightly dashboard is unjustified complexity."
   source: "https://paimon.apache.org/docs/master/concepts/overview/"
-  objectives: [sth:architecture]
 
 - id: STH-01-q7
   type: multi
@@ -87,7 +81,6 @@
   answer: [A, B, C]
   explanation: "Classification is structural. Lambda = two merged pipelines; streamhouse = one stream-native copy serving both read paths. D is wrong: Kafka as an ingestion bus feeding batch loads is not Kappa — Kappa requires the log to be the queryable system of record with replay-based reprocessing."
   source: "https://fluss.apache.org/docs/intro/"
-  objectives: [sth:architecture]
 
 - id: STH-01-q8
   type: single
@@ -100,4 +93,3 @@
   answer: [B]
   explanation: "Ververica coined 'streamhouse'; it is now a cross-vendor concept with a working group spanning several streaming vendors, reflecting convergence of streaming storage and the lakehouse."
   source: "https://fluss.apache.org/docs/intro/"
-  objectives: [sth:architecture]

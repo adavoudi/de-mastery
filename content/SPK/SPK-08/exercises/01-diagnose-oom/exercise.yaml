@@ -7,4 +7,3 @@ hints:
   - "Parse the log string for signatures: a collect/toPandas in the driver stack => driver OOM; one task far larger during a shuffle => executor skew; repeated 'Spilling in-memory map ... to disk' => execution-memory spill; 'Container killed ... exceeding memory limits'/'OOMKilled' => memory overhead."
   - "Return a dict {'location': ..., 'cause': ..., 'fix': ...} using the exact vocabulary in the README. Base the answer on the log text, not on guesses."
   - "location in {'driver','executor'}; cause in {'collect_to_driver','skew','spill','overhead'}; fix in {'avoid_collect','salt_or_aqe_skew','more_partitions_or_memory','raise_overhead'}."
-cert_objectives: [spark-assoc:4.3]

@@ -16,7 +16,7 @@ import yaml
 from de_cli import byo as byo_mod
 from de_web import render as render_mod
 
-DEFAULT_TRACK_ORDER = ["FND", "SPK", "LKH", "CDW", "JVM", "KFK", "FLK", "STH", "ARC"]
+DEFAULT_TRACK_ORDER = ["FND", "SPK", "LKH", "JVM", "KFK", "FLK", "STH"]
 MAX_STARTER_BYTES = 60_000
 
 

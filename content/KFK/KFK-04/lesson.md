@@ -9,7 +9,7 @@ unprocessed records (**at-most-once**). Commit after processing and a crash repr
 few (**at-least-once**). This module makes you feel the difference by killing a consumer mid-stream
 and watching what the next consumer picks up.
 
-## How consumer groups work (objective ccdak:2 / dse-found)
+## How consumer groups work
 
 - **Group.** Consumers sharing a `group.id` form a group; the partitions of the subscribed topics
   are **divided among** them, so each partition is read by exactly one consumer in the group at a
@@ -31,7 +31,7 @@ and watching what the next consumer picks up.
 
 ![Four partitions split between two consumers in one group; when C2 crashes its partitions move to C1](diagrams/group-rebalance.svg)
 
-## Commit strategies and delivery semantics (objective ccdak:2)
+## Commit strategies and delivery semantics
 
 - **Auto-commit** (`enable.auto.commit=true`): the client commits the latest polled offsets every
   `auto.commit.interval.ms`, *regardless of whether you finished processing them*. Convenient, but a

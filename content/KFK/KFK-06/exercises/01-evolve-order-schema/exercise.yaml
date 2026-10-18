@@ -7,4 +7,3 @@ hints:
   - "Under BACKWARD, a new field must carry a default so old records can be read with the new schema. Add currency with default 'USD'; do NOT drop or rename id/amount."
   - "Serialize each order with the NEW schema using fastavro.schemaless_writer, prepending nothing (plain schemaless binary is fine for this exercise)."
   - "Read every message back twice: once with the NEW reader schema (currency present) and once with the OLD reader schema (currency ignored). Both must succeed — that proves old consumers survive the evolution."
-cert_objectives: [ccdak:2, dse-found]

@@ -7,4 +7,3 @@ hints:
   - "Call env.enableCheckpointing(...) so operator state is snapshotted. The default checkpointing mode is EXACTLY_ONCE; a replayable bounded source (NumberSequenceSource) lets recovery rewind to the checkpointed position."
   - "Use a FileSink with OnCheckpointRollingPolicy so files are only committed when a checkpoint completes. Output written since the last complete checkpoint is rolled back on restart, which is what prevents duplicates after the crash."
   - "Write exactly one line per source id (its decimal string) so the grader can check no-loss / no-duplication over the committed output. Read the output directory from args[0]."
-cert_objectives: [dse-flink:checkpoints]

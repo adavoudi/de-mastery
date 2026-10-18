@@ -5,7 +5,4 @@ hours: 5
 requires: [FLK-06]
 labs: []
 cost: "☁️free"
-cert_objectives:
-  - dse-flink:ops
-  - dse-flink:savepoints
 from_your_world: "a dbt/pipeline deploy that must not lose accumulated state — upgrading the job while preserving the running totals, like a zero-downtime schema migration"

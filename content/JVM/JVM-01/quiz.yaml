@@ -14,7 +14,6 @@
     may be distinct objects, so `==` can be false. Use `.equals()` for value equality. Equal
     hashCodes are necessary but not sufficient (collisions exist).
   source: "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)"
-  objectives: [dse-found]
 
 - id: JVM-01-q2
   type: single
@@ -30,7 +29,6 @@
     (named like the components, e.g. currency()), plus value-based equals/hashCode and a readable
     toString. It is the Java analogue of a frozen dataclass.
   source: "https://docs.oracle.com/en/java/javase/21/language/records.html"
-  objectives: [dse-found]
 
 - id: JVM-01-q3
   type: single
@@ -47,7 +45,6 @@
     Optional<T> encodes absence in the type so the caller is nudged to handle it (orElse, map,
     ifPresent). Returning null invites NullPointerException; magic sentinels are error-prone.
   source: "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Optional.html"
-  objectives: [dse-found]
 
 - id: JVM-01-q4
   type: single
@@ -63,7 +60,6 @@
     or declare them. Unchecked ones (RuntimeException and subclasses like IllegalArgumentException)
     do not require declaration. Python has no checked-exception concept.
   source: "https://docs.oracle.com/javase/tutorial/essential/exceptions/catchOrDeclare.html"
-  objectives: [dse-found]
 
 - id: JVM-01-q5
   type: single
@@ -79,7 +75,6 @@
     method), such as Function, Predicate or Comparator. It is the compiled analogue of a Python
     lambda.
   source: "https://docs.oracle.com/javase/tutorial/java/javaOO/lambdaexpressions.html"
-  objectives: [dse-found]
 
 - id: JVM-01-q6
   type: single
@@ -96,7 +91,6 @@
     The directory structure under the source root must mirror the package: package de.mastery means
     the file is de/mastery/Money.java. Build tools and the compiler rely on this convention.
   source: "https://docs.oracle.com/javase/tutorial/java/package/managingfiles.html"
-  objectives: [dse-found]
 
 - id: JVM-01-q7
   type: single
@@ -111,4 +105,3 @@
     Java has no truthiness: an if condition must be a boolean. Test emptiness explicitly, e.g.
     if (!list.isEmpty()). Relying on Python-style truthiness is a common porting bug.
   source: "https://docs.oracle.com/javase/specs/jls/se21/html/jls-14.html#jls-14.9"
-  objectives: [dse-found]

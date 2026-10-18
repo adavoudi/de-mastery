@@ -6,8 +6,7 @@ You can write Java, package it, serialize data, and reason about memory. The las
 is proving it works and fixing it when it doesn't: **JUnit 5** + **AssertJ** for unit tests,
 **Testcontainers** for integration tests against a real Kafka/Postgres, and the ability to **read a
 JVM stack trace** to find the actual cause of a failure. This is the Java version of your dbt tests
-plus a Spark pipeline integration test — and it's exactly what CCDAK's "application testing" domain
-and the real job both expect.
+plus a Spark pipeline integration test — and it's exactly what the real job expects.
 
 ## How JUnit 5 and AssertJ work
 

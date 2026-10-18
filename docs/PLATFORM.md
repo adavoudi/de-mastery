@@ -8,9 +8,9 @@ Every module uses the same structure. Each part is graded by the `de` CLI.
 |---|---|---|
 | **Lesson** (`lesson.md`) | Short concept text: *Why it exists → How it works → From your world → When NOT to use it* | – |
 | **Exercises** (`exercises/NN-*/`) | boot.dev style: small task, starter code, hidden + visible tests | pytest / JUnit |
-| **Quiz** (`quiz.yaml`) | Exam-style multiple choice. Every question is tagged with cert objective IDs and cites a doc source | auto |
-| **Explain-it** (`explain.md`) | Write a 200-word explanation as if teaching it (Feynman technique) | rubric checklist + optional AI review |
-| **Interview drill** | 3–5 questions with model answers, added to spaced-repetition review | self-graded |
+| **Quiz** (`quiz.yaml`) | Multiple choice. Every question cites a doc source | auto |
+| **Explain-it** (`explain.md`) | Write a 200-word explanation as if teaching it (Feynman technique) | self-check rubric |
+| **Interview drill** (`drills.md`) | 3–5 questions with model answers | self-graded |
 
 Each core track also has one **build-your-own (BYO) challenge** in CodeCrafters style:
 
@@ -29,7 +29,6 @@ hours: 6
 requires: [SPK-05]
 labs: [core]
 cost: free            # free | 💲 (~$X estimate) | 💲💲
-cert_objectives: [spark-assoc:3.5, spark-assoc:3.10, spark-assoc:4.1]
 from_your_world: "Redshift DISTKEY/DISTSTYLE ALL ≈ broadcast join"
 ```
 
@@ -37,7 +36,7 @@ from_your_world: "Redshift DISTKEY/DISTSTYLE ALL ≈ broadcast join"
 
 | Command | Does |
 |---|---|
-| `de status` | Progress by track, cert readiness (% of mapped objectives passed) |
+| `de status` | Passed/total per track and BYO challenge |
 | `de next` | Opens the next unfinished exercise, respecting `requires` |
 | `de start <ID>` | Jumps to a module or stage, and warns if prerequisites are missing |
 | `de test` | Runs the tests for the current exercise. Result is stored in `progress.json` |
@@ -46,10 +45,9 @@ from_your_world: "Redshift DISTKEY/DISTSTYLE ALL ≈ broadcast join"
 | `de lab up <profile>` / `down` | Starts or stops Docker Compose profiles |
 | `de web` | Serves the course as a local website (lessons, exercises, quizzes), see [WEB.md](WEB.md) |
 | `de plan` | Recalculates the schedule from `learner.yaml` (see below) |
-| `de quiz <ID>` / `de mock <cert>` | Module quiz / timed mock exam with the real exam's format |
-| `de review` | Spaced-repetition queue (quiz misses + interview drills) |
-| `de cost` | Lists 💲 labs, their estimates, and spend so far (from AWS Cost Explorer tags) |
-| `de dispute` | Reports a test you think is wrong (see TESTING.md) |
+| `de quiz <ID>` | Module quiz; best score saved |
+| `de validate <ID>` | Runs the validity gates on an exercise (see [TESTING.md](TESTING.md)) |
+| `de doctor` | Environment check with fixes |
 
 Implementation: Python 3.12, Typer, uv. Progress is stored in `progress.json`, a local, gitignored file. The course repo holds content only; your progress, `workspace/` and `learner.yaml` are never committed.
 
@@ -64,16 +62,14 @@ from `learner.yaml`, plus the remaining module hours:
 - **Re-planning:** past progress is never lost. Changing pace or date only changes the projection
   for remaining work. Your measured hours per module also refine later estimates.
 
-## Repository layout (built in Phase 1+)
+## Repository layout
 
 ```
 de-mastery/
 ├── README.md  ROADMAP.md  learner.example.yaml
 │   (local, gitignored: learner.yaml  progress.json  workspace/)
-├── docs/              # this file, TESTING.md
-├── tracks/            # syllabi (planning)
-├── certs/             # exam objectives + mapping
-├── capstones/
+├── docs/              # this file, TUTORIAL.md, TESTING.md, WEB.md, DIAGRAMS.md
+├── tracks/            # one overview per track
 ├── cli/               # `de` source
 ├── labs/
 │   ├── compose.yaml   # profiles: core, streaming, flink, streamhouse, observability
@@ -81,7 +77,8 @@ de-mastery/
 │   └── data/          # synthetic data generators (commerce, multi-company)
 ├── content/
 │   └── SPK/SPK-06/
-│       ├── module.yaml  lesson.md  quiz.yaml  explain.md
+│       ├── module.yaml  lesson.md  quiz.yaml  explain.md  drills.md
+│       ├── diagrams/
 │       └── exercises/01-broadcast-join/
 │           ├── starter/  tests/  solution/  mutants/
 └── byo/
@@ -100,7 +97,7 @@ Profiles keep the memory footprint bounded. Run one or two at a time.
 | `streamhouse` | `flink` + Paimon + Fluss + StarRocks | 8–10 GB |
 | `observability` | Prometheus + Grafana with dashboards for Spark, Kafka and Flink | 1–2 GB |
 
-> **Phase 3 (Kafka/Java) grades without Docker.** The `streaming` profile above
+> **Kafka and Java exercises grade without Docker.** The `streaming` profile above
 > is an *optional* extra layer (e.g. Debezium CDC). Most Kafka/Java exercises run
 > against **native** runtimes vendored under gitignored `labs/` dirs — Apache
 > Kafka 4.3.1 (`bash labs/fetch_kafka.sh`), the JVM/JUnit jars
@@ -131,6 +128,5 @@ Rules for every 💲 lab:
 - It shows its estimate before it starts.
 - It tags resources with `project=de-mastery`.
 - It ships a `teardown` script that the `de` CLI runs automatically when the time limit expires.
-- An AWS Budgets alarm at 50/80/100% of `cloud.aws_budget_usd` is created in Phase 1.
 
 For actual prices, check the AWS Pricing Calculator. Estimates here are rough guides only.

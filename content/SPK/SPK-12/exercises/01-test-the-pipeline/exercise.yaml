@@ -7,4 +7,3 @@ hints:
   - "You are given a pipeline's RESULT plus the raw ORDERS it was computed from. Independently recompute the correct per-company revenue (an oracle) and assert the result equals it — row-level, order-insensitive, float tolerance (pyspark.testing.assertDataFrameEqual, checkRowOrder=False)."
   - "Also assert invariants that a correct result must satisfy: one row per company, no NULL company_id, revenue is non-negative, and the companies present match the input's companies. These catch bugs an equality check alone might miss (e.g. a dropped company)."
   - "assert_valid(spark, result_df, orders_df) must RAISE (AssertionError) when the result is wrong and return normally when it is correct. Build the oracle with Spark or DuckDB over orders_df; don't trust the result's own numbers."
-cert_objectives: [spark-assoc:4.3]

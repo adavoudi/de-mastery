@@ -12,7 +12,6 @@
     Authorization is a separate layer where the authorizer checks that principal's requests against
     ACLs. Both are needed to lock down a cluster.
   source: "https://kafka.apache.org/documentation/#security_authz"
-  objectives: [ccaak:2]
 
 - id: KFK-12-q2
   type: single
@@ -27,7 +26,6 @@
     The authorizer denies anything without a matching allow ACL (unless the principal is a super
     user). An unauthorized produce fails with TOPIC_AUTHORIZATION_FAILED — the denial you test for.
   source: "https://kafka.apache.org/documentation/#security_authz"
-  objectives: [ccaak:2]
 
 - id: KFK-12-q3
   type: single
@@ -42,7 +40,6 @@
     SCRAM credentials are stored in the cluster metadata and created with kafka-configs.sh. SCRAM is
     a salted challenge-response mechanism, so the raw password is never transmitted.
   source: "https://kafka.apache.org/documentation/#security_sasl_scram_credentials"
-  objectives: [ccaak:2]
 
 - id: KFK-12-q4
   type: single
@@ -57,7 +54,6 @@
     super.users bypass authorization entirely. Granting that to an application is the opposite of
     least privilege; reserve it for a trusted internal/admin path and grant apps narrow ACLs.
   source: "https://kafka.apache.org/documentation/#security_authz"
-  objectives: [ccaak:2]
 
 - id: KFK-12-q5
   type: single
@@ -72,7 +68,6 @@
     Consuming needs two grants: Read on the Topic and Read on the consumer Group resource. Granting
     only the topic lets the fetch authorize but the group join/commit fails.
   source: "https://kafka.apache.org/documentation/#security_authz_cli"
-  objectives: [ccaak:2]
 
 - id: KFK-12-q6
   type: single
@@ -87,7 +82,6 @@
     The client must select the SASL security protocol and mechanism and supply its SCRAM username and
     password; those identify the principal the broker authorizes.
   source: "https://kafka.apache.org/documentation/#security_sasl_scram"
-  objectives: [ccaak:2]
 
 - id: KFK-12-q7
   type: single
@@ -102,7 +96,6 @@
     A producer needs Write (and Describe) on exactly that topic. Granting All, a wildcard topic,
     Read/Delete, or super-user status all violate least privilege.
   source: "https://kafka.apache.org/documentation/#security_authz_cli"
-  objectives: [ccaak:2]
 
 - id: KFK-12-q8
   type: single
@@ -117,4 +110,3 @@
     SASL_PLAINTEXT provides authentication without TLS encryption. It is fine on a trusted local
     loopback for teaching, but production must use SASL_SSL so the channel is encrypted.
   source: "https://kafka.apache.org/documentation/#security_sasl_scram"
-  objectives: [ccaak:2]

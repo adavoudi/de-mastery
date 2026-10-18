@@ -7,4 +7,3 @@ hints:
   - "Track max_seen = the largest event time observed so far. The emitted watermark is max(previous_watermark, max_seen - allowed_lateness). Taking the max with the previous value is what makes it never go backwards, even when a late (small-timestamp) event arrives."
   - "Process events in arrival order. For each event, FIRST update max_seen and the watermark using THIS event, then classify it against the watermark that was in effect BEFORE this event (events can't be late relative to a watermark they themselves advanced). Keep the pre-event watermark for the classification decision."
   - "Classification against the pre-event watermark W and the window grace G: event_time > W is on-time; W - G <= event_time <= W is late_accepted; event_time < W - G is dropped. Use the same allowed_lateness as the grace unless the task says otherwise."
-cert_objectives: []

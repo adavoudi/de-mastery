@@ -5,8 +5,4 @@ hours: 7
 requires: [SPK-10]
 labs: []
 cost: free
-cert_objectives:
-  - spark-assoc:3.8
-  - spark-assoc:5.3
-  - spark-assoc:5.4
 from_your_world: "SCD2 dimension snapshots and late-arriving facts"

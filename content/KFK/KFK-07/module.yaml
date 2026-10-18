@@ -5,5 +5,4 @@ hours: 6
 requires: [KFK-06]
 labs: [streaming]
 cost: free
-cert_objectives: [dse-found, ccdak:2, ccaak:4]
 from_your_world: "SCD2 dimensions sourced from an OLTP database, now in real time"
