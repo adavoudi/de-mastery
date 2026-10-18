@@ -5,7 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <title>{% block title %}DE Mastery{% endblock %}</title>
-<link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+<link rel="icon" href="{{ asset('brand/favicon.svg') }}" type="image/svg+xml">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="apple-touch-icon" href="{{ asset('brand/apple-touch-icon.png') }}">
+<link rel="manifest" href="/static/brand/site.webmanifest">
+<meta name="theme-color" content="#1d5c63">
 <link rel="preload" href="/static/fonts/newsreader-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{{ asset('style.css') }}">
 <script src="{{ asset('theme.js') }}"></script>
@@ -17,7 +21,7 @@
 <header class="topbar">
   {% if lib %}<button class="icon-btn menu-btn" id="menu-btn" aria-label="Toggle course menu" aria-controls="side" aria-expanded="false">
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>{% endif %}
-  <a class="brand" href="/"><span class="brand-mark">de</span><span class="brand-name">Mastery</span></a>
+  <a class="brand" href="/"><img class="brand-mark" src="{{ asset('brand/logo-mark.svg') }}" width="30" height="30" alt=""><span class="brand-name">DE Mastery</span></a>
   <span class="grow"></span>
   <button class="icon-btn" id="theme-btn" aria-label="Toggle light/dark theme">
     <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>

@@ -104,6 +104,19 @@ def test_security_headers(client):
     assert r.headers["x-content-type-options"] == "nosniff"
 
 
+def test_brand_assets_served(client):
+    for p, kind in (("/favicon.ico", "image/x-icon"), ("/static/brand/favicon.svg", "image/svg+xml"),
+                    ("/static/brand/logo.svg", "image/svg+xml"), ("/static/brand/apple-touch-icon.png", "image/png"),
+                    ("/static/brand/site.webmanifest", None)):
+        r = client.get(p)
+        assert r.status_code == 200, p
+        if kind:
+            assert r.headers["content-type"].startswith(kind), p
+    html = client.get("/").text
+    for needle in ('rel="icon"', 'rel="apple-touch-icon"', 'rel="manifest"', "brand/logo-mark.svg"):
+        assert needle in html, needle
+
+
 def test_healthz(client):
     assert client.get("/healthz").json() == {"ok": True}
 

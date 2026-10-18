@@ -1,0 +1,14 @@
+{
+  "name": "DE Mastery",
+  "short_name": "DE Mastery",
+  "description": "A self-paced course for analytics engineers moving into data platform engineering.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#faf8f3",
+  "theme_color": "#1d5c63",
+  "icons": [
+    {"src": "/static/brand/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "/static/brand/icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "/static/brand/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

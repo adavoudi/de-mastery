@@ -1,3 +1,5 @@
+<p><img src="web/de_web/static/brand/logo.svg" alt="DE Mastery" height="56"></p>
+
 # DE Mastery: from Analytics Engineer to Data Platform Engineer
 
 A self-paced learning platform for Spark, Kafka, Flink, open table formats (lakehouse) and

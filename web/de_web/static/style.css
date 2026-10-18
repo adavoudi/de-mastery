@@ -67,7 +67,7 @@ code, pre, kbd { font-family: var(--mono); }
 .topbar { position: sticky; top: 0; z-index: 30; height: var(--topbar-h); display: flex; align-items: center; gap: 10px; padding: 0 20px; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: saturate(1.4) blur(10px); border-bottom: 1px solid var(--line); }
 .grow { flex: 1; }
 .brand { display: inline-flex; align-items: center; gap: 9px; text-decoration: none; color: var(--ink); font-weight: 650; letter-spacing: -.01em; }
-.brand-mark { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: var(--accent); color: var(--accent-ink); font: 700 14px/1 var(--mono); letter-spacing: -.04em; }
+.brand-mark { width: 30px; height: 30px; display: block; }
 .brand-name { font-family: var(--serif); font-size: 1.25rem; font-weight: 600; }
 .icon-btn { display: inline-grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 8px; background: none; color: var(--ink-2); cursor: pointer; }
 .icon-btn:hover { background: var(--sunken); }

@@ -6,6 +6,7 @@ import hashlib
 from pathlib import Path
 
 from fastapi import FastAPI, Request
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -48,6 +49,11 @@ def create_app(repo_root: Path | None = None, source_url: str = DEFAULT_SOURCE_U
         if request.url.path.startswith("/static/"):
             resp.headers["Cache-Control"] = "public, max-age=86400"
         return resp
+
+    @app.get("/favicon.ico", include_in_schema=False)
+    def favicon():
+        return FileResponse(HERE / "static" / "brand" / "favicon.ico", media_type="image/x-icon",
+                            headers={"Cache-Control": "public, max-age=86400"})
 
     @app.get("/healthz")
     def healthz():
