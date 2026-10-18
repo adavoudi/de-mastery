@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>{% block title %}DE Mastery{% endblock %}</title>
+<link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+<link rel="preload" href="/static/fonts/newsreader-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="{{ asset('style.css') }}">
+<script src="{{ asset('theme.js') }}"></script>
+<script src="{{ asset('app.js') }}" defer></script>
+{% block head %}{% endblock %}
+</head>
+<body{% if lib %} class="has-side"{% endif %}>
+<a class="skip" href="#main">Skip to content</a>
+<header class="topbar">
+  {% if lib %}<button class="icon-btn menu-btn" id="menu-btn" aria-label="Toggle course menu" aria-controls="side" aria-expanded="false">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>{% endif %}
+  <a class="brand" href="/"><span class="brand-mark">de</span><span class="brand-name">Mastery</span></a>
+  <span class="grow"></span>
+  <button class="icon-btn" id="theme-btn" aria-label="Toggle light/dark theme">
+    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+  <a class="btn small" href="{{ lib.source_url if lib else '#' }}">GitHub</a>
+</header>
+
+<div class="shell">
+{% if lib %}
+<nav class="side" id="side" aria-label="Course">
+  <div class="side-filter"><input type="search" id="side-filter" placeholder="Filter modules…" aria-label="Filter modules" autocomplete="off"></div>
+  <div class="side-scroll">
+    <section>
+      <h2>Start</h2>
+      <ul>
+        <li><a href="/" {% if path == '/' %}aria-current="page"{% endif %}>Curriculum</a></li>
+        {% for d in lib.docs.values() %}{% if d.slug in ('tutorial','roadmap','certs','capstones') %}
+        <li><a href="/docs/{{ d.slug }}" {% if path == '/docs/' ~ d.slug %}aria-current="page"{% endif %}>{{ d.title }}</a></li>
+        {% endif %}{% endfor %}
+      </ul>
+    </section>
+    <section>
+      <h2>Tracks</h2>
+      {% for t in lib.tracks.values() %}
+      <details class="trk" {% if path.startswith('/track/' ~ t.id) or (module is defined and module and module.track == t.id) or (challenge is defined and challenge and challenge.track == t.id) %}open{% endif %}>
+        <summary><span class="tid">{{ t.id }}</span> {{ t.name|truncate(26, True, '…') }}</summary>
+        <ul>
+          <li><a href="/track/{{ t.id }}" {% if path == '/track/' ~ t.id %}aria-current="page"{% endif %}>Overview</a></li>
+          {% for m in t.modules %}
+          <li data-filter="{{ m.id }} {{ m.title }}"><a href="/m/{{ m.id }}" {% if module is defined and module and module.id == m.id %}aria-current="page"{% endif %}>
+            <span class="mid">{{ m.id.split('-')[1] }}</span> {{ m.title }}</a></li>
+          {% endfor %}
+          {% for c in lib.challenges.values() if c.track == t.id %}
+          <li data-filter="{{ c.id }} {{ c.title }}"><a href="/byo/{{ c.id }}" {% if challenge is defined and challenge and challenge.id == c.id %}aria-current="page"{% endif %}><span class="mid">BYO</span> {{ c.title }}</a></li>
+          {% endfor %}
+        </ul>
+      </details>
+      {% endfor %}
+    </section>
+    {% if lib.capstones %}<section>
+      <h2>Capstones</h2>
+      <ul>{% for c in lib.capstones.values() %}<li><a href="/capstone/{{ c.slug }}" {% if path == '/capstone/' ~ c.slug %}aria-current="page"{% endif %}>{{ c.title }}</a></li>{% endfor %}</ul>
+    </section>{% endif %}
+  </div>
+</nav>
+<div class="scrim" id="scrim"></div>
+{% endif %}
+<main id="main">
+{% block body %}{% endblock %}
+<footer class="foot">DE Mastery · <a href="{{ lib.source_url if lib else 'https://github.com/adavoudi/de-mastery' }}">source on GitHub</a></footer>
+</main>
+</div>
+</body>
+</html>

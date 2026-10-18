@@ -203,22 +203,19 @@ Habits that make this work:
 - **Stuck for more than 30 minutes?** Use the next hint level. The point is to learn, not to
   suffer.
 
-## 9. Saving and syncing progress
+## 9. Where your progress lives
 
 `de test` and `de quiz` write results to `progress.json` at the repo root. Your code lives in
 `workspace/`, and your profile is `learner.yaml` (copy it from `learner.example.yaml`). All three
 are gitignored: the course repo contains content only, so `git pull` never conflicts with your
-work.
+work, and nothing is uploaded anywhere.
 
-To keep progress across machines and see it on the web dashboard, sync it to the server:
+To keep a history of your own solutions, fork the repo and commit `workspace/` and `progress.json`
+there (use `git add -f`). To move to another machine, copy those two paths across.
 
-```bash
-de login   # one-time, approve the code in your browser with GitHub
-de sync    # push your results
-```
-
-Your own code in `workspace/` is not uploaded. If you want a history of it, fork the repo and
-commit it there; the upstream repo is not affected.
+Prefer reading in a browser? `uv run de web` serves every lesson, exercise statement, quiz and
+syllabus at http://127.0.0.1:8000 (see [WEB.md](WEB.md)). Running and grading exercises still happens in
+the terminal.
 
 ## 10. Command cheat sheet
 

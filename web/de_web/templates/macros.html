@@ -1,0 +1,13 @@
+{% macro toc(items) -%}
+{%- if items|length > 2 -%}
+<aside class="toc" aria-label="On this page"><h2>On this page</h2><ul>
+{% for level, id, text in items %}<li class="l{{ level }}"><a href="#{{ id }}">{{ text }}</a></li>{% endfor %}
+</ul></aside>
+{%- endif -%}
+{%- endmacro %}
+
+{% macro runbox(cmds) -%}
+<div class="runbox"><div class="runbox-h">Run it locally</div>
+<pre class="hl" data-lang="bash"><code>{% for c in cmds %}{{ c }}
+{% endfor %}</code></pre></div>
+{%- endmacro %}

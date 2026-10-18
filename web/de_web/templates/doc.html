@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% from "macros.html" import toc %}
+{% block title %}{{ doc_meta.title }} · DE Mastery{% endblock %}
+{% block body %}
+<div class="page"><article class="prose-wrap">
+  <header class="phead"><p class="eyebrow">{{ doc_meta.group }}</p><h1>{{ doc_meta.title }}</h1></header>
+  <div class="prose">{{ doc.html|safe }}</div>
+</article>{{ toc(doc.toc) }}</div>
+{% endblock %}

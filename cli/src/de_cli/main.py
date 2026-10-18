@@ -19,7 +19,6 @@ from de_cli import doctor as doctor_mod
 from de_cli import plan as plan_mod
 from de_cli import progress as progress_mod
 from de_cli import quiz as quiz_mod
-from de_cli import sync as sync_mod
 from de_cli.paths import content_root, learner_path, repo_root
 from de_cli.runner import copy_starter, run_tests, workspace_dir_for
 from de_cli.validate import validate_exercise
@@ -139,50 +138,20 @@ def status():
 
 
 # ---------------------------------------------------------------------------
-# login / sync / logout / whoami (progress server)
+# web
 # ---------------------------------------------------------------------------
 @app.command()
-def login(server: Optional[str] = typer.Option(
-        None, "--server", help="Progress server URL (or set DE_SERVER_URL).")):
-    """Sign in to the progress server with GitHub (opens a code you approve in the browser)."""
+def web(host: str = typer.Option("127.0.0.1", help="Interface to bind."),
+        port: int = typer.Option(8000, help="Port to listen on.")):
+    """Serve the course (lessons, exercises, quizzes) as a website on this machine."""
     try:
-        who = sync_mod.login(sync_mod.resolve_server(server), say=console.print)
-    except sync_mod.SyncError as e:
-        console.print(f"[red]{e}[/]")
+        import uvicorn
+        from de_web.app import create_app
+    except ImportError:
+        console.print("[red]The website needs extra packages.[/] Run: [bold]uv sync --extra web[/]")
         raise typer.Exit(1)
-    console.print(f"[green]Logged in as {who}.[/] Run `de sync` to upload your progress.")
-
-
-@app.command()
-def sync():
-    """Upload your results to the progress server and merge in progress from other machines."""
-    try:
-        merged = sync_mod.sync()
-    except sync_mod.SyncError as e:
-        console.print(f"[red]{e}[/]")
-        raise typer.Exit(1)
-    passed = sum(1 for e in merged["exercises"].values() if e["status"] == "passed")
-    console.print(f"[green]Synced.[/] {passed} exercises passed, "
-                  f"{len(merged['exercises'])} tracked.")
-
-
-@app.command()
-def logout():
-    """Revoke this machine's token and forget it."""
-    if sync_mod.logout():
-        console.print("Logged out.")
-    else:
-        console.print("Not logged in.")
-
-
-@app.command()
-def whoami():
-    """Show the progress-server account this machine is connected to."""
-    c = sync_mod.load_credentials()
-    if not c.get("token"):
-        console.print("Not logged in.")
-        raise typer.Exit(1)
-    console.print(f"{c.get('login', '?')} @ {c.get('server', '?')}")
+    console.print(f"Course site: [bold]http://{host}:{port}[/]  (Ctrl+C to stop)")
+    uvicorn.run(create_app(repo_root()), host=host, port=port, log_level="warning")
 
 
 # ---------------------------------------------------------------------------

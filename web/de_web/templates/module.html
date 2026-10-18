@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% from "macros.html" import toc, runbox %}
+{% block title %}{{ module.id }} · {{ module.title }} · DE Mastery{% endblock %}
+{% block body %}
+<div class="page">
+<article class="prose-wrap">
+  <header class="phead">
+    <p class="eyebrow"><a href="/track/{{ module.track }}">{{ lib.tracks[module.track].name }}</a> · {{ module.id }}</p>
+    <h1>{{ module.title }}</h1>
+    <ul class="chips">
+      <li>{{ module.hours|round|int }} h</li>
+      {% if module.meta.get('cost') %}<li>{{ module.meta.cost }}</li>{% endif %}
+      {% if module.meta.get('labs') %}<li>lab: {{ module.meta.labs|join(', ') }}</li>{% endif %}
+      {% for r in module.meta.get('requires', []) %}<li>requires <a href="/m/{{ r }}">{{ r }}</a></li>{% endfor %}
+    </ul>
+    {% if module.meta.get('from_your_world') %}<p class="world"><b>From your world.</b> {{ module.meta.from_your_world }}</p>{% endif %}
+  </header>
+
+  <nav class="tabs" aria-label="Module sections">
+    <a href="/m/{{ module.id }}" {% if part == 'lesson' %}aria-current="page"{% endif %}>Lesson</a>
+    {% if module.exercises %}<a href="/m/{{ module.id }}/exercises" {% if part == 'exercises' %}aria-current="page"{% endif %}>Exercises <span class="count">{{ module.exercises|length }}</span></a>{% endif %}
+    {% if module.has('quiz.yaml') %}<a href="/m/{{ module.id }}/quiz" {% if part == 'quiz' %}aria-current="page"{% endif %}>Quiz</a>{% endif %}
+    {% for key, label in parts.items() %}{% if module.has(key ~ '.md') %}<a href="/m/{{ module.id }}/{{ key }}" {% if part == key %}aria-current="page"{% endif %}>{{ label }}</a>{% endif %}{% endfor %}
+  </nav>
+
+  {% if part == 'exercises' and exercise is defined %}
+    <p class="crumb"><a href="/m/{{ module.id }}/exercises">← All exercises</a></p>
+    <h2 class="ex-h">{{ exercise.title }}</h2>
+    <div class="prose">{{ doc.html|safe }}</div>
+    {% if starter %}<h2 class="section-h">Starter code</h2>
+      {% for name, code in starter %}<figure class="file"><figcaption>{{ name }}</figcaption>{{ code|safe }}</figure>{% endfor %}{% endif %}
+    {% if exercise.hints %}<h2 class="section-h">Hints</h2>
+      {% for h in exercise.hints %}<details class="hint"><summary>Hint {{ loop.index }}</summary><p>{{ h }}</p></details>{% endfor %}{% endif %}
+    {{ runbox(['uv run de start ' ~ exercise.id, '# edit workspace/' ~ exercise.id ~ '/', 'uv run de test']) }}
+
+  {% elif part == 'exercises' %}
+    {% if module.exercises %}
+    <ul class="exlist">{% for e in module.exercises %}
+      <li><a href="/m/{{ module.id }}/x/{{ e.slug }}"><span class="mt">{{ e.title }}</span><span class="mm">{{ e.id }}</span></a></li>{% endfor %}</ul>
+    {{ runbox(['uv run de start ' ~ module.id, 'uv run de test']) }}
+    {% endif %}
+
+  {% elif part == 'quiz' %}
+    <p class="note">Practice quiz with instant feedback. For a scored run that counts toward your local progress, use
+      <code>uv run de quiz {{ module.id }}</code>.</p>
+    <div id="quiz" data-total="{{ questions|length }}">
+      <p class="quiz-score" id="quiz-score" aria-live="polite"></p>
+      {% for q in questions %}
+      <form class="q" data-answer="{{ q.answers|join(',') }}">
+        <fieldset>
+          <legend><span class="qn">{{ loop.index }}</span>{{ q.prompt|safe }}{% if q.multi %} <em class="muted">(select all that apply)</em>{% endif %}</legend>
+          {% for key, text in q.options %}
+          <label class="opt"><input type="{{ 'checkbox' if q.multi else 'radio' }}" name="q{{ loop.index0 }}-{{ q.id }}" value="{{ key }}"><span class="key">{{ key }}</span><span>{{ text|safe }}</span></label>
+          {% endfor %}
+        </fieldset>
+        <button class="btn small" type="button" data-check>Check answer</button>
+        <div class="why" hidden>
+          <p>{{ q.explanation|safe }}</p>
+          {% if q.source %}<p class="muted src">Source: <a class="ext" rel="noopener noreferrer" href="{{ q.source }}">{{ q.source }}</a></p>{% endif %}
+        </div>
+      </form>
+      {% endfor %}
+    </div>
+    <script src="{{ asset('quiz.js') }}" defer></script>
+
+  {% else %}
+    <div class="prose">{% if doc %}{{ doc.html|safe }}{% else %}<p class="note">This module has no {{ part }} yet.</p>{% endif %}</div>
+  {% endif %}
+
+  <nav class="pager" aria-label="Previous and next module">
+    {% if prev_module %}<a class="prev" href="/m/{{ prev_module.id }}"><span>Previous</span>{{ prev_module.id }} · {{ prev_module.title }}</a>{% else %}<span></span>{% endif %}
+    {% if next_module %}<a class="next" href="/m/{{ next_module.id }}"><span>Next</span>{{ next_module.id }} · {{ next_module.title }}</a>{% endif %}
+  </nav>
+</article>
+{% if doc and exercise is not defined %}{{ toc(doc.toc) }}{% endif %}
+</div>
+{% endblock %}

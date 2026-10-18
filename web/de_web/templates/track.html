@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% from "macros.html" import toc %}
+{% block title %}{{ track.id }} · {{ track.name }} · DE Mastery{% endblock %}
+{% block body %}
+<div class="page">
+<article class="prose-wrap">
+  <header class="phead">
+    <p class="eyebrow">Track · {{ track.id }}{% if track.hours %} · {{ track.hours }}{% endif %}</p>
+    <h1>{{ track.name }}</h1>
+  </header>
+
+  {% if track.modules or lib.challenges.values()|selectattr('track','equalto',track.id)|list %}
+  <h2 class="section-h">Modules</h2>
+  <ol class="modlist">
+    {% for m in track.modules %}{% set n = m.exercises|length %}
+    <li><a href="/m/{{ m.id }}">
+      <span class="mnum">{{ m.id.split('-')[1] }}</span>
+      <span class="mt">{{ m.title }}</span>
+      <span class="mm">{{ m.hours|round|int }} h{% if n %} · {{ n }} exercise{{ 's' if n != 1 }}{% endif %}</span>
+    </a></li>
+    {% endfor %}
+    {% for c in lib.challenges.values() if c.track == track.id %}
+    <li><a href="/byo/{{ c.id }}"><span class="mnum">BYO</span><span class="mt">{{ c.title }}</span>
+      <span class="mm">{{ c.hours|round|int }} h · {{ c.stages|length }} stages</span></a></li>
+    {% endfor %}
+  </ol>
+  {% else %}<p class="note">No exercises are published for this track yet. The syllabus below shows what is planned.</p>{% endif %}
+
+  {% if syllabus %}<h2 class="section-h">Syllabus</h2><div class="prose">{{ syllabus.html|safe }}</div>{% endif %}
+</article>
+{% if syllabus %}{{ toc(syllabus.toc) }}{% endif %}
+</div>
+{% endblock %}

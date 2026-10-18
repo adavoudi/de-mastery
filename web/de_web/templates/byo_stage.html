@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% from "macros.html" import toc, runbox %}
+{% block title %}{{ stage.title }} · {{ challenge.title }} · DE Mastery{% endblock %}
+{% block body %}
+<div class="page"><article class="prose-wrap">
+  <header class="phead">
+    <p class="eyebrow"><a href="/byo/{{ challenge.id }}">{{ challenge.title }}</a> · Stage {{ stage.number }} of {{ challenge.stages|length }}</p>
+    <h1>{{ stage.title }}</h1>
+  </header>
+  <div class="prose">{% if doc %}{{ doc.html|safe }}{% endif %}</div>
+  {% if stage.hints %}<h2 class="section-h">Hints</h2>
+    {% for h in stage.hints %}<details class="hint"><summary>Hint {{ loop.index }}</summary><p>{{ h }}</p></details>{% endfor %}{% endif %}
+  {{ runbox(['uv run de start ' ~ stage.id, 'uv run de test']) }}
+  <nav class="pager">
+    {% set i = stage.number - 1 %}
+    {% if i > 0 %}{% set s = challenge.stages[i-1] %}<a class="prev" href="/byo/{{ challenge.id }}/{{ '%02d'|format(s.number) }}"><span>Previous</span>{{ s.title }}</a>{% else %}<span></span>{% endif %}
+    {% if i + 1 < challenge.stages|length %}{% set s = challenge.stages[i+1] %}<a class="next" href="/byo/{{ challenge.id }}/{{ '%02d'|format(s.number) }}"><span>Next</span>{{ s.title }}</a>{% endif %}
+  </nav>
+</article>{% if doc %}{{ toc(doc.toc) }}{% endif %}</div>
+{% endblock %}

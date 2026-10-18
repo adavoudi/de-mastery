@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}DE Mastery · From analytics engineer to data platform engineer{% endblock %}
+{% block body %}
+<section class="hero">
+  <p class="eyebrow">A self-paced course</p>
+  <h1>From analytics engineer to<br>data platform engineer.</h1>
+  <p class="lede">Spark, Kafka, Flink, open table formats and the streamhouse. Short lessons, exercises graded by
+  tests that have themselves been tested, and build-your-own challenges that teach the internals.</p>
+  <p class="cta"><a class="btn primary" href="/m/FND-01">Start with the foundations</a>
+  <a class="btn" href="/docs/tutorial">How to study with this course</a></p>
+</section>
+
+<section>
+  <h2 class="section-h">The curriculum</h2>
+  <div class="cards">
+  {% for t in lib.tracks.values() %}
+    <a class="card" href="/track/{{ t.id }}">
+      <span class="card-top"><span class="tid">{{ t.id }}</span><span class="muted">{{ t.hours }}</span></span>
+      <span class="card-t">{{ t.name }}</span>
+      <span class="card-b">{{ t.blurb|truncate(130, True, '…') if t.blurb else '' }}</span>
+      <span class="card-f">{% if t.modules %}{{ t.modules|length }} modules{% else %}Syllabus only{% endif %}</span>
+    </a>
+  {% endfor %}
+  </div>
+</section>
+{% endblock %}

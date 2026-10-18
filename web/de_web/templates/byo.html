@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% from "macros.html" import runbox %}
+{% block title %}{{ challenge.title }} · DE Mastery{% endblock %}
+{% block body %}
+<div class="page"><article class="prose-wrap">
+  <header class="phead">
+    <p class="eyebrow"><a href="/track/{{ challenge.track }}">{{ lib.tracks[challenge.track].name }}</a> · Build your own · {{ challenge.id }}</p>
+    <h1>{{ challenge.title }}</h1>
+    <ul class="chips"><li>{{ challenge.hours|round|int }} h</li><li>{{ challenge.stages|length }} stages</li></ul>
+    <p class="lede-s">Build the real thing from scratch, one stage at a time. Each stage has its own tests, and you move on when it passes.</p>
+  </header>
+  <ol class="modlist">{% for s in challenge.stages %}
+    <li><a href="/byo/{{ challenge.id }}/{{ '%02d'|format(s.number) }}">
+      <span class="mnum">{{ '%02d'|format(s.number) }}</span><span class="mt">{{ s.title }}</span>
+      </a></li>{% endfor %}
+  </ol>
+  {{ runbox(['uv run de start ' ~ challenge.id ~ '/01', 'uv run de test']) }}
+</article></div>
+{% endblock %}

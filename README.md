@@ -27,7 +27,7 @@ It uses two course formats together:
 | **[docs/TUTORIAL.md](docs/TUTORIAL.md)** | **Start here:** how to study with this repo (reading order, exercise loop, BYO, weekly rhythm) |
 | [ROADMAP.md](ROADMAP.md) | Tracks, order, dependency graph, how existing skills map to new ones, build phases |
 | [learner.example.yaml](learner.example.yaml) | Template for your profile (copy to `learner.yaml`, which is gitignored): pace, target dates, cert choices, cost budget |
-| [docs/SERVER.md](docs/SERVER.md) | The optional progress server: `de login` / `de sync`, dashboard, how to host it |
+| [docs/WEB.md](docs/WEB.md) | Read the whole course in a browser: `uv run de web`, and how to host it |
 | [docs/PLATFORM.md](docs/PLATFORM.md) | Course format, `de` CLI, repo layout, local lab stack, cost flags |
 | [docs/TESTING.md](docs/TESTING.md) | How we make sure the exercise tests are valid |
 | [tracks/](tracks/) | One syllabus per track (FND, SPK, LKH, CDW, JVM, KFK, FLK, STH, ARC) |

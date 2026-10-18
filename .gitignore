@@ -28,7 +28,6 @@ workspace/**/build/
 byo/**/build/
 
 # Learner state: local only, never committed to the course repo.
-# Progress is synced to the server with `de sync`.
 /progress.json
 /learner.yaml
 /workspace/*

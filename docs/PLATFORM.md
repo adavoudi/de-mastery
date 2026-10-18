@@ -44,14 +44,14 @@ from_your_world: "Redshift DISTKEY/DISTSTYLE ALL ≈ broadcast join"
 | `de hint` | Progressive hints (3 levels) |
 | `de solution` | Unlocks after a pass or after 3 failed attempts |
 | `de lab up <profile>` / `down` | Starts or stops Docker Compose profiles |
-| `de login` / `de sync` / `de logout` / `de whoami` | Optional: sync progress with the progress server (see [SERVER.md](SERVER.md)) |
+| `de web` | Serves the course as a local website (lessons, exercises, quizzes), see [WEB.md](WEB.md) |
 | `de plan` | Recalculates the schedule from `learner.yaml` (see below) |
 | `de quiz <ID>` / `de mock <cert>` | Module quiz / timed mock exam with the real exam's format |
 | `de review` | Spaced-repetition queue (quiz misses + interview drills) |
 | `de cost` | Lists 💲 labs, their estimates, and spend so far (from AWS Cost Explorer tags) |
 | `de dispute` | Reports a test you think is wrong (see TESTING.md) |
 
-Implementation: Python 3.12, Typer, uv. Progress is stored in `progress.json`, a local, gitignored file. The course repo holds content only; your progress, `workspace/` and `learner.yaml` are never committed. Progress is synced across machines through the progress server (`de login`, `de sync`).
+Implementation: Python 3.12, Typer, uv. Progress is stored in `progress.json`, a local, gitignored file. The course repo holds content only; your progress, `workspace/` and `learner.yaml` are never committed.
 
 ### Scheduling
 

@@ -41,14 +41,15 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Progress server (server/de_server). Not needed to do the course; only to host the dashboard.
-server = [
+# Course website (web/de_web). Not needed to do the course; only to read it in a browser.
+web = [
     "fastapi==0.115.6",
     "uvicorn==0.34.0",
-    "httpx==0.28.1",
-    "itsdangerous==2.2.0",
     "jinja2==3.1.5",
-    "python-multipart==0.0.20",
+    "markdown-it-py==4.2.0",
+    "mdit-py-plugins==0.6.1",
+    "pygments==2.21.0",
+    "httpx==0.28.1",   # test client for web/tests
 ]
 
 [project.scripts]
@@ -66,7 +67,7 @@ packages = [
     "cli/src/de_cli",
     "cli/src/de_testkit",
     "cli/src/de_data",
-    "server/de_server",
+    "web/de_web",
 ]
 
 [tool.uv]
@@ -75,7 +76,7 @@ package = true
 [tool.pytest.ini_options]
 # Root pytest only collects the tool's own tests. Exercise tests are run by
 # `de test` / `de validate`, never by plain root collection.
-testpaths = ["cli/tests", "server/tests"]
+testpaths = ["cli/tests", "web/tests"]
 addopts = "-p no:cacheprovider"
 timeout = 300
 # Exercise fixture tests live under cli/tests/fixtures and are run only via
