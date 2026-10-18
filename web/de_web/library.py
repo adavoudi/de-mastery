@@ -7,6 +7,7 @@ reach a file the index chose to expose. Solutions, mutants and tests are never e
 from __future__ import annotations
 
 import re
+from urllib.parse import urlencode
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path, PurePosixPath
@@ -116,6 +117,12 @@ class Doc:
 
 
 class Library:
+    def issue_url(self, page_path: str) -> str:
+        """Link to a pre-filled "content error" issue form for the page the reader is on."""
+        query = urlencode({"template": "content-error.yml", "title": f"Content error: {page_path}",
+                           "page": page_path})
+        return f"{self.source_url}/issues/new?{query}"
+
     def __init__(self, root: Path, source_url: str = "https://github.com/adavoudi/de-mastery"):
         self.root = root
         self.source_url = source_url.rstrip("/")

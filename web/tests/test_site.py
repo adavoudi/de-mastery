@@ -176,3 +176,9 @@ def test_static_export_prefixes_links(tmp_path):
     assert 'href="/de-mastery/static/style.css' in html and 'href="/de-mastery/roadmap"' in html
     assert 'href="/roadmap"' not in html and 'src="/static' not in html
     assert 'url("/de-mastery/static/fonts' in (tmp_path / "static" / "style.css").read_text()
+
+
+def test_every_page_links_to_a_prefilled_issue_form(client):
+    html = client.get("/m/SPK-01").text
+    assert "issues/new?template=content-error.yml" in html
+    assert "page=%2Fm%2FSPK-01" in html

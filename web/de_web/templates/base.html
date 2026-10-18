@@ -67,7 +67,7 @@
 {% endif %}
 <main id="main">
 {% block body %}{% endblock %}
-<footer class="foot">DE Mastery · <a href="{{ lib.source_url if lib else 'https://github.com/adavoudi/de-mastery' }}">source on GitHub</a></footer>
+<footer class="foot">DE Mastery · <a href="{{ lib.source_url if lib else 'https://github.com/adavoudi/de-mastery' }}">source on GitHub</a>{% if lib %} · <a class="ext" rel="noopener noreferrer" href="{{ lib.issue_url(path) }}">Found an error? Report it on GitHub</a>{% endif %}</footer>
 </main>
 </div>
 </body>

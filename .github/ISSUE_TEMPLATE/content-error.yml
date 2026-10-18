@@ -1,0 +1,35 @@
+name: Content error
+description: Report a technical error, unclear text, or a broken example in the course.
+labels: ["content"]
+body:
+  - type: input
+    id: page
+    attributes:
+      label: Page
+      description: The page path or module ID, for example /m/SPK-01 or SPK-01. The site link fills this in for you.
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind of problem
+      options:
+        - Technical error (the text is wrong)
+        - Unclear or hard to understand
+        - Quiz question or answer is wrong
+        - Broken code, link, or diagram
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong?
+      description: Quote the sentence or question, and say what is wrong with it.
+    validations:
+      required: true
+  - type: textarea
+    id: fix
+    attributes:
+      label: Suggested fix, or a source
+      description: Optional. A link to the official documentation helps most.
