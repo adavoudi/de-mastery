@@ -38,6 +38,8 @@ optimistic counterweight: in practice we grow the problem to fill the machines, 
 datasets keep more of the work parallel. Both are true; they answer different questions ("fixed
 work, more workers" vs. "more workers, bigger work").
 
+![With p = 0.9, speedup climbs fast at first, then flattens toward the 10x cap](diagrams/amdahl-speedup.svg)
+
 **The real cost model.** For a scan-heavy aggregation the dominant term is usually *bytes read*,
 not CPU. Columnar formats + predicate/column pruning cut bytes read by 10–100×, which often beats
 adding nodes. This is why a measured 10 GB aggregation on a laptop-class DuckDB can match a small

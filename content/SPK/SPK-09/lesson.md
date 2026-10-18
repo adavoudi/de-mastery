@@ -34,6 +34,8 @@ the result back. Three costs follow:
    filter below it or prune columns it "might" need. The UDF is an optimizer fence.
 3. **No vectorization.** The JVM's whole-stage codegen stops at the UDF boundary.
 
+![One row per trip to the Python worker (BatchEvalPython) versus one Arrow batch per trip (ArrowEvalPython)](diagrams/udf-row-vs-arrow.svg)
+
 The fix, in order of preference:
 
 - **Use a built-in.** 95% of what people write UDFs for — arithmetic, string cleanup, dates,

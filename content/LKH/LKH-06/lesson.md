@@ -26,6 +26,8 @@ Delta writes a **checkpoint** — a Parquet file that materializes the full set 
 version. A reader loads the latest checkpoint and only replays the JSON commits after it. This is
 Delta's answer to the same scaling problem Iceberg solves with manifest lists and manifests.
 
+![A reader loads the latest checkpoint (v10) and replays only the JSON commits after it to get the table state](diagrams/delta-log-replay.svg)
+
 **`MERGE INTO` for SCD2.** The upsert is the same shape you have written in dbt snapshots and SQL
 marts. For a Type 2 dimension you keep history: when an incoming row changes an attribute, you
 **close** the current version (set its `valid_to`) and **insert** a new current version

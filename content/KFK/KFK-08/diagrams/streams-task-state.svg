@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" role="img" aria-labelledby="streams-task-state-t">
+  <title id="streams-task-state-t">Kafka Streams: one task per input partition, each with its own state store backed by a changelog partition</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}
+  </style>
+  <defs><marker id="streams-task-state-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <text class="dg-muted" x="85" y="28" text-anchor="middle">input topic</text>
+  <text class="dg-muted" x="265" y="28" text-anchor="middle">tasks (one per partition)</text>
+  <text class="dg-muted" x="440" y="28" text-anchor="middle">local state store</text>
+  <text class="dg-muted" x="625" y="28" text-anchor="middle">compacted changelog topic</text>
+  <rect class="dg-box" x="20" y="45" width="130" height="60" rx="8"/>
+  <text class="dg-text dg-mono" x="85" y="80" text-anchor="middle">partition 0</text>
+  <rect class="dg-accent" x="195" y="45" width="140" height="60" rx="8"/>
+  <text class="dg-text dg-b" x="265" y="73" text-anchor="middle">Task 0_0</text>
+  <text class="dg-muted" x="265" y="91" text-anchor="middle">join / aggregate</text>
+  <rect class="dg-ok" x="380" y="45" width="120" height="60" rx="8"/>
+  <text class="dg-text dg-b" x="440" y="73" text-anchor="middle">Store 0</text>
+  <text class="dg-muted" x="440" y="91" text-anchor="middle">RocksDB</text>
+  <rect class="dg-box" x="545" y="45" width="160" height="60" rx="8"/>
+  <text class="dg-text dg-mono" x="625" y="80" text-anchor="middle">changelog p0</text>
+  <path class="dg-line" d="M150 75H193" marker-end="url(#streams-task-state-arrow)"/>
+  <path class="dg-line" d="M335 75H378" marker-start="url(#streams-task-state-arrow)" marker-end="url(#streams-task-state-arrow)"/>
+  <path class="dg-line dg-dash" d="M500 75H543" marker-end="url(#streams-task-state-arrow)"/>
+  <rect class="dg-box" x="20" y="125" width="130" height="60" rx="8"/>
+  <text class="dg-text dg-mono" x="85" y="160" text-anchor="middle">partition 1</text>
+  <rect class="dg-accent" x="195" y="125" width="140" height="60" rx="8"/>
+  <text class="dg-text dg-b" x="265" y="153" text-anchor="middle">Task 0_1</text>
+  <text class="dg-muted" x="265" y="171" text-anchor="middle">join / aggregate</text>
+  <rect class="dg-ok" x="380" y="125" width="120" height="60" rx="8"/>
+  <text class="dg-text dg-b" x="440" y="153" text-anchor="middle">Store 1</text>
+  <text class="dg-muted" x="440" y="171" text-anchor="middle">RocksDB</text>
+  <rect class="dg-box" x="545" y="125" width="160" height="60" rx="8"/>
+  <text class="dg-text dg-mono" x="625" y="160" text-anchor="middle">changelog p1</text>
+  <path class="dg-line" d="M150 155H193" marker-end="url(#streams-task-state-arrow)"/>
+  <path class="dg-line" d="M335 155H378" marker-start="url(#streams-task-state-arrow)" marker-end="url(#streams-task-state-arrow)"/>
+  <path class="dg-line dg-dash" d="M500 155H543" marker-end="url(#streams-task-state-arrow)"/>
+  <rect class="dg-box" x="20" y="205" width="130" height="60" rx="8"/>
+  <text class="dg-text dg-mono" x="85" y="240" text-anchor="middle">partition 2</text>
+  <rect class="dg-accent" x="195" y="205" width="140" height="60" rx="8"/>
+  <text class="dg-text dg-b" x="265" y="233" text-anchor="middle">Task 0_2</text>
+  <text class="dg-muted" x="265" y="251" text-anchor="middle">join / aggregate</text>
+  <rect class="dg-ok" x="380" y="205" width="120" height="60" rx="8"/>
+  <text class="dg-text dg-b" x="440" y="233" text-anchor="middle">Store 2</text>
+  <text class="dg-muted" x="440" y="251" text-anchor="middle">RocksDB</text>
+  <rect class="dg-box" x="545" y="205" width="160" height="60" rx="8"/>
+  <text class="dg-text dg-mono" x="625" y="240" text-anchor="middle">changelog p2</text>
+  <path class="dg-line" d="M150 235H193" marker-end="url(#streams-task-state-arrow)"/>
+  <path class="dg-line" d="M335 235H378" marker-start="url(#streams-task-state-arrow)" marker-end="url(#streams-task-state-arrow)"/>
+  <path class="dg-line dg-dash" d="M500 235H543" marker-end="url(#streams-task-state-arrow)"/>
+  <text class="dg-muted" x="360" y="296" text-anchor="middle">Partition N maps to task 0_N, store N and changelog partition N. After a crash the store is rebuilt by replaying its changelog.</text>
+</svg>

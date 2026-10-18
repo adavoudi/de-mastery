@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 340" role="img" aria-labelledby="raft-election-overlap-t">
+  <title id="raft-election-overlap-t">Raft election in term 4: N1 wins 3 of 5 votes, and any other majority shares a voter with it</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}
+  </style>
+  <defs><marker id="raft-election-overlap-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <text class="dg-text dg-b" x="30" y="30">Term 4</text>
+  <text class="dg-muted" x="150" y="50" text-anchor="middle">timeout</text>
+  <text class="dg-muted" x="260" y="50" text-anchor="middle">RequestVote</text>
+  <text class="dg-muted" x="380" y="50" text-anchor="middle">votes granted</text>
+  <text class="dg-muted" x="480" y="50" text-anchor="middle">majority</text>
+  <rect class="dg-accent" x="30" y="64" width="50" height="32" rx="8"/><text class="dg-text dg-b" x="55" y="85" text-anchor="middle">N1</text>
+  <path class="dg-line dg-dash" d="M84 80H510"/>
+  <rect class="dg-ok" x="30" y="109" width="50" height="32" rx="8"/><text class="dg-text dg-b" x="55" y="130" text-anchor="middle">N2</text>
+  <path class="dg-line dg-dash" d="M84 125H510"/>
+  <rect class="dg-ok" x="30" y="154" width="50" height="32" rx="8"/><text class="dg-text dg-b" x="55" y="175" text-anchor="middle">N3</text>
+  <path class="dg-line dg-dash" d="M84 170H510"/>
+  <rect class="dg-box" x="30" y="199" width="50" height="32" rx="8"/><text class="dg-text dg-b" x="55" y="220" text-anchor="middle">N4</text>
+  <path class="dg-line dg-dash" d="M84 215H510"/>
+  <rect class="dg-box" x="30" y="244" width="50" height="32" rx="8"/><text class="dg-text dg-b" x="55" y="265" text-anchor="middle">N5</text>
+  <path class="dg-line dg-dash" d="M84 260H510"/>
+  <path class="dg-line" d="M150 80L254 122" marker-end="url(#raft-election-overlap-arrow)"/>
+  <path class="dg-line" d="M150 80L254 167" marker-end="url(#raft-election-overlap-arrow)"/>
+  <path class="dg-line" d="M150 80L254 212" marker-end="url(#raft-election-overlap-arrow)"/>
+  <path class="dg-line" d="M150 80L254 257" marker-end="url(#raft-election-overlap-arrow)"/>
+  <path class="dg-line" d="M270 125L376 83" marker-end="url(#raft-election-overlap-arrow)"/>
+  <path class="dg-line" d="M270 170L376 83" marker-end="url(#raft-election-overlap-arrow)"/>
+  <text class="dg-muted" x="400" y="238">N4, N5 slow</text>
+  <text class="dg-muted" x="400" y="256">no vote yet</text>
+  <circle class="dg-dot" cx="150" cy="80" r="6"/>
+  <circle class="dg-dot-ok" cx="270" cy="125" r="6"/>
+  <circle class="dg-dot-ok" cx="270" cy="170" r="6"/>
+  <rect class="dg-ok" x="412" y="62" width="104" height="36" rx="8"/><text class="dg-text dg-b" x="464" y="85" text-anchor="middle">3 of 5: leader</text>
+  <circle class="dg-dot" r="5" cx="150" cy="80"><animate attributeName="cx" values="150;254;254" keyTimes="0;0.25;1" dur="9s" repeatCount="indefinite"/><animate attributeName="cy" values="80;122;122" keyTimes="0;0.25;1" dur="9s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;1;0;0" keyTimes="0;0.25;0.3;1" dur="9s" repeatCount="indefinite"/></circle>
+  <circle class="dg-dot" r="5" cx="150" cy="80"><animate attributeName="cx" values="150;254;254" keyTimes="0;0.25;1" dur="9s" repeatCount="indefinite"/><animate attributeName="cy" values="80;167;167" keyTimes="0;0.25;1" dur="9s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;1;0;0" keyTimes="0;0.25;0.3;1" dur="9s" repeatCount="indefinite"/></circle>
+  <circle class="dg-dot" r="5" cx="150" cy="80"><animate attributeName="cx" values="150;254;254" keyTimes="0;0.25;1" dur="9s" repeatCount="indefinite"/><animate attributeName="cy" values="80;212;212" keyTimes="0;0.25;1" dur="9s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;1;0;0" keyTimes="0;0.25;0.3;1" dur="9s" repeatCount="indefinite"/></circle>
+  <circle class="dg-dot" r="5" cx="150" cy="80"><animate attributeName="cx" values="150;254;254" keyTimes="0;0.25;1" dur="9s" repeatCount="indefinite"/><animate attributeName="cy" values="80;257;257" keyTimes="0;0.25;1" dur="9s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;1;0;0" keyTimes="0;0.25;0.3;1" dur="9s" repeatCount="indefinite"/></circle>
+  <circle class="dg-dot-ok" r="5" cx="270" cy="125"><animate attributeName="cx" values="270;270;376;376" keyTimes="0;0.35;0.6;1" dur="9s" repeatCount="indefinite"/><animate attributeName="cy" values="125;125;83;83" keyTimes="0;0.35;0.6;1" dur="9s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.34;0.35;0.6;0.65;1" dur="9s" repeatCount="indefinite"/></circle>
+  <circle class="dg-dot-ok" r="5" cx="270" cy="170"><animate attributeName="cx" values="270;270;376;376" keyTimes="0;0.35;0.6;1" dur="9s" repeatCount="indefinite"/><animate attributeName="cy" values="170;170;83;83" keyTimes="0;0.35;0.6;1" dur="9s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.34;0.35;0.6;0.65;1" dur="9s" repeatCount="indefinite"/></circle>
+  <path class="dg-line" d="M524 70H530V180H524"/><path class="dg-line" d="M544 160H550V270H544"/>
+  <text class="dg-text dg-b" x="560" y="105">Majority A</text><text class="dg-muted dg-mono" x="560" y="123">N1 N2 N3</text>
+  <text class="dg-text dg-b" x="560" y="225">Majority B</text><text class="dg-muted dg-mono" x="560" y="243">N3 N4 N5</text>
+    <circle class="dg-line" cx="270" cy="170" r="13" fill="none"><animate attributeName="r" values="11;17;11" dur="3s" repeatCount="indefinite"/></circle>
+  <text class="dg-text dg-b" x="560" y="174">N3 is in both</text>
+  <text class="dg-text" x="30" y="305">N3 voted for N1 in term 4 and cannot vote again, so a rival cannot also reach 3 votes.</text>
+</svg>

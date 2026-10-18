@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 330" role="img" aria-labelledby="micro-batch-checkpoint-t">
+  <title id="micro-batch-checkpoint-t">One micro-batch: read offsets, process, write to sink, commit to checkpoint; a crash before or after the commit both recover exactly-once</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}
+  </style>
+  <defs><marker id="micro-batch-checkpoint-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+
+  <rect class="dg-box" x="20" y="30" width="150" height="76" rx="10"/>
+  <text class="dg-text dg-b" x="95" y="56" text-anchor="middle">1 Source</text>
+  <text class="dg-muted dg-mono" x="95" y="78" text-anchor="middle">offsets 100-199</text>
+  <text class="dg-muted" x="95" y="96" text-anchor="middle">new rows only</text>
+
+  <rect class="dg-box" x="195" y="30" width="150" height="76" rx="10"/>
+  <text class="dg-text dg-b" x="270" y="56" text-anchor="middle">2 Process</text>
+  <text class="dg-muted" x="270" y="78" text-anchor="middle">same query plan</text>
+  <text class="dg-muted" x="270" y="96" text-anchor="middle">over this batch</text>
+
+  <rect class="dg-box" x="370" y="30" width="150" height="76" rx="10"/>
+  <text class="dg-text dg-b" x="445" y="56" text-anchor="middle">3 Write sink</text>
+  <text class="dg-muted" x="445" y="78" text-anchor="middle">idempotent or</text>
+  <text class="dg-muted" x="445" y="96" text-anchor="middle">transactional</text>
+
+  <rect class="dg-accent" x="545" y="30" width="150" height="76" rx="10"/>
+  <text class="dg-text dg-b" x="620" y="56" text-anchor="middle">4 Commit</text>
+  <text class="dg-muted dg-mono" x="620" y="78" text-anchor="middle">checkpoint = 199</text>
+  <text class="dg-muted" x="620" y="96" text-anchor="middle">after the write</text>
+
+  <!-- step highlights -->
+  <rect class="dg-ok" x="20" y="30" width="150" height="76" rx="10" opacity="0" fill-opacity="0.35">
+    <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.05;0.2;0.21;1" dur="9s" repeatCount="indefinite"/>
+  </rect>
+  <rect class="dg-ok" x="195" y="30" width="150" height="76" rx="10" opacity="0" fill-opacity="0.35">
+    <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.2;0.25;0.4;0.41;1" dur="9s" repeatCount="indefinite"/>
+  </rect>
+  <rect class="dg-ok" x="370" y="30" width="150" height="76" rx="10" opacity="0" fill-opacity="0.35">
+    <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.4;0.45;0.6;0.61;1" dur="9s" repeatCount="indefinite"/>
+  </rect>
+  <rect class="dg-ok" x="545" y="30" width="150" height="76" rx="10" opacity="0" fill-opacity="0.35">
+    <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.6;0.65;0.85;0.86;1" dur="9s" repeatCount="indefinite"/>
+  </rect>
+
+  <path class="dg-line" d="M170 68H193" marker-end="url(#micro-batch-checkpoint-arrow)"/>
+  <path class="dg-line" d="M345 68H368" marker-end="url(#micro-batch-checkpoint-arrow)"/>
+  <path class="dg-line" d="M520 68H543" marker-end="url(#micro-batch-checkpoint-arrow)"/>
+
+  <circle class="dg-dot" r="7" cx="95" cy="122">
+    <animate attributeName="cx" values="95;270;445;620;620" keyTimes="0;0.25;0.5;0.75;1" dur="9s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="1;1;1;1;0" keyTimes="0;0.25;0.5;0.85;1" dur="9s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- crash points -->
+  <path class="dg-line dg-dash" d="M532 112V150"/>
+  <circle class="dg-bad" cx="532" cy="158" r="6"/>
+  <text class="dg-muted" x="532" y="182" text-anchor="middle">crash A</text>
+  <path class="dg-line dg-dash" d="M703 112V150"/>
+  <circle class="dg-bad" cx="703" cy="158" r="6"/>
+  <text class="dg-muted" x="716" y="182" text-anchor="end">crash B</text>
+
+  <rect class="dg-warn" x="20" y="196" width="335" height="112" rx="10"/>
+  <text class="dg-text dg-b" x="36" y="220">A: crash after write, before commit</text>
+  <text class="dg-text" x="36" y="244">Checkpoint still says 99.</text>
+  <text class="dg-text" x="36" y="264">Restart re-reads the same offsets 100-199</text>
+  <text class="dg-text" x="36" y="284">and redoes the batch; the sink ignores</text>
+  <text class="dg-text" x="36" y="302">the repeat, so no duplicates.</text>
+
+  <rect class="dg-ok" x="375" y="196" width="325" height="112" rx="10"/>
+  <text class="dg-text dg-b" x="391" y="220">B: crash after commit</text>
+  <text class="dg-text" x="391" y="244">Checkpoint says 199.</text>
+  <text class="dg-text" x="391" y="264">Restart asks the source for 200 onward;</text>
+  <text class="dg-text" x="391" y="284">the next batch starts cleanly, so no gaps.</text>
+  <text class="dg-muted" x="391" y="302">Either way: exactly-once.</text>
+</svg>

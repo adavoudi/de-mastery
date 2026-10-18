@@ -10,6 +10,8 @@ install their result, **one write is silently lost**: whoever swaps the pointer 
 first writer's snapshot from the current line. Lost updates are the quiet data-corruption bug that
 table formats exist to prevent.
 
+![Two writers read version N; A wins the compare-and-swap, B gets a conflict, refreshes and retries on N+1](diagrams/commit-cas-retry.svg)
+
 Iceberg's answer is **optimistic concurrency control (OCC)**. There are no locks held across the
 work. Each writer optimistically does its work against the snapshot it read, then, at commit time,
 performs an **atomic compare-and-swap**: "install my new metadata *only if* the table is still at

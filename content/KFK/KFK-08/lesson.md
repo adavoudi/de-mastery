@@ -32,6 +32,9 @@ becomes a streaming enrichment that updates as either side changes.
 - **State stores & changelogs.** Aggregations and joins keep local state in a
   **state store** (RocksDB by default), backed by a compacted **changelog topic**.
   That is how state survives a crash: the store is rebuilt from the changelog.
+
+![Each input partition gets its own task and state store, and every store writes to a matching changelog partition](diagrams/streams-task-state.svg)
+
 - **Windows.** Tumbling, hopping, sliding, and session windows group events by
   **event time** for time-bounded aggregations (e.g. revenue per 1-minute window).
 - **EOS v2** (exactly-once semantics) ties consume → process → produce → state

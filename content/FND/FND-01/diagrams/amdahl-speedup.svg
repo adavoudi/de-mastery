@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 380" role="img" aria-labelledby="amdahl-speedup-t">
+  <title id="amdahl-speedup-t">Amdahl's law with p = 0.9: speedup flattens toward the 10x cap as workers grow</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}
+  </style>
+  <path class="dg-line" d="M90 320H730M90 320V40"/>
+  <path class="dg-line dg-dash" d="M90 50H730"/>
+  <text class="dg-text dg-b" x="730" y="38" text-anchor="end">cap = 1 / (1 - p) = 10x</text>
+  <path class="dg-line" d="M90 293L180 271L270 237L360 193L450 147L540 109L630 83L720 69"/>
+  <g class="dg-dot">
+    <circle r="5" cx="90" cy="293"/><circle r="5" cx="180" cy="271"/><circle r="5" cx="270" cy="237"/><circle r="5" cx="360" cy="193"/>
+    <circle r="5" cx="450" cy="147"/><circle r="5" cx="540" cy="109"/><circle r="5" cx="630" cy="83"/><circle r="5" cx="720" cy="69"/>
+  </g>
+  <text class="dg-text" x="100" y="282">1x</text>
+  <text class="dg-text" x="360" y="215" text-anchor="middle">4.7x</text>
+  <text class="dg-text" x="450" y="170" text-anchor="middle">6.4x</text>
+  <text class="dg-text" x="540" y="132" text-anchor="middle">7.8x</text>
+  <text class="dg-text" x="630" y="106" text-anchor="middle">8.8x</text>
+  <text class="dg-text" x="720" y="94" text-anchor="middle">9.3x</text>
+  <g class="dg-muted" text-anchor="middle">
+    <text x="90" y="340">1</text><text x="180" y="340">2</text><text x="270" y="340">4</text><text x="360" y="340">8</text>
+    <text x="450" y="340">16</text><text x="540" y="340">32</text><text x="630" y="340">64</text><text x="720" y="340">128</text>
+  </g>
+  <text class="dg-muted" x="410" y="362" text-anchor="middle">workers n (log scale)</text>
+  <text class="dg-muted" x="80" y="324" text-anchor="end">0</text>
+  <text class="dg-muted" x="80" y="54" text-anchor="end">10x</text>
+  <text class="dg-muted" x="80" y="190" text-anchor="end">speedup</text>
+  <text class="dg-muted dg-mono" x="150" y="130">p = 0.9 (10% serial)</text>
+</svg>

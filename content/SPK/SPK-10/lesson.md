@@ -31,6 +31,8 @@ that either is idempotent or participates in the commit, you get **end-to-end ex
 is the streaming analogue of your incremental model's "did we remember the right watermark, and is
 the merge idempotent?"
 
+![One micro-batch: read offsets, process, write, then commit to the checkpoint; a crash on either side of the commit recovers exactly-once](diagrams/micro-batch-checkpoint.svg)
+
 ## Sources, sinks, triggers, output modes (objective 5.2)
 
 - **Sources:** files (a directory you drop files into), Kafka (KFK track — not until Phase 3 here),

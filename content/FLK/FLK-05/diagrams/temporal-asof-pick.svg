@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 330" role="img" aria-labelledby="temporal-asof-pick-t">
+  <title id="temporal-asof-pick-t">Each order lands on the FX rate version valid at its order time</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}.dg-dot-ok{fill:#2c7a4b}.dg-dot-bad{fill:#b3372b}
+  </style>
+  <defs><marker id="temporal-asof-pick-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <text class="dg-text dg-b" x="30" y="28">Orders (event time)</text>
+  <!-- orders -->
+  <circle class="dg-dot" r="8" cx="160" cy="70"/>
+  <text class="dg-text dg-mono" x="160" y="50" text-anchor="middle">order Jan 3</text>
+  <circle class="dg-dot-ok" r="8" cx="410" cy="70"/>
+  <text class="dg-text dg-mono dg-b" x="410" y="50" text-anchor="middle">order Jan 8</text>
+  <circle class="dg-dot" r="8" cx="610" cy="70"/>
+  <text class="dg-text dg-mono" x="610" y="50" text-anchor="middle">order Jan 12</text>
+  <path class="dg-line" d="M160 80V152" marker-end="url(#temporal-asof-pick-arrow)"/>
+  <path class="dg-line" d="M410 80V152" marker-end="url(#temporal-asof-pick-arrow)"/>
+  <path class="dg-line" d="M610 80V152" marker-end="url(#temporal-asof-pick-arrow)"/>
+  <!-- versions -->
+  <rect class="dg-box" x="60" y="156" width="250" height="60" rx="6"/>
+  <text class="dg-text dg-b" x="185" y="182" text-anchor="middle">EUR rate 1.08</text>
+  <text class="dg-muted dg-mono" x="185" y="202" text-anchor="middle">Jan 1 to Jan 6</text>
+  <rect class="dg-ok" x="310" y="156" width="200" height="60" rx="6"/>
+  <text class="dg-text dg-b" x="410" y="182" text-anchor="middle">EUR rate 1.10</text>
+  <text class="dg-muted dg-mono" x="410" y="202" text-anchor="middle">Jan 6 to Jan 10</text>
+  <rect class="dg-box" x="510" y="156" width="170" height="60" rx="6"/>
+  <text class="dg-text dg-b" x="595" y="182" text-anchor="middle">EUR rate 1.12</text>
+  <text class="dg-muted dg-mono" x="595" y="202" text-anchor="middle">Jan 10 to open</text>
+  <!-- axis -->
+  <path class="dg-line" d="M60 236H680" marker-end="url(#temporal-asof-pick-arrow)"/>
+  <text class="dg-muted" x="60" y="256" text-anchor="middle">Jan 1</text>
+  <text class="dg-muted" x="310" y="256" text-anchor="middle">Jan 6</text>
+  <text class="dg-muted" x="510" y="256" text-anchor="middle">Jan 10</text>
+  <text class="dg-muted" x="30" y="276">event time</text>
+  <!-- note -->
+  <rect class="dg-bad" x="380" y="288" width="300" height="30" rx="6"/>
+  <text class="dg-text" x="530" y="308" text-anchor="middle">Today's rate 1.12 would restate Jan 8</text>
+  <text class="dg-text" x="30" y="308">Rule: greatest valid_from &lt;= order time</text>
+</svg>

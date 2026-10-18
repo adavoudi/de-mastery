@@ -8,7 +8,7 @@
     .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
     .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
     .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
-    .dg-dot{fill:#1d5c63}
+    .dg-dot{fill:#1d5c63}.dg-dot-ok{fill:#2c7a4b}.dg-dot-bad{fill:#b3372b}
   </style>
   <defs><marker id="tpl-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
   <rect class="dg-accent" x="30" y="70" width="150" height="70" rx="10"/>

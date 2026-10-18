@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 410" role="img" aria-labelledby="iceberg-metadata-tree-t">
+  <title id="iceberg-metadata-tree-t">Iceberg metadata tree: catalog, metadata.json, manifest list, manifest, data files</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}
+  </style>
+
+  <defs><marker id="iceberg-metadata-tree-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <rect class="dg-accent" x="30" y="16" width="300" height="52" rx="10"/>
+  <text class="dg-text dg-b dg-mono" x="180" y="38" text-anchor="middle">Glue catalog entry</text>
+  <text class="dg-muted" x="180" y="56" text-anchor="middle">one atomic pointer per table</text>
+  <text class="dg-text" x="360" y="47">1. holds the path of the current file</text>
+  <path class="dg-line" d="M180 68V94" marker-end="url(#iceberg-metadata-tree-arrow)"/>
+  <rect class="dg-box" x="30" y="96" width="300" height="52" rx="10"/>
+  <text class="dg-text dg-b dg-mono" x="180" y="118" text-anchor="middle">vN.metadata.json</text>
+  <text class="dg-muted" x="180" y="136" text-anchor="middle">schema, specs, snapshots[], current-snapshot-id</text>
+  <text class="dg-text" x="360" y="127">2. each snapshot points at one manifest list</text>
+  <path class="dg-line" d="M180 148V174" marker-end="url(#iceberg-metadata-tree-arrow)"/>
+  <rect class="dg-box" x="30" y="176" width="300" height="52" rx="10"/>
+  <text class="dg-text dg-b dg-mono" x="180" y="198" text-anchor="middle">snap-&lt;id&gt;.avro</text>
+  <text class="dg-muted" x="180" y="216" text-anchor="middle">manifest list</text>
+  <text class="dg-text" x="360" y="207">3. one row per manifest, with partition ranges</text>
+  <path class="dg-line" d="M180 228V254" marker-end="url(#iceberg-metadata-tree-arrow)"/>
+  <rect class="dg-box" x="30" y="256" width="300" height="52" rx="10"/>
+  <text class="dg-text dg-b dg-mono" x="180" y="278" text-anchor="middle">&lt;uuid&gt;-m0.avro</text>
+  <text class="dg-muted" x="180" y="296" text-anchor="middle">manifest</text>
+  <text class="dg-text" x="360" y="287">4. per-file stats: counts, min/max, nulls</text>
+  <path class="dg-line" d="M180 308V334" marker-end="url(#iceberg-metadata-tree-arrow)"/>
+  <rect class="dg-ok" x="30" y="336" width="300" height="52" rx="10"/>
+  <text class="dg-text dg-b dg-mono" x="180" y="358" text-anchor="middle">00000-….parquet</text>
+  <text class="dg-muted" x="180" y="376" text-anchor="middle">data files (and delete files, v2+)</text>
+  <text class="dg-text" x="360" y="367">5. immutable leaves</text>
+</svg>

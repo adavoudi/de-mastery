@@ -34,6 +34,8 @@ dramatic when the data is **sorted or clustered** on the filtered column (tight,
 ranges) and weak when it's randomly ordered (every group's range covers everything, so nothing is
 skipped). This is why *sort order is a performance feature*, not cosmetics.
 
+![Footer max stats let the engine skip row groups 0 and 1 for line_amount > 900 and read only row group 2](diagrams/parquet-pruning.svg)
+
 **Avro and ORC, briefly.** Avro is a compact **row** format with a schema — great for streaming
 and record-at-a-time writes (Kafka), poor for wide-column scans. ORC is another columnar format
 (stripes + indexes + bloom filters), common in the Hive/Trino world; same idea as Parquet with

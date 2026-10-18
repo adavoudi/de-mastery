@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 400" role="img" aria-labelledby="flink-cluster-t">
+  <title id="flink-cluster-t">JobManager schedules subtasks into slots on two TaskManagers</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}
+  </style>
+  <defs><marker id="flink-cluster-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <rect class="dg-accent" x="240" y="15" width="220" height="60" rx="10"/>
+  <text class="dg-text dg-b" x="350" y="40" text-anchor="middle">JobManager</text>
+  <text class="dg-muted" x="350" y="60" text-anchor="middle">schedules, checkpoints, no data</text>
+  <path class="dg-line dg-dash" d="M300 75L190 128" marker-end="url(#flink-cluster-arrow)"/>
+  <path class="dg-line dg-dash" d="M400 75L510 128" marker-end="url(#flink-cluster-arrow)"/>
+  <text class="dg-muted" x="215" y="100" text-anchor="end">assign subtasks</text>
+  <text class="dg-muted" x="485" y="100">assign subtasks</text>
+  <rect class="dg-box" x="40" y="130" width="300" height="225" rx="10"/>
+  <text class="dg-text dg-b" x="190" y="154" text-anchor="middle">TaskManager 1 (2 slots)</text>
+  <rect class="dg-ok" x="55" y="170" width="130" height="170" rx="8"/>
+  <text class="dg-text dg-b" x="120" y="194" text-anchor="middle">slot, slice 0</text>
+  <text class="dg-text dg-mono" x="120" y="222" text-anchor="middle">source[0]</text>
+  <text class="dg-text dg-mono" x="120" y="246" text-anchor="middle">map[0]</text>
+  <text class="dg-text dg-mono" x="120" y="270" text-anchor="middle">window[0]</text>
+  <text class="dg-text dg-mono" x="120" y="294" text-anchor="middle">sink[0]</text>
+  <text class="dg-muted" x="120" y="325" text-anchor="middle">shared by 4 subtasks</text>
+  <rect class="dg-ok" x="195" y="170" width="130" height="170" rx="8"/>
+  <text class="dg-text dg-b" x="260" y="194" text-anchor="middle">slot, slice 1</text>
+  <text class="dg-text dg-mono" x="260" y="222" text-anchor="middle">source[1]</text>
+  <text class="dg-text dg-mono" x="260" y="246" text-anchor="middle">map[1]</text>
+  <text class="dg-text dg-mono" x="260" y="270" text-anchor="middle">window[1]</text>
+  <text class="dg-text dg-mono" x="260" y="294" text-anchor="middle">sink[1]</text>
+  <text class="dg-muted" x="260" y="325" text-anchor="middle">shared by 4 subtasks</text>
+  <rect class="dg-box" x="360" y="130" width="300" height="225" rx="10"/>
+  <text class="dg-text dg-b" x="510" y="154" text-anchor="middle">TaskManager 2 (2 slots)</text>
+  <rect class="dg-ok" x="375" y="170" width="130" height="170" rx="8"/>
+  <text class="dg-text dg-b" x="440" y="194" text-anchor="middle">slot, slice 2</text>
+  <text class="dg-text dg-mono" x="440" y="222" text-anchor="middle">source[2]</text>
+  <text class="dg-text dg-mono" x="440" y="246" text-anchor="middle">map[2]</text>
+  <text class="dg-text dg-mono" x="440" y="270" text-anchor="middle">window[2]</text>
+  <text class="dg-text dg-mono" x="440" y="294" text-anchor="middle">sink[2]</text>
+  <text class="dg-muted" x="440" y="325" text-anchor="middle">shared by 4 subtasks</text>
+  <rect class="dg-ok" x="515" y="170" width="130" height="170" rx="8"/>
+  <text class="dg-text dg-b" x="580" y="194" text-anchor="middle">slot, slice 3</text>
+  <text class="dg-text dg-mono" x="580" y="222" text-anchor="middle">source[3]</text>
+  <text class="dg-text dg-mono" x="580" y="246" text-anchor="middle">map[3]</text>
+  <text class="dg-text dg-mono" x="580" y="270" text-anchor="middle">window[3]</text>
+  <text class="dg-text dg-mono" x="580" y="294" text-anchor="middle">sink[3]</text>
+  <text class="dg-muted" x="580" y="325" text-anchor="middle">shared by 4 subtasks</text>
+  <text class="dg-muted" x="350" y="380" text-anchor="middle">Parallelism 4 needs 4 slots (max operator parallelism), not 16</text>
+</svg>

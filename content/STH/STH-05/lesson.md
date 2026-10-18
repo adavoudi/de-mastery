@@ -28,6 +28,8 @@ A streaming star schema is three ideas you already know, re-expressed:
    `FOR SYSTEM_TIME AS OF`; expressed over an explicit SCD2 dimension (as here) it is a range join on
    the validity interval. Either way the planner/engine picks exactly one version per order.
 
+![Each order lands on the Alice version whose validity interval contains its order_ts; t=100 falls on gold because valid_to is exclusive](diagrams/as-of-join.svg)
+
 **Why "as-of" and not "latest".** Alice is `std` until t=100 and `gold` after. An order she placed at
 t=30 must be stamped `std` even if we reprocess it next week, when she is already `gold`. Valuing it
 `gold` is not a rounding error — it restates a historical fact and breaks reconciliation and SOX

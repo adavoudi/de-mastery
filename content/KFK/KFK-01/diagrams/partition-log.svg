@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 370" role="img" aria-labelledby="partition-log-t">
+  <title id="partition-log-t">One partition as an append-only log: two consumer groups at different offsets, the retention cutoff, and a replay</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}
+  </style>
+
+  <defs><marker id="partition-log-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <text class="dg-text dg-b" x="48" y="30">Partition 0: offsets only grow, records are never changed</text>
+  <rect class="dg-bad dg-dash" x="48" y="150" width="48" height="44"/>
+  <text class="dg-mono dg-muted" x="72" y="177" text-anchor="middle">0</text>
+  <rect class="dg-bad dg-dash" x="96" y="150" width="48" height="44"/>
+  <text class="dg-mono dg-muted" x="120" y="177" text-anchor="middle">1</text>
+  <rect class="dg-bad dg-dash" x="144" y="150" width="48" height="44"/>
+  <text class="dg-mono dg-muted" x="168" y="177" text-anchor="middle">2</text>
+  <rect class="dg-accent" x="192" y="150" width="48" height="44"/>
+  <text class="dg-mono dg-text" x="216" y="177" text-anchor="middle">3</text>
+  <rect class="dg-accent" x="240" y="150" width="48" height="44"/>
+  <text class="dg-mono dg-text" x="264" y="177" text-anchor="middle">4</text>
+  <rect class="dg-accent" x="288" y="150" width="48" height="44"/>
+  <text class="dg-mono dg-text" x="312" y="177" text-anchor="middle">5</text>
+  <rect class="dg-accent" x="336" y="150" width="48" height="44"/>
+  <text class="dg-mono dg-text" x="360" y="177" text-anchor="middle">6</text>
+  <rect class="dg-accent" x="384" y="150" width="48" height="44"/>
+  <text class="dg-mono dg-text" x="408" y="177" text-anchor="middle">7</text>
+  <rect class="dg-accent" x="432" y="150" width="48" height="44"/>
+  <text class="dg-mono dg-text" x="456" y="177" text-anchor="middle">8</text>
+  <rect class="dg-accent" x="480" y="150" width="48" height="44"/>
+  <text class="dg-mono dg-text" x="504" y="177" text-anchor="middle">9</text>
+  <rect class="dg-accent" x="528" y="150" width="48" height="44"/>
+  <text class="dg-mono dg-text" x="552" y="177" text-anchor="middle">10</text>
+  <rect class="dg-accent" x="576" y="150" width="48" height="44"/>
+  <text class="dg-mono dg-text" x="600" y="177" text-anchor="middle">11</text>
+  <rect class="dg-box dg-dash" x="624" y="150" width="48" height="44"/>
+  <text class="dg-mono dg-muted" x="648" y="177" text-anchor="middle">12</text>
+  <path class="dg-line dg-dash" d="M192 106V232"/>
+  <text class="dg-muted" x="200" y="124">retention cutoff: low = 3</text>
+  <text class="dg-muted" x="120" y="222" text-anchor="middle">deleted</text>
+  <text class="dg-muted" x="672" y="222" text-anchor="end">high = 12 (next write)</text>
+  <g transform="translate(504 0)">
+    <animateTransform attributeName="transform" type="translate" values="504 0;600 0;600 0;504 0;504 0" keyTimes="0;0.3;0.5;0.8;1" dur="10s" repeatCount="indefinite"/>
+    <text class="dg-text dg-b" x="0" y="78" text-anchor="middle">group: billing</text>
+    <path class="dg-line" d="M0 86V146" marker-end="url(#partition-log-arrow)"/>
+  </g>
+  <g transform="translate(360 0)">
+    <animateTransform attributeName="transform" type="translate" values="360 0;408 0;216 0;216 0;360 0" keyTimes="0;0.3;0.45;0.55;1" dur="10s" repeatCount="indefinite"/>
+    <text class="dg-text dg-b" x="0" y="300" text-anchor="middle">group: audit</text>
+    <path class="dg-line" d="M0 270V198" marker-end="url(#partition-log-arrow)"/>
+  </g>
+  <text class="dg-muted" x="48" y="345">Each group reads forward at its own pace. A replay moves only audit's pointer back to 3.</text>
+</svg>

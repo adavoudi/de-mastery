@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 250" role="img" aria-labelledby="match-recognize-states-t">
+  <title id="match-recognize-states-t">PATTERN (A B) as a state machine: any row becomes A, a larger next row completes B and emits a match</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}.dg-dot-ok{fill:#2c7a4b}.dg-dot-bad{fill:#b3372b}
+  </style>
+  <defs><marker id="match-recognize-states-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <circle class="dg-box" cx="55" cy="110" r="30"/>
+  <text class="dg-text dg-b" x="55" y="115" text-anchor="middle">start</text>
+  <path class="dg-line" d="M85 110H148" marker-end="url(#match-recognize-states-arrow)"/>
+  <text class="dg-muted" x="117" y="100" text-anchor="middle">next row</text>
+  <rect class="dg-accent" x="150" y="75" width="110" height="70" rx="10"/>
+  <text class="dg-text dg-b dg-mono" x="205" y="105" text-anchor="middle">A</text>
+  <text class="dg-muted" x="205" y="127" text-anchor="middle">any row</text>
+  <path class="dg-line" d="M260 110H358" marker-end="url(#match-recognize-states-arrow)"/>
+  <text class="dg-text dg-mono" x="309" y="100" text-anchor="middle">B.v &gt; A.v</text>
+  <rect class="dg-ok" x="360" y="75" width="110" height="70" rx="10"/>
+  <text class="dg-text dg-b dg-mono" x="415" y="105" text-anchor="middle">B</text>
+  <text class="dg-muted" x="415" y="127" text-anchor="middle">pattern complete</text>
+  <path class="dg-line" d="M470 110H558" marker-end="url(#match-recognize-states-arrow)"/>
+  <text class="dg-muted" x="514" y="100" text-anchor="middle">match</text>
+  <rect class="dg-box" x="560" y="80" width="140" height="60" rx="10"/>
+  <text class="dg-text dg-b" x="630" y="106" text-anchor="middle">emit 1 row</text>
+  <text class="dg-muted" x="630" y="126" text-anchor="middle">first_v, last_v</text>
+  <path class="dg-line dg-dash" d="M175 145C145 200 265 200 235 145" marker-end="url(#match-recognize-states-arrow)"/>
+  <text class="dg-text" x="205" y="224" text-anchor="middle">B.v &lt;= A.v: this row becomes the new A</text>
+</svg>

@@ -28,6 +28,8 @@ Catalyst runs a query through four stages, and `df.explain("extended")` shows al
 4. **Physical plan** — one or more candidate physical plans; a cost model picks one. This is what
    actually runs. `df.explain("formatted")` prints it as a numbered tree with a details section.
 
+![Catalyst rewrites the logical plan, then picks one physical plan to run](diagrams/catalyst-pipeline.svg)
+
 Two properties you will read off the physical plan over and over:
 
 - **`PushedFilters`** — printed on the `FileScan`/`BatchScan` node. A non-empty list means Spark

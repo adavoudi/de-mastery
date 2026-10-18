@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" role="img" aria-labelledby="incident-triage-t">
+  <title id="incident-triage-t">Incident triage: symptom, check, likely cause for the six Kafka incidents</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}
+  </style>
+  <defs><marker id="incident-triage-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <text class="dg-muted dg-b" x="110.0" y="22" text-anchor="middle">Symptom</text>
+  <text class="dg-muted dg-b" x="375.0" y="22" text-anchor="middle">Check</text>
+  <text class="dg-muted dg-b" x="625.0" y="22" text-anchor="middle">Likely cause</text>
+  <rect class="dg-bad" x="10" y="36" width="200" height="46" rx="8"/>
+  <text class="dg-text dg-b" x="110" y="64" text-anchor="middle">URP &gt; 0</text>
+  <rect class="dg-box" x="250" y="36" width="250" height="46" rx="8"/>
+  <text class="dg-text" x="375" y="64" text-anchor="middle">isr shorter than replicas</text>
+  <rect class="dg-accent" x="540" y="36" width="170" height="46" rx="8"/>
+  <text class="dg-text dg-b" x="625" y="64" text-anchor="middle">Replica offline</text>
+  <path class="dg-line" d="M210 59H248" marker-end="url(#incident-triage-arrow)"/>
+  <path class="dg-line" d="M500 59H538" marker-end="url(#incident-triage-arrow)"/>
+  <rect class="dg-bad" x="10" y="96" width="200" height="46" rx="8"/>
+  <text class="dg-text dg-b" x="110" y="124" text-anchor="middle">NOT_ENOUGH_REPLICAS</text>
+  <rect class="dg-box" x="250" y="96" width="250" height="46" rx="8"/>
+  <text class="dg-text" x="375" y="124" text-anchor="middle">ISR size &lt; min.insync.replicas?</text>
+  <rect class="dg-accent" x="540" y="96" width="170" height="46" rx="8"/>
+  <text class="dg-text dg-b" x="625" y="124" text-anchor="middle">ISR too small</text>
+  <path class="dg-line" d="M210 119H248" marker-end="url(#incident-triage-arrow)"/>
+  <path class="dg-line" d="M500 119H538" marker-end="url(#incident-triage-arrow)"/>
+  <rect class="dg-bad" x="10" y="156" width="200" height="46" rx="8"/>
+  <text class="dg-text dg-b" x="110" y="184" text-anchor="middle">Lag rising, never drains</text>
+  <rect class="dg-box" x="250" y="156" width="250" height="46" rx="8"/>
+  <text class="dg-text" x="375" y="184" text-anchor="middle">end_offset - committed flat?</text>
+  <rect class="dg-accent" x="540" y="156" width="170" height="46" rx="8"/>
+  <text class="dg-text dg-b" x="625" y="184" text-anchor="middle">Stuck group</text>
+  <path class="dg-line" d="M210 179H248" marker-end="url(#incident-triage-arrow)"/>
+  <path class="dg-line" d="M500 179H538" marker-end="url(#incident-triage-arrow)"/>
+  <rect class="dg-bad" x="10" y="216" width="200" height="46" rx="8"/>
+  <text class="dg-text dg-b" x="110" y="244" text-anchor="middle">Data vanishing early</text>
+  <rect class="dg-box" x="250" y="216" width="250" height="46" rx="8"/>
+  <text class="dg-text" x="375" y="244" text-anchor="middle">retention.ms below the floor?</text>
+  <rect class="dg-accent" x="540" y="216" width="170" height="46" rx="8"/>
+  <text class="dg-text dg-b" x="625" y="244" text-anchor="middle">Bad topic config</text>
+  <path class="dg-line" d="M210 239H248" marker-end="url(#incident-triage-arrow)"/>
+  <path class="dg-line" d="M500 239H538" marker-end="url(#incident-triage-arrow)"/>
+  <rect class="dg-bad" x="10" y="276" width="200" height="46" rx="8"/>
+  <text class="dg-text dg-b" x="110" y="304" text-anchor="middle">Timeouts to odd host</text>
+  <rect class="dg-box" x="250" y="276" width="250" height="46" rx="8"/>
+  <text class="dg-text" x="375" y="304" text-anchor="middle">advertised.listeners reachable?</text>
+  <rect class="dg-accent" x="540" y="276" width="170" height="46" rx="8"/>
+  <text class="dg-text dg-b" x="625" y="304" text-anchor="middle">Unreachable listener</text>
+  <path class="dg-line" d="M210 299H248" marker-end="url(#incident-triage-arrow)"/>
+  <path class="dg-line" d="M500 299H538" marker-end="url(#incident-triage-arrow)"/>
+  <rect class="dg-bad" x="10" y="336" width="200" height="46" rx="8"/>
+  <text class="dg-text dg-b" x="110" y="364" text-anchor="middle">Reassignment never ends</text>
+  <rect class="dg-box" x="250" y="336" width="250" height="46" rx="8"/>
+  <text class="dg-text" x="375" y="364" text-anchor="middle">throttle rate tiny?</text>
+  <rect class="dg-accent" x="540" y="336" width="170" height="46" rx="8"/>
+  <text class="dg-text dg-b" x="625" y="364" text-anchor="middle">Throttle set too low</text>
+  <path class="dg-line" d="M210 359H248" marker-end="url(#incident-triage-arrow)"/>
+  <path class="dg-line" d="M500 359H538" marker-end="url(#incident-triage-arrow)"/>
+</svg>

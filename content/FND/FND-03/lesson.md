@@ -41,6 +41,8 @@ different winners would each need a majority, and two majorities must overlap on
 illegally voted twice. That is the whole safety argument for leader election, and it is what you
 will implement.
 
+![Term 4 election: N1 collects 3 of 5 votes; any other majority must include N3, which already voted](diagrams/raft-election-overlap.svg)
+
 ## From your world
 
 You already trust this every day. **Amazon S3** stores each object redundantly across multiple

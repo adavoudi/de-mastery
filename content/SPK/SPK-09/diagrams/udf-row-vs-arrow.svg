@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 340" role="img" aria-labelledby="udf-row-vs-arrow-t">
+  <title id="udf-row-vs-arrow-t">Python UDF boundary: one row per trip versus one Arrow batch per trip</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}
+  </style>
+  <defs><marker id="udf-row-vs-arrow-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <rect class="dg-accent" x="20" y="40" width="170" height="260" rx="10"/>
+  <text class="dg-text dg-b" x="105" y="70" text-anchor="middle">JVM executor</text>
+  <text class="dg-muted" x="105" y="92" text-anchor="middle">Catalyst + codegen</text>
+  <rect class="dg-box" x="510" y="40" width="170" height="260" rx="10"/>
+  <text class="dg-text dg-b" x="595" y="70" text-anchor="middle">Python worker</text>
+  <text class="dg-muted" x="595" y="92" text-anchor="middle">runs your function</text>
+  <text class="dg-text dg-b dg-mono" x="350" y="40" text-anchor="middle">BatchEvalPython</text>
+  <path class="dg-line" d="M192 100H508" marker-end="url(#udf-row-vs-arrow-arrow)"/>
+  <text class="dg-muted" x="350" y="68" text-anchor="middle">1 row per trip, pickled</text>
+  <text class="dg-muted" x="350" y="130" text-anchor="middle">many small trips</text>
+  <circle class="dg-dot" r="7" cy="100" cx="215"><animate attributeName="cx" values="215;485" dur="8s" begin="0.0s" repeatCount="indefinite"/></circle>
+  <circle class="dg-dot" r="7" cy="100" cx="215"><animate attributeName="cx" values="215;485" dur="8s" begin="-1.6s" repeatCount="indefinite"/></circle>
+  <circle class="dg-dot" r="7" cy="100" cx="215"><animate attributeName="cx" values="215;485" dur="8s" begin="-3.2s" repeatCount="indefinite"/></circle>
+  <circle class="dg-dot" r="7" cy="100" cx="215"><animate attributeName="cx" values="215;485" dur="8s" begin="-4.800000000000001s" repeatCount="indefinite"/></circle>
+  <circle class="dg-dot" r="7" cy="100" cx="215"><animate attributeName="cx" values="215;485" dur="8s" begin="-6.4s" repeatCount="indefinite"/></circle>
+  <text class="dg-text dg-b dg-mono" x="350" y="190" text-anchor="middle">ArrowEvalPython</text>
+  <path class="dg-line" d="M192 250H508" marker-end="url(#udf-row-vs-arrow-arrow)"/>
+  <text class="dg-muted" x="350" y="218" text-anchor="middle">1 Arrow batch per trip, columnar</text>
+  <text class="dg-muted" x="350" y="290" text-anchor="middle">few big trips</text>
+  <rect class="dg-ok" x="205" y="236" width="56" height="28" rx="4">
+    <animate attributeName="x" values="205;435" dur="8s" repeatCount="indefinite"/>
+  </rect>
+</svg>

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 310" role="img" aria-labelledby="skew-salting-t">
+  <title id="skew-salting-t">Skew before and after salting: one oversized partition becomes several even ones</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}
+  </style>
+
+  <defs><marker id="skew-salting-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <text class="dg-text dg-b" x="175" y="24" text-anchor="middle">Before: key "big" is one partition</text>
+  <text class="dg-text dg-b" x="525" y="24" text-anchor="middle">After: salted into key#0..#3</text>
+  <path class="dg-line" d="M350 40V290" />
+  <rect class="dg-bad" x="50" y="90" width="40" height="160" rx="4"/>
+  <text class="dg-text" x="70" y="268" text-anchor="middle">big</text>
+  <rect class="dg-box" x="125" y="228" width="40" height="22" rx="4"/>
+  <text class="dg-text" x="145" y="268" text-anchor="middle">k2</text>
+  <rect class="dg-box" x="200" y="232" width="40" height="18" rx="4"/>
+  <text class="dg-text" x="220" y="268" text-anchor="middle">k3</text>
+  <rect class="dg-box" x="275" y="224" width="40" height="26" rx="4"/>
+  <text class="dg-text" x="295" y="268" text-anchor="middle">k4</text>
+  <text class="dg-muted" x="70" y="80" text-anchor="middle">straggler</text>
+  <text class="dg-muted" x="175" y="296" text-anchor="middle">one task runs long, others idle</text>
+  <rect class="dg-ok" x="385" y="208" width="36" height="42" rx="4"/>
+  <text class="dg-muted" x="403" y="268" text-anchor="middle">big#0</text>
+  <rect class="dg-ok" x="437" y="210" width="36" height="40" rx="4"/>
+  <text class="dg-muted" x="455" y="268" text-anchor="middle">big#1</text>
+  <rect class="dg-ok" x="489" y="206" width="36" height="44" rx="4"/>
+  <text class="dg-muted" x="507" y="268" text-anchor="middle">big#2</text>
+  <rect class="dg-ok" x="541" y="212" width="36" height="38" rx="4"/>
+  <text class="dg-muted" x="559" y="268" text-anchor="middle">big#3</text>
+  <rect class="dg-box" x="593" y="228" width="36" height="22" rx="4"/>
+  <text class="dg-muted" x="611" y="268" text-anchor="middle">k2</text>
+  <rect class="dg-box" x="645" y="224" width="36" height="26" rx="4"/>
+  <text class="dg-muted" x="663" y="268" text-anchor="middle">k4</text>
+  <text class="dg-muted" x="525" y="296" text-anchor="middle">even tasks; same join result</text>
+</svg>

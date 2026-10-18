@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 340" role="img" aria-labelledby="repartition-vs-coalesce-t">
+  <title id="repartition-vs-coalesce-t">coalesce(2) merges neighbouring partitions without a shuffle; repartition(2) shuffles every partition into evenly sized ones</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}
+  </style>
+
+  <defs><marker id="repartition-vs-coalesce-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <text class="dg-text dg-b dg-mono" x="162" y="28" text-anchor="middle">coalesce(2)</text>
+  <text class="dg-muted" x="162" y="46" text-anchor="middle">narrow: no Exchange</text>
+  <text class="dg-text dg-b dg-mono" x="512" y="28" text-anchor="middle">repartition(2)</text>
+  <text class="dg-muted" x="512" y="46" text-anchor="middle">wide: full shuffle (Exchange)</text>
+  <rect class="dg-box" x="15" y="64" width="62" height="46" rx="6"/>
+  <text class="dg-text dg-b" x="46" y="84" text-anchor="middle">P0</text>
+  <text class="dg-muted" x="46" y="101" text-anchor="middle">4 MB</text>
+  <rect class="dg-box" x="89" y="64" width="62" height="46" rx="6"/>
+  <text class="dg-text dg-b" x="120" y="84" text-anchor="middle">P1</text>
+  <text class="dg-muted" x="120" y="101" text-anchor="middle">4 MB</text>
+  <rect class="dg-box" x="163" y="64" width="62" height="46" rx="6"/>
+  <text class="dg-text dg-b" x="194" y="84" text-anchor="middle">P2</text>
+  <text class="dg-muted" x="194" y="101" text-anchor="middle">1 MB</text>
+  <rect class="dg-box" x="237" y="64" width="62" height="46" rx="6"/>
+  <text class="dg-text dg-b" x="268" y="84" text-anchor="middle">P3</text>
+  <text class="dg-muted" x="268" y="101" text-anchor="middle">1 MB</text>
+  <rect class="dg-box" x="365" y="64" width="62" height="46" rx="6"/>
+  <text class="dg-text dg-b" x="396" y="84" text-anchor="middle">P0</text>
+  <text class="dg-muted" x="396" y="101" text-anchor="middle">4 MB</text>
+  <rect class="dg-box" x="439" y="64" width="62" height="46" rx="6"/>
+  <text class="dg-text dg-b" x="470" y="84" text-anchor="middle">P1</text>
+  <text class="dg-muted" x="470" y="101" text-anchor="middle">4 MB</text>
+  <rect class="dg-box" x="513" y="64" width="62" height="46" rx="6"/>
+  <text class="dg-text dg-b" x="544" y="84" text-anchor="middle">P2</text>
+  <text class="dg-muted" x="544" y="101" text-anchor="middle">1 MB</text>
+  <rect class="dg-box" x="587" y="64" width="62" height="46" rx="6"/>
+  <text class="dg-text dg-b" x="618" y="84" text-anchor="middle">P3</text>
+  <text class="dg-muted" x="618" y="101" text-anchor="middle">1 MB</text>
+  <rect class="dg-accent" x="39" y="210" width="110" height="46" rx="6"/>
+  <text class="dg-text dg-b" x="94" y="230" text-anchor="middle">P0+P1</text>
+  <text class="dg-muted" x="94" y="247" text-anchor="middle">8 MB</text>
+  <rect class="dg-warn" x="175" y="210" width="110" height="46" rx="6"/>
+  <text class="dg-text dg-b" x="230" y="230" text-anchor="middle">P2+P3</text>
+  <text class="dg-muted" x="230" y="247" text-anchor="middle">2 MB</text>
+  <path class="dg-line" d="M46 112L80 208" marker-end="url(#repartition-vs-coalesce-arrow)"/>
+  <path class="dg-line" d="M120 112L108 208" marker-end="url(#repartition-vs-coalesce-arrow)"/>
+  <path class="dg-line" d="M194 112L216 208" marker-end="url(#repartition-vs-coalesce-arrow)"/>
+  <path class="dg-line" d="M268 112L244 208" marker-end="url(#repartition-vs-coalesce-arrow)"/>
+  <rect class="dg-ok" x="385" y="210" width="110" height="46" rx="6"/>
+  <text class="dg-text dg-b" x="440" y="230" text-anchor="middle">new P</text>
+  <text class="dg-muted" x="440" y="247" text-anchor="middle">5 MB</text>
+  <rect class="dg-ok" x="529" y="210" width="110" height="46" rx="6"/>
+  <text class="dg-text dg-b" x="584" y="230" text-anchor="middle">new P</text>
+  <text class="dg-muted" x="584" y="247" text-anchor="middle">5 MB</text>
+  <path class="dg-line dg-dash" d="M396 112L435 208" marker-end="url(#repartition-vs-coalesce-arrow)"/>
+  <path class="dg-line dg-dash" d="M396 112L579 208" marker-end="url(#repartition-vs-coalesce-arrow)"/>
+  <path class="dg-line dg-dash" d="M470 112L438 208" marker-end="url(#repartition-vs-coalesce-arrow)"/>
+  <path class="dg-line dg-dash" d="M470 112L582 208" marker-end="url(#repartition-vs-coalesce-arrow)"/>
+  <path class="dg-line dg-dash" d="M544 112L441 208" marker-end="url(#repartition-vs-coalesce-arrow)"/>
+  <path class="dg-line dg-dash" d="M544 112L585 208" marker-end="url(#repartition-vs-coalesce-arrow)"/>
+  <path class="dg-line dg-dash" d="M618 112L444 208" marker-end="url(#repartition-vs-coalesce-arrow)"/>
+  <path class="dg-line dg-dash" d="M618 112L588 208" marker-end="url(#repartition-vs-coalesce-arrow)"/>
+  <text class="dg-text" x="162" y="286" text-anchor="middle">Neighbours concatenated: cheap,</text>
+  <text class="dg-text" x="162" y="304" text-anchor="middle">but sizes stay uneven (skew)</text>
+  <text class="dg-text" x="512" y="286" text-anchor="middle">Every row can move: costly,</text>
+  <text class="dg-text" x="512" y="304" text-anchor="middle">but sizes come out even</text>
+</svg>

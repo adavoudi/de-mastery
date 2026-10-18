@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 330" role="img" aria-labelledby="delta-log-replay-t">
+  <title id="delta-log-replay-t">A Delta reader loads the latest checkpoint, then replays only the later JSON commits</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}
+  </style>
+
+  <defs><marker id="delta-log-replay-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <text class="dg-text dg-b dg-mono" x="30" y="30">_delta_log/</text>
+  <rect class="dg-box dg-dash" x="30" y="50" width="170" height="70" rx="8"/>
+  <text class="dg-text dg-mono" x="115" y="82" text-anchor="middle">0000…0.json</text>
+  <text class="dg-muted" x="115" y="104" text-anchor="middle">… to 0009.json: skipped</text>
+  <rect class="dg-accent" x="225" y="50" width="170" height="70" rx="8"/>
+  <text class="dg-text dg-mono" x="310" y="82" text-anchor="middle">…0010.checkpoint</text>
+  <text class="dg-muted" x="310" y="104" text-anchor="middle">.parquet: full state at v10</text>
+  <rect class="dg-ok" x="420" y="50" width="115" height="70" rx="8"/>
+  <text class="dg-text dg-mono" x="477" y="82" text-anchor="middle">…0011.json</text>
+  <text class="dg-muted" x="477" y="104" text-anchor="middle">add / remove</text>
+  <rect class="dg-ok" x="560" y="50" width="115" height="70" rx="8"/>
+  <text class="dg-text dg-mono" x="617" y="82" text-anchor="middle">…0012.json</text>
+  <text class="dg-muted" x="617" y="104" text-anchor="middle">add / remove</text>
+  <text class="dg-muted" x="115" y="145" text-anchor="middle">1. not needed</text>
+  <text class="dg-muted" x="310" y="145" text-anchor="middle">2. load latest checkpoint</text>
+  <text class="dg-muted" x="548" y="145" text-anchor="middle">3. replay commits after it, in order</text>
+  <path class="dg-line" d="M310 155V215" marker-end="url(#delta-log-replay-arrow)"/>
+  <path class="dg-line" d="M477 155V185H340V215" marker-end="url(#delta-log-replay-arrow)"/>
+  <path class="dg-line" d="M617 155V195H360V215" marker-end="url(#delta-log-replay-arrow)"/>
+  <rect class="dg-accent" x="170" y="220" width="360" height="85" rx="10"/>
+  <text class="dg-text dg-b" x="350" y="252" text-anchor="middle">Table state at version 12</text>
+  <text class="dg-text" x="350" y="276" text-anchor="middle">live data files = checkpoint + adds − removes</text>
+  <text class="dg-muted" x="350" y="296" text-anchor="middle">a fold of the ordered log</text>
+</svg>

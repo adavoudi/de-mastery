@@ -51,6 +51,8 @@ the versions for the as-of match and emit. Writing it by hand is the point of FL
 "as of" rule and the watermark dependency concrete, exactly like hand-writing an SCD2 `MERGE`
 teaches you what a temporal table *is*.
 
+![Each order is matched to the FX rate version whose valid_from/valid_to range contains its event time, so the Jan 8 order gets 1.10, not today's 1.12](diagrams/temporal-asof-pick.svg)
+
 ## From your world
 
 | Kimball / dbt / SOX | Flink | Note |

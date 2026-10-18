@@ -55,6 +55,8 @@ The heap is split into generations (with the default **G1** collector):
   off-heap) lives outside the GC-managed heap — important because an off-heap leak won't show in
   heap-occupancy graphs.
 
+![Heap layout: Eden and survivors form Young, survivors are promoted to Old; metaspace and off-heap sit outside the GC heap](diagrams/jvm-heap-layout.svg)
+
 **What a healthy heap looks like:** a sawtooth. Occupancy rises as you allocate, a GC cuts it back
 down, repeat. The *floor* of the sawtooth — occupancy right **after** each GC (the **live set**) —
 is roughly flat over time.
@@ -63,6 +65,8 @@ is roughly flat over time.
 than last time, because something keeps references alive (a growing cache/`Map`, an unbounded queue,
 listeners never removed). GCs run more often, reclaim less, pauses grow, and eventually the JVM
 throws `java.lang.OutOfMemoryError: Java heap space`. Reading that trend from a GC log is the skill.
+
+![Occupancy over time: the live set after each GC stays flat when healthy and climbs toward the heap max in a leak](diagrams/jvm-gc-floor.svg)
 
 ### Reading a unified GC log
 

@@ -10,6 +10,8 @@ OLTP system, and lags. **Change Data Capture (CDC)** reads the database's own
 in commit order, with before/after images. **Kafka Connect** is the runtime that
 hosts such connectors so you don't write bespoke ingestion code per source.
 
+![Postgres WAL is read by a Debezium source connector on Kafka Connect, lands in a topic, and a sink connector delivers it](diagrams/cdc-pipeline.svg)
+
 For an analytics engineer this is the missing half of SCD2. You already build
 slowly-changing dimensions from daily snapshots in dbt; CDC gives you the *stream*
 of row changes directly, so the dimension can be rebuilt continuously and no
@@ -53,6 +55,8 @@ them into dimension versions:
 - `d` → close the current version; emit no new open version (the entity is gone).
 - A tombstone (null value) is a compaction marker — it carries no new state, so
   SCD2 derivation **skips** it (the preceding `d` already closed the row).
+
+![Create, update and delete events for customer 7 fold into two SCD2 rows with valid_from and valid_to; the delete only closes a row](diagrams/cdc-to-scd2.svg)
 
 This is the SOX-friendly, fully-auditable version of a dimension: every state the
 entity ever had, with exact validity windows, reconstructed from the OLTP log.

@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 370" role="img" aria-labelledby="parquet-pruning-t">
+  <title id="parquet-pruning-t">Parquet file layout: footer max statistics let the engine skip row groups with max at or below 900</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}
+  </style>
+
+  <rect class="dg-box" x="10" y="10" width="700" height="320" rx="10"/>
+  <text class="dg-text dg-b" x="24" y="32">Parquet file  ·  WHERE line_amount &gt; 900</text>
+  <text class="dg-muted" x="118" y="68">order_id</text><text class="dg-muted" x="290" y="68">line_amount</text>
+  <g opacity="0.45">
+  <rect class="dg-box dg-dash" x="24" y="76" width="450" height="70" rx="8"/>
+  <text class="dg-text dg-b" x="34" y="106">row group</text><text class="dg-text dg-b" x="34" y="124">0</text>
+  <rect class="dg-box" x="110" y="83" width="160" height="56" rx="6"/>
+  <text class="dg-text" x="190" y="107" text-anchor="middle">column chunk</text>
+  <rect class="dg-box" x="282" y="83" width="180" height="56" rx="6"/>
+  <text class="dg-text" x="372" y="99" text-anchor="middle">column chunk</text>
+  <rect class="dg-accent" x="290" y="108" width="78" height="24" rx="4"/>
+  <text class="dg-text" x="329" y="124" text-anchor="middle">page 0</text>
+  <rect class="dg-accent" x="376" y="108" width="78" height="24" rx="4"/>
+  <text class="dg-text" x="415" y="124" text-anchor="middle">page 1</text>
+  </g>
+  <g opacity="0.45">
+  <rect class="dg-box dg-dash" x="24" y="156" width="450" height="70" rx="8"/>
+  <text class="dg-text dg-b" x="34" y="186">row group</text><text class="dg-text dg-b" x="34" y="204">1</text>
+  <rect class="dg-box" x="110" y="163" width="160" height="56" rx="6"/>
+  <text class="dg-text" x="190" y="187" text-anchor="middle">column chunk</text>
+  <rect class="dg-box" x="282" y="163" width="180" height="56" rx="6"/>
+  <text class="dg-text" x="372" y="179" text-anchor="middle">column chunk</text>
+  <rect class="dg-accent" x="290" y="188" width="78" height="24" rx="4"/>
+  <text class="dg-text" x="329" y="204" text-anchor="middle">page 0</text>
+  <rect class="dg-accent" x="376" y="188" width="78" height="24" rx="4"/>
+  <text class="dg-text" x="415" y="204" text-anchor="middle">page 1</text>
+  </g>
+  <g>
+  <rect class="dg-ok" x="24" y="236" width="450" height="70" rx="8"/>
+  <text class="dg-text dg-b" x="34" y="266">row group</text><text class="dg-text dg-b" x="34" y="284">2</text>
+  <rect class="dg-box" x="110" y="243" width="160" height="56" rx="6"/>
+  <text class="dg-text" x="190" y="267" text-anchor="middle">column chunk</text>
+  <rect class="dg-box" x="282" y="243" width="180" height="56" rx="6"/>
+  <text class="dg-text" x="372" y="259" text-anchor="middle">column chunk</text>
+  <rect class="dg-accent" x="290" y="268" width="78" height="24" rx="4"/>
+  <text class="dg-text" x="329" y="284" text-anchor="middle">page 0</text>
+  <rect class="dg-accent" x="376" y="268" width="78" height="24" rx="4"/>
+  <text class="dg-text" x="415" y="284" text-anchor="middle">page 1</text>
+  </g>
+  <rect class="dg-accent" x="492" y="46" width="206" height="272" rx="8"/>
+  <text class="dg-text dg-b" x="595" y="66" text-anchor="middle">Footer (read first)</text>
+  <text class="dg-text dg-mono" x="506" y="107">rg 0: max 640</text>
+  <text class="dg-muted" x="506" y="125">max &lt;= 900: skip</text>
+  <text class="dg-text dg-mono" x="506" y="187">rg 1: max 870</text>
+  <text class="dg-muted" x="506" y="205">max &lt;= 900: skip</text>
+  <text class="dg-text dg-mono" x="506" y="267">rg 2: max 1450</text>
+  <text class="dg-text dg-b" x="506" y="285">max &gt; 900: read pages</text>
+  <text class="dg-muted" x="360" y="354" text-anchor="middle">Greyed row groups are never read: the footer stats alone rule them out.</text>
+</svg>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 270" role="img" aria-labelledby="flk11-skew-balance-t">
+  <title id="flk11-skew-balance-t">Hot-key skew on one subtask versus an even rebalance across four subtasks</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}.dg-dot-ok{fill:#2c7a4b}.dg-dot-bad{fill:#b3372b}.dg-dot-ok{fill:#2c7a4b}.dg-dot-bad{fill:#b3372b}
+  </style>
+  <text class="dg-text dg-b" x="180" y="28" text-anchor="middle">keyBy with a hot key (HASH)</text>
+  <text class="dg-text dg-b" x="520" y="28" text-anchor="middle">rebalance() (round-robin)</text>
+  <path class="dg-line" d="M40 210H320"/>
+  <path class="dg-line" d="M380 210H660"/>
+  <rect class="dg-bad" x="55" y="50" width="45" height="160" rx="4"/>
+  <rect class="dg-box" x="125" y="190" width="45" height="20" rx="4"/>
+  <rect class="dg-box" x="195" y="195" width="45" height="15" rx="4"/>
+  <rect class="dg-box" x="265" y="192" width="45" height="18" rx="4"/>
+  <rect class="dg-ok" x="395" y="148" width="45" height="62" rx="4"/>
+  <rect class="dg-ok" x="465" y="148" width="45" height="62" rx="4"/>
+  <rect class="dg-ok" x="535" y="148" width="45" height="62" rx="4"/>
+  <rect class="dg-ok" x="605" y="148" width="45" height="62" rx="4"/>
+  <g class="dg-muted" text-anchor="middle">
+    <text x="77" y="230">0</text><text x="147" y="230">1</text><text x="217" y="230">2</text><text x="287" y="230">3</text>
+    <text x="417" y="230">0</text><text x="487" y="230">1</text><text x="557" y="230">2</text><text x="627" y="230">3</text>
+  </g>
+  <text class="dg-muted" x="180" y="248" text-anchor="middle">subtask: one is the straggler, three idle</text>
+  <text class="dg-muted" x="520" y="248" text-anchor="middle">subtask: same total records, even load</text>
+  <text class="dg-text" x="150" y="80">hot key: all its records</text>
+  <text class="dg-text" x="150" y="100">land on subtask 0</text>
+</svg>

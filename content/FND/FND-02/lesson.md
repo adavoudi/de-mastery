@@ -36,6 +36,8 @@ look at `max / mean`. A ratio near 1.0 is balanced; a large ratio means a hot ke
 *salting* (append a random suffix to the hot key to spread it, then re-aggregate) or a different
 key.
 
+![Rows fan out from map partitions to reduce partitions by hash; the hot-key partition swells into the straggler](diagrams/shuffle-skew.svg)
+
 ## From your world
 
 This is **DISTKEY / DISTSTYLE** by another name. In Redshift:

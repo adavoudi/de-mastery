@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 340" role="img" aria-labelledby="thin-vs-fat-jar-t">
+  <title id="thin-vs-fat-jar-t">Thin jar holds only your classes and fails with NoClassDefFoundError; fat jar also bundles implementation dependencies while compileOnly Flink stays on the cluster</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}.dg-dot-ok{fill:#2c7a4b}.dg-dot-bad{fill:#b3372b}
+  </style>
+
+  <defs><marker id="thin-vs-fat-jar-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <text class="dg-text dg-b" x="165" y="26" text-anchor="middle">Thin jar (default jar task)</text>
+  <text class="dg-text dg-b" x="525" y="26" text-anchor="middle">Fat jar (fatJar task)</text>
+  <rect class="dg-box" x="30" y="40" width="270" height="110" rx="10"/>
+  <text class="dg-muted" x="45" y="60">app.jar</text>
+  <rect class="dg-accent" x="45" y="72" width="240" height="60" rx="8"/>
+  <text class="dg-text dg-mono" x="165" y="107" text-anchor="middle">your classes (Job)</text>
+  <rect class="dg-box" x="360" y="40" width="330" height="170" rx="10"/>
+  <text class="dg-muted" x="375" y="60">app-all.jar</text>
+  <rect class="dg-accent" x="375" y="72" width="300" height="42" rx="8"/>
+  <text class="dg-text dg-mono" x="525" y="98" text-anchor="middle">your classes (Job)</text>
+  <rect class="dg-ok" x="375" y="124" width="300" height="70" rx="8"/>
+  <text class="dg-text dg-mono" x="525" y="150" text-anchor="middle">avro classes</text>
+  <text class="dg-muted" x="525" y="176" text-anchor="middle">implementation: bundled</text>
+  <path class="dg-line" d="M165 150V200" marker-end="url(#thin-vs-fat-jar-arrow)"/>
+  <rect class="dg-bad" x="30" y="202" width="270" height="86" rx="10"/>
+  <text class="dg-text dg-b" x="165" y="228" text-anchor="middle">Bare JVM: java -jar app.jar</text>
+  <text class="dg-text dg-mono" x="165" y="252" text-anchor="middle">NoClassDefFoundError</text>
+  <text class="dg-muted" x="165" y="274" text-anchor="middle">first avro class touched is missing</text>
+  <path class="dg-line" d="M525 210V240" marker-end="url(#thin-vs-fat-jar-arrow)"/>
+  <rect class="dg-ok" x="360" y="242" width="330" height="46" rx="10"/>
+  <text class="dg-text dg-b" x="525" y="270" text-anchor="middle">Runs: java -jar app-all.jar</text>
+  <rect class="dg-box dg-dash" x="360" y="298" width="330" height="34" rx="8"/>
+  <text class="dg-muted" x="525" y="320" text-anchor="middle">Flink (compileOnly): left out, cluster provides it</text>
+</svg>

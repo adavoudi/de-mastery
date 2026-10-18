@@ -51,6 +51,8 @@ This is why a job with max parallelism 4 runs on a cluster with 4 total slots (e
 2 slots). If you ask for more parallelism than there are slots, the job cannot be scheduled and
 stays in `CREATED`/`SCHEDULED`, never reaching `RUNNING`.
 
+![JobManager assigns subtasks to slots on TaskManagers; one slot holds one slice of the whole pipeline](diagrams/cluster-slots.svg)
+
 ### Operator chains
 
 Flink **chains** adjacent operators that don't need a network shuffle (a `map` after a `filter`,
@@ -58,6 +60,8 @@ say) into a single task that runs in one thread, passing records by method call 
 network. A chain is broken by a **keyBy / rebalance / rescale** (anything that redistributes
 records) — exactly like a Spark stage boundary at a shuffle. The chained operators show up as one
 vertex in the JobGraph; the breaks become separate vertices connected by data exchanges.
+
+![A keyBy splits the pipeline into two chains with a network exchange between them](diagrams/operator-chaining.svg)
 
 ### The job lifecycle
 

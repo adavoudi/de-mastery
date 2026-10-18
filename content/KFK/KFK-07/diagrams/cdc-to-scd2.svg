@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 270" role="img" aria-labelledby="cdc-to-scd2-t">
+  <title id="cdc-to-scd2-t">A create, update and delete event for one key become two SCD2 rows with valid_from and valid_to</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}
+  </style>
+  <defs><marker id="cdc-to-scd2-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <text class="dg-text dg-b" x="10" y="22">Change events (customer 7)</text>
+  <text class="dg-text dg-b" x="400" y="22">SCD2 rows</text>
+  <rect class="dg-box" x="10" y="40" width="300" height="52" rx="8"/>
+  <text class="dg-text dg-mono" x="22" y="62">op=c  t1</text>
+  <text class="dg-muted dg-mono" x="22" y="80">after: tier=silver</text>
+  <rect class="dg-box" x="10" y="106" width="300" height="52" rx="8"/>
+  <text class="dg-text dg-mono" x="22" y="128">op=u  t2</text>
+  <text class="dg-muted dg-mono" x="22" y="146">before: silver  after: gold</text>
+  <rect class="dg-box" x="10" y="172" width="300" height="52" rx="8"/>
+  <text class="dg-text dg-mono" x="22" y="194">op=d  t3</text>
+  <text class="dg-muted dg-mono" x="22" y="212">before: gold  after: null</text>
+  <text class="dg-muted dg-mono" x="402" y="52">key</text><text class="dg-muted dg-mono" x="450" y="52">tier</text><text class="dg-muted dg-mono" x="540" y="52">valid_from</text><text class="dg-muted dg-mono" x="640" y="52">valid_to</text>
+  <rect class="dg-ok" x="390" y="62" width="320" height="40" rx="8"/>
+  <text class="dg-text dg-mono" x="402" y="87">7</text><text class="dg-text dg-mono" x="450" y="87">silver</text><text class="dg-text dg-mono" x="540" y="87">t1</text><text class="dg-text dg-mono" x="640" y="87">t2</text>
+  <rect class="dg-ok" x="390" y="118" width="320" height="40" rx="8"/>
+  <text class="dg-text dg-mono" x="402" y="143">7</text><text class="dg-text dg-mono" x="450" y="143">gold</text><text class="dg-text dg-mono" x="540" y="143">t2</text><text class="dg-text dg-mono" x="640" y="143">t3</text>
+  <path class="dg-line" d="M312 66H386" marker-end="url(#cdc-to-scd2-arrow)"/>
+  <path class="dg-line" d="M312 132H386" marker-end="url(#cdc-to-scd2-arrow)"/>
+  <path class="dg-line dg-dash" d="M312 198H350"/>
+  <text class="dg-muted" x="360" y="190">d closes the row,</text>
+  <text class="dg-muted" x="360" y="208">opens none</text>
+  <text class="dg-muted" x="400" y="250">u closes silver (valid_to=t2) and opens gold</text>
+</svg>

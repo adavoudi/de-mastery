@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 370" role="img" aria-labelledby="commit-cadence-t">
+  <title id="commit-cadence-t">Many small jobs give many snapshots and tiny files; one batched job gives one snapshot and one file</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}.dg-dot-ok{fill:#2c7a4b}.dg-dot-bad{fill:#b3372b}
+  </style>
+
+  <defs><marker id="commit-cadence-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <text class="dg-text dg-b" x="20" y="24">Many small jobs: one checkpoint, snapshot and file each</text>
+  <rect class="dg-box" x="20" y="40" width="120" height="36" rx="8"/><text class="dg-text" x="80" y="63.0" text-anchor="middle">micro-batch 1</text>
+  <path class="dg-line" d="M140 58.0H188" marker-end="url(#commit-cadence-arrow)"/>
+  <rect class="dg-accent" x="190" y="40" width="140" height="36" rx="8"/><text class="dg-text" x="260" y="63.0" text-anchor="middle">job 1, checkpoint</text>
+  <path class="dg-line" d="M330 58.0H378" marker-end="url(#commit-cadence-arrow)"/>
+  <rect class="dg-bad" x="380" y="40" width="140" height="36" rx="8"/><text class="dg-text" x="450" y="63.0" text-anchor="middle">snapshot 1</text>
+  <path class="dg-line" d="M520 58.0H558" marker-end="url(#commit-cadence-arrow)"/>
+  <rect class="dg-bad" x="560" y="40" width="140" height="36" rx="8"/><text class="dg-text" x="630" y="63.0" text-anchor="middle">1 tiny file</text>
+  <rect class="dg-box" x="20" y="84" width="120" height="36" rx="8"/><text class="dg-text" x="80" y="107.0" text-anchor="middle">micro-batch 2</text>
+  <path class="dg-line" d="M140 102.0H188" marker-end="url(#commit-cadence-arrow)"/>
+  <rect class="dg-accent" x="190" y="84" width="140" height="36" rx="8"/><text class="dg-text" x="260" y="107.0" text-anchor="middle">job 2, checkpoint</text>
+  <path class="dg-line" d="M330 102.0H378" marker-end="url(#commit-cadence-arrow)"/>
+  <rect class="dg-bad" x="380" y="84" width="140" height="36" rx="8"/><text class="dg-text" x="450" y="107.0" text-anchor="middle">snapshot 2</text>
+  <path class="dg-line" d="M520 102.0H558" marker-end="url(#commit-cadence-arrow)"/>
+  <rect class="dg-bad" x="560" y="84" width="140" height="36" rx="8"/><text class="dg-text" x="630" y="107.0" text-anchor="middle">1 tiny file</text>
+  <rect class="dg-box" x="20" y="128" width="120" height="36" rx="8"/><text class="dg-text" x="80" y="151.0" text-anchor="middle">micro-batch 3</text>
+  <path class="dg-line" d="M140 146.0H188" marker-end="url(#commit-cadence-arrow)"/>
+  <rect class="dg-accent" x="190" y="128" width="140" height="36" rx="8"/><text class="dg-text" x="260" y="151.0" text-anchor="middle">job 3, checkpoint</text>
+  <path class="dg-line" d="M330 146.0H378" marker-end="url(#commit-cadence-arrow)"/>
+  <rect class="dg-bad" x="380" y="128" width="140" height="36" rx="8"/><text class="dg-text" x="450" y="151.0" text-anchor="middle">snapshot 3</text>
+  <path class="dg-line" d="M520 146.0H558" marker-end="url(#commit-cadence-arrow)"/>
+  <rect class="dg-bad" x="560" y="128" width="140" height="36" rx="8"/><text class="dg-text" x="630" y="151.0" text-anchor="middle">1 tiny file</text>
+  <text class="dg-muted" x="360" y="186" text-anchor="middle">...and so on: N jobs = N snapshots and N tiny files per partition</text>
+  <line class="dg-line dg-dash" x1="20" y1="205" x2="700" y2="205"/>
+  <text class="dg-text dg-b" x="20" y="232">One job over a batched input: one final checkpoint</text>
+  <rect class="dg-box" x="20" y="248" width="120" height="60" rx="8"/><text class="dg-text" x="80" y="283.0" text-anchor="middle">all batches</text>
+  <path class="dg-line" d="M140 278.0H188" marker-end="url(#commit-cadence-arrow)"/>
+  <rect class="dg-accent" x="190" y="248" width="140" height="60" rx="8"/><text class="dg-text" x="260" y="283.0" text-anchor="middle">1 final checkpoint</text>
+  <path class="dg-line" d="M330 278.0H378" marker-end="url(#commit-cadence-arrow)"/>
+  <rect class="dg-ok" x="380" y="248" width="140" height="60" rx="8"/><text class="dg-text" x="450" y="283.0" text-anchor="middle">1 snapshot</text>
+  <path class="dg-line" d="M520 278.0H558" marker-end="url(#commit-cadence-arrow)"/>
+  <rect class="dg-ok" x="560" y="248" width="140" height="60" rx="8"/><text class="dg-text" x="630" y="283.0" text-anchor="middle">1 fat file</text>
+  <text class="dg-muted" x="360" y="340" text-anchor="middle">Fewer, fatter files: readers plan fast, but data lands only when the job commits</text>
+</svg>

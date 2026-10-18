@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 300" role="img" aria-labelledby="dq-split-t">
+  <title id="dq-split-t">Data-quality split: input routes to a good stream feeding the mart and a bad stream feeding quarantine with a reason</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}.dg-dot-ok{fill:#2c7a4b}.dg-dot-bad{fill:#b3372b}
+  </style>
+  <defs><marker id="dq-split-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <rect class="dg-box" x="20" y="105" width="130" height="80" rx="10"/>
+  <text class="dg-text dg-b" x="85" y="141" text-anchor="middle">Input stream</text>
+  <text class="dg-muted" x="85" y="162" text-anchor="middle">count(input)</text>
+  <rect class="dg-accent" x="205" y="115" width="130" height="60" rx="10"/>
+  <text class="dg-text dg-b" x="270" y="141" text-anchor="middle">DQ rules</text>
+  <text class="dg-muted" x="270" y="160" text-anchor="middle">split, not filter</text>
+  <path class="dg-line" d="M150 145H203" marker-end="url(#dq-split-arrow)"/>
+  <path class="dg-line" d="M335 135C365 135 365 70 408 70" marker-end="url(#dq-split-arrow)"/>
+  <path class="dg-line" d="M335 155C365 155 365 230 408 230" marker-end="url(#dq-split-arrow)"/>
+  <text class="dg-muted" x="340" y="60">pass</text>
+  <text class="dg-muted" x="340" y="250">fail</text>
+  <rect class="dg-ok" x="410" y="35" width="130" height="70" rx="10"/>
+  <text class="dg-text dg-b" x="475" y="65" text-anchor="middle">Good stream</text>
+  <text class="dg-muted" x="475" y="86" text-anchor="middle">valid rows</text>
+  <rect class="dg-bad" x="410" y="195" width="130" height="70" rx="10"/>
+  <text class="dg-text dg-b" x="475" y="225" text-anchor="middle">Bad stream</text>
+  <text class="dg-muted" x="475" y="246" text-anchor="middle">+ reason column</text>
+  <path class="dg-line" d="M540 70H578" marker-end="url(#dq-split-arrow)"/>
+  <path class="dg-line" d="M540 230H578" marker-end="url(#dq-split-arrow)"/>
+  <rect class="dg-ok" x="580" y="35" width="105" height="70" rx="10"/>
+  <text class="dg-text dg-b dg-mono" x="632" y="75" text-anchor="middle">fct_orders</text>
+  <rect class="dg-bad" x="580" y="195" width="105" height="70" rx="10"/>
+  <text class="dg-text dg-b" x="632" y="225" text-anchor="middle">Quarantine</text>
+  <text class="dg-muted dg-mono" x="632" y="246" text-anchor="middle">reason</text>
+  <text class="dg-muted" x="450" y="156" text-anchor="middle">mart + quarantine = input</text>
+</svg>

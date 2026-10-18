@@ -62,6 +62,8 @@ the records that only the dead in-sync replicas had. Default is off, and for SOX
 you keep it off: prefer unavailability to silent loss. **KRaft** (Kafka 4.x, no ZooKeeper) runs the
 controller quorum that performs these elections; the controller metadata log is itself replicated.
 
+![An acks=all write reaches every ISR member; when the leader dies, an ISR follower is elected and the acknowledged record survives](diagrams/isr-failover.svg)
+
 ## From your world
 
 | Lakehouse / SOX | Kafka durability | Note |

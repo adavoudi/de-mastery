@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 370" role="img" aria-labelledby="watermark-event-time-t">
+  <title id="watermark-event-time-t">Watermark trailing the maximum event time by the allowed delay, splitting events into on-time, late and dropped</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}
+  </style>
+  <defs><marker id="watermark-event-time-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <rect class="dg-bad" x="40" y="140" width="210" height="110"><animate attributeName="width" values="210;210;270;270;350;350" keyTimes="0;0.15;0.3;0.5;0.65;1" dur="10s" repeatCount="indefinite"/></rect>
+  <rect class="dg-warn" x="250" y="140" width="70" height="110"><animate attributeName="x" values="250;250;310;310;390;390" keyTimes="0;0.15;0.3;0.5;0.65;1" dur="10s" repeatCount="indefinite"/></rect>
+  <rect class="dg-ok" x="320" y="140" width="340" height="110"><animate attributeName="x" values="320;320;380;380;460;460" keyTimes="0;0.15;0.3;0.5;0.65;1" dur="10s" repeatCount="indefinite"/><animate attributeName="width" values="340;340;280;280;200;200" keyTimes="0;0.15;0.3;0.5;0.65;1" dur="10s" repeatCount="indefinite"/></rect>
+  <path class="dg-line" d="M40 200H675" marker-end="url(#watermark-event-time-arrow)"/>
+  <text class="dg-muted" x="670" y="228" text-anchor="end">event time</text>
+  <text class="dg-text" x="145" y="162" text-anchor="middle">dropped<animate attributeName="x" values="145.0;145.0;175.0;175.0;215.0;215.0" keyTimes="0;0.15;0.3;0.5;0.65;1" dur="10s" repeatCount="indefinite"/></text>
+  <text class="dg-text" x="285" y="162" text-anchor="middle">late<animate attributeName="x" values="285;285;345;345;425;425" keyTimes="0;0.15;0.3;0.5;0.65;1" dur="10s" repeatCount="indefinite"/></text>
+  <text class="dg-text" x="620" y="162" text-anchor="middle">on-time</text>
+  <line class="dg-line" x1="400" y1="110" x2="400" y2="250"><animate attributeName="x1" values="400;400;460;460;540;540" keyTimes="0;0.15;0.3;0.5;0.65;1" dur="10s" repeatCount="indefinite"/><animate attributeName="x2" values="400;400;460;460;540;540" keyTimes="0;0.15;0.3;0.5;0.65;1" dur="10s" repeatCount="indefinite"/></line>
+  <line class="dg-line dg-dash" x1="320" y1="140" x2="320" y2="270"><animate attributeName="x1" values="320;320;380;380;460;460" keyTimes="0;0.15;0.3;0.5;0.65;1" dur="10s" repeatCount="indefinite"/><animate attributeName="x2" values="320;320;380;380;460;460" keyTimes="0;0.15;0.3;0.5;0.65;1" dur="10s" repeatCount="indefinite"/></line>
+  <text class="dg-text dg-b dg-mono" x="400" y="100" text-anchor="middle">maxEventTime<animate attributeName="x" values="400;400;460;460;540;540" keyTimes="0;0.15;0.3;0.5;0.65;1" dur="10s" repeatCount="indefinite"/></text>
+  <text class="dg-text dg-b dg-mono" x="320" y="290" text-anchor="middle">watermark W<animate attributeName="x" values="320;320;380;380;460;460" keyTimes="0;0.15;0.3;0.5;0.65;1" dur="10s" repeatCount="indefinite"/></text>
+  <text class="dg-muted" x="360" y="266" text-anchor="middle">allowed delay<animate attributeName="x" values="360;360;420;420;500;500" keyTimes="0;0.15;0.3;0.5;0.65;1" dur="10s" repeatCount="indefinite"/></text>
+  <circle class="dg-ok" r="7" cx="380" cy="200"/>
+  <circle class="dg-ok" r="7" cx="400" cy="200"/>
+  <circle class="dg-ok" r="7" cx="460" cy="200" opacity="0">
+    <animate attributeName="opacity" values="0;0;1;1" keyTimes="0;0.28;0.31000000000000005;1" dur="10s" repeatCount="indefinite"/>
+    <animate attributeName="cy" values="150;150;200;200" keyTimes="0;0.28;0.31000000000000005;1" dur="10s" repeatCount="indefinite"/>
+  </circle>
+  <circle class="dg-warn" r="7" cx="350" cy="200" opacity="0">
+    <animate attributeName="opacity" values="0;0;1;1" keyTimes="0;0.38;0.41000000000000003;1" dur="10s" repeatCount="indefinite"/>
+    <animate attributeName="cy" values="150;150;200;200" keyTimes="0;0.38;0.41000000000000003;1" dur="10s" repeatCount="indefinite"/>
+  </circle>
+  <circle class="dg-bad" r="7" cx="300" cy="200" opacity="0">
+    <animate attributeName="opacity" values="0;0;1;1" keyTimes="0;0.45;0.48;1" dur="10s" repeatCount="indefinite"/>
+    <animate attributeName="cy" values="150;150;200;200" keyTimes="0;0.45;0.48;1" dur="10s" repeatCount="indefinite"/>
+  </circle>
+  <circle class="dg-ok" r="7" cx="540" cy="200" opacity="0">
+    <animate attributeName="opacity" values="0;0;1;1" keyTimes="0;0.66;0.6900000000000001;1" dur="10s" repeatCount="indefinite"/>
+    <animate attributeName="cy" values="150;150;200;200" keyTimes="0;0.66;0.6900000000000001;1" dur="10s" repeatCount="indefinite"/>
+  </circle>
+  <circle class="dg-warn" r="7" cx="420" cy="200" opacity="0">
+    <animate attributeName="opacity" values="0;0;1;1" keyTimes="0;0.74;0.77;1" dur="10s" repeatCount="indefinite"/>
+    <animate attributeName="cy" values="150;150;200;200" keyTimes="0;0.74;0.77;1" dur="10s" repeatCount="indefinite"/>
+  </circle>
+  <circle class="dg-bad" r="7" cx="380" cy="200" opacity="0">
+    <animate attributeName="opacity" values="0;0;1;1" keyTimes="0;0.84;0.87;1" dur="10s" repeatCount="indefinite"/>
+    <animate attributeName="cy" values="150;150;200;200" keyTimes="0;0.84;0.87;1" dur="10s" repeatCount="indefinite"/>
+  </circle>
+  <text class="dg-muted" x="40" y="318">Events arrive out of order; each is judged against W at arrival. W only moves right.</text>
+  <circle class="dg-ok" r="6" cx="48" cy="346"/><text class="dg-text" x="62" y="350">on-time (t &gt; W)</text>
+  <circle class="dg-warn" r="6" cx="228" cy="346"/><text class="dg-text" x="242" y="350">late, still accepted</text>
+  <circle class="dg-bad" r="6" cx="438" cy="346"/><text class="dg-text" x="452" y="350">dropped or side output</text>
+</svg>

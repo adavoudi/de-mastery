@@ -39,6 +39,8 @@ The kind of changelog a query produces determines where you can sink it and how 
   `k` is being updated in place. You cannot append this to a plain topic without losing the
   semantics — you need an **upsert sink** keyed by `k` (see `upsert-kafka`).
 
+![Each changelog row is applied to the table in order: +I creates the row, -U retracts it, +U writes the new count, -D removes it](diagrams/changelog-fold.svg)
+
 This is the thing to internalise: **an unbounded GROUP BY in streaming does not "append counts" — it
 retracts and re-emits.** The *final* state (after all input) equals the batch answer, but the
 *changelog* in between contains retractions. Grading a dbt-model port on its changelog is how you

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" role="img" aria-labelledby="cow-vs-mor-t">
+  <title id="cow-vs-mor-t">The same UPDATE under copy-on-write and merge-on-read</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}
+  </style>
+
+  <defs><marker id="cow-vs-mor-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <text class="dg-text dg-b" x="190" y="26" text-anchor="middle">Copy-on-write</text>
+  <text class="dg-text dg-b" x="530" y="26" text-anchor="middle">Merge-on-read</text>
+  <text class="dg-muted" x="360" y="48" text-anchor="middle">UPDATE one row (row 3) in data-a.parquet</text>
+  <path class="dg-line dg-dash" d="M360 58V390"/>
+  <text class="dg-muted" x="20" y="78">Before</text>
+  <rect class="dg-box" x="20" y="86" width="320" height="44" rx="8"/>
+  <text class="dg-text dg-mono" x="180" y="113" text-anchor="middle">data-a.parquet (rows 1-4)</text>
+  <path class="dg-line" d="M180 130V162" marker-end="url(#cow-vs-mor-arrow)"/>
+  <rect class="dg-box" x="380" y="86" width="320" height="44" rx="8"/>
+  <text class="dg-text dg-mono" x="540" y="113" text-anchor="middle">data-a.parquet (rows 1-4)</text>
+  <path class="dg-line" d="M540 130V162" marker-end="url(#cow-vs-mor-arrow)"/>
+  <text class="dg-muted" x="20" y="158">After</text>
+  <rect class="dg-box dg-dash" x="20" y="170" width="320" height="44" rx="8"/>
+  <text class="dg-muted dg-mono" x="180" y="197" text-anchor="middle">data-a.parquet (dropped)</text>
+  <rect class="dg-ok" x="20" y="226" width="320" height="44" rx="8"/>
+  <text class="dg-text dg-mono" x="180" y="253" text-anchor="middle">data-a2.parquet (rows 1-4, 3 new)</text>
+  <text class="dg-text" x="180" y="304" text-anchor="middle">Whole file rewritten for one row</text>
+  <text class="dg-muted" x="180" y="326" text-anchor="middle">Write: costly. Read: scan clean files only.</text>
+  <text class="dg-muted" x="180" y="348" text-anchor="middle">content = 0 only</text>
+  <rect class="dg-box" x="380" y="170" width="320" height="44" rx="8"/>
+  <text class="dg-text dg-mono" x="540" y="197" text-anchor="middle">data-a.parquet (untouched)</text>
+  <rect class="dg-warn" x="380" y="226" width="320" height="44" rx="8"/>
+  <text class="dg-text dg-mono" x="540" y="253" text-anchor="middle">delete file: data-a, pos 3</text>
+  <rect class="dg-ok" x="380" y="282" width="320" height="44" rx="8"/>
+  <text class="dg-text dg-mono" x="540" y="309" text-anchor="middle">data-b.parquet (new row 3)</text>
+  <text class="dg-text" x="540" y="352" text-anchor="middle">Reader merges delete file at scan time</text>
+  <text class="dg-muted" x="540" y="374" text-anchor="middle">Write: cheap. Read: pays merge. content = 0 and 1</text>
+</svg>

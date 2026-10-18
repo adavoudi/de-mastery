@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 330" role="img" aria-labelledby="join-strategies-t">
+  <title id="join-strategies-t">Broadcast, shuffle hash and sort-merge joins: where data moves</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}
+  </style>
+
+  <defs><marker id="join-strategies-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <text class="dg-text dg-b" x="120" y="24" text-anchor="middle">Broadcast hash</text>
+  <text class="dg-muted" x="120" y="42" text-anchor="middle">0 shuffles</text>
+  <rect class="dg-box" x="20" y="190" width="95" height="100" rx="8"/>
+  <text class="dg-muted" x="67" y="208" text-anchor="middle">Executor</text>
+  <rect class="dg-box" x="125" y="190" width="95" height="100" rx="8"/>
+  <text class="dg-muted" x="172" y="208" text-anchor="middle">Executor</text>
+  <text class="dg-text dg-b" x="350" y="24" text-anchor="middle">Shuffle hash</text>
+  <text class="dg-muted" x="350" y="42" text-anchor="middle">2 shuffles</text>
+  <rect class="dg-box" x="250" y="190" width="95" height="100" rx="8"/>
+  <text class="dg-muted" x="297" y="208" text-anchor="middle">Executor</text>
+  <rect class="dg-box" x="355" y="190" width="95" height="100" rx="8"/>
+  <text class="dg-muted" x="402" y="208" text-anchor="middle">Executor</text>
+  <text class="dg-text dg-b" x="580" y="24" text-anchor="middle">Sort-merge</text>
+  <text class="dg-muted" x="580" y="42" text-anchor="middle">2 shuffles + sorts</text>
+  <rect class="dg-box" x="480" y="190" width="95" height="100" rx="8"/>
+  <text class="dg-muted" x="527" y="208" text-anchor="middle">Executor</text>
+  <rect class="dg-box" x="585" y="190" width="95" height="100" rx="8"/>
+  <text class="dg-muted" x="632" y="208" text-anchor="middle">Executor</text>
+  <rect class="dg-ok" x="75" y="60" width="90" height="34" rx="8"/>
+  <text class="dg-text dg-b" x="120" y="82" text-anchor="middle">small dim</text>
+  <path class="dg-line" d="M100 94L68 188" marker-end="url(#join-strategies-arrow)"/>
+  <path class="dg-line" d="M140 94L172 188" marker-end="url(#join-strategies-arrow)"/>
+  <rect class="dg-accent" x="20" y="222" width="75" height="24" rx="8"/>
+  <text class="dg-text" x="57" y="239" text-anchor="middle">big part</text>
+  <rect class="dg-accent" x="125" y="222" width="75" height="24" rx="8"/>
+  <text class="dg-text" x="162" y="239" text-anchor="middle">big part</text>
+  <rect class="dg-ok" x="20" y="254" width="75" height="24" rx="8"/>
+  <text class="dg-text" x="57" y="271" text-anchor="middle">small copy</text>
+  <rect class="dg-ok" x="125" y="254" width="75" height="24" rx="8"/>
+  <text class="dg-text" x="162" y="271" text-anchor="middle">small copy</text>
+  <rect class="dg-accent" x="250" y="60" width="90" height="34" rx="8"/>
+  <text class="dg-text dg-b" x="295" y="82" text-anchor="middle">side A</text>
+  <rect class="dg-warn" x="360" y="60" width="90" height="34" rx="8"/>
+  <text class="dg-text dg-b" x="405" y="82" text-anchor="middle">side B</text>
+  <path class="dg-line" d="M280 94L285 188" marker-end="url(#join-strategies-arrow)"/>
+  <path class="dg-line" d="M310 94L385 188" marker-end="url(#join-strategies-arrow)"/>
+  <path class="dg-line" d="M390 94L315 188" marker-end="url(#join-strategies-arrow)"/>
+  <path class="dg-line" d="M420 94L415 188" marker-end="url(#join-strategies-arrow)"/>
+  <rect class="dg-accent" x="255" y="222" width="85" height="24" rx="8"/>
+  <text class="dg-text" x="298" y="239" text-anchor="middle">A keys 0-4</text>
+  <rect class="dg-accent" x="360" y="222" width="85" height="24" rx="8"/>
+  <text class="dg-text" x="402" y="239" text-anchor="middle">A keys 5-9</text>
+  <rect class="dg-warn" x="255" y="254" width="85" height="24" rx="8"/>
+  <text class="dg-text" x="298" y="271" text-anchor="middle">B keys 0-4</text>
+  <rect class="dg-warn" x="360" y="254" width="85" height="24" rx="8"/>
+  <text class="dg-text" x="402" y="271" text-anchor="middle">B keys 5-9</text>
+  <rect class="dg-accent" x="480" y="60" width="90" height="34" rx="8"/>
+  <text class="dg-text dg-b" x="525" y="82" text-anchor="middle">side A</text>
+  <rect class="dg-warn" x="590" y="60" width="90" height="34" rx="8"/>
+  <text class="dg-text dg-b" x="635" y="82" text-anchor="middle">side B</text>
+  <path class="dg-line" d="M510 94L515 188" marker-end="url(#join-strategies-arrow)"/>
+  <path class="dg-line" d="M540 94L615 188" marker-end="url(#join-strategies-arrow)"/>
+  <path class="dg-line" d="M620 94L545 188" marker-end="url(#join-strategies-arrow)"/>
+  <path class="dg-line" d="M650 94L645 188" marker-end="url(#join-strategies-arrow)"/>
+  <rect class="dg-accent" x="485" y="222" width="85" height="24" rx="8"/>
+  <text class="dg-text" x="528" y="239" text-anchor="middle">A keys 0-4</text>
+  <rect class="dg-accent" x="590" y="222" width="85" height="24" rx="8"/>
+  <text class="dg-text" x="632" y="239" text-anchor="middle">A keys 5-9</text>
+  <rect class="dg-warn" x="485" y="254" width="85" height="24" rx="8"/>
+  <text class="dg-text" x="528" y="271" text-anchor="middle">B keys 0-4</text>
+  <rect class="dg-warn" x="590" y="254" width="85" height="24" rx="8"/>
+  <text class="dg-text" x="632" y="271" text-anchor="middle">B keys 5-9</text>
+  <text class="dg-muted" x="120" y="318" text-anchor="middle">small side copied to all</text>
+  <text class="dg-muted" x="350" y="318" text-anchor="middle">hash smaller side per partition</text>
+  <text class="dg-muted" x="580" y="318" text-anchor="middle">sort both sides, then merge</text>
+</svg>

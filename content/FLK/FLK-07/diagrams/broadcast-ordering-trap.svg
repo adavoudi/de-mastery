@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" role="img" aria-labelledby="broadcast-ordering-trap-t">
+  <title id="broadcast-ordering-trap-t">Evaluating an event against whatever rule is in state gives different answers depending on arrival order; buffering and a timer fixes it</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}.dg-dot-ok{fill:#2c7a4b}.dg-dot-bad{fill:#b3372b}
+    .dg-dot-ok{fill:#2c7a4b}.dg-dot-bad{fill:#b3372b}
+  </style>
+  <defs><marker id="broadcast-ordering-trap-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <text class="dg-text dg-b" x="20" y="30">Run A: event arrives first</text>
+  <rect class="dg-accent" x="20" y="42" width="290" height="40" rx="8"/><text class="dg-text" x="165" y="67" text-anchor="middle">1. event: amount 300</text>
+  <rect class="dg-box" x="410" y="42" width="290" height="40" rx="8"/><text class="dg-text" x="555" y="67" text-anchor="middle">2. rule: threshold T=200</text>
+  <path class="dg-line" d="M310 62H408" marker-end="url(#broadcast-ordering-trap-arrow)"/>
+  <text class="dg-text" x="20" y="108">judged by old T=500: not flagged</text>
+  <text class="dg-text dg-b" x="20" y="146">Run B: rule arrives first</text>
+  <rect class="dg-box" x="20" y="158" width="290" height="40" rx="8"/><text class="dg-text" x="165" y="183" text-anchor="middle">1. rule: threshold T=200</text>
+  <rect class="dg-accent" x="410" y="158" width="290" height="40" rx="8"/><text class="dg-text" x="555" y="183" text-anchor="middle">2. event: amount 300</text>
+  <path class="dg-line" d="M310 178H408" marker-end="url(#broadcast-ordering-trap-arrow)"/>
+  <text class="dg-text" x="20" y="224">judged by new T=200: flagged. Same data, different result.</text>
+  <text class="dg-text dg-b" x="20" y="272">Fix: buffer the event, decide on an event-time timer</text>
+  <rect class="dg-accent" x="20" y="284" width="210" height="40" rx="8"/><text class="dg-text" x="125" y="309" text-anchor="middle">event buffered</text>
+  <rect class="dg-box" x="255" y="284" width="210" height="40" rx="8"/><text class="dg-text" x="360" y="309" text-anchor="middle">rules versioned by time</text>
+  <rect class="dg-ok" x="490" y="284" width="210" height="40" rx="8"/><text class="dg-text" x="595" y="309" text-anchor="middle">watermark passes: timer</text>
+  <path class="dg-line" d="M230 304H253" marker-end="url(#broadcast-ordering-trap-arrow)"/><path class="dg-line" d="M465 304H488" marker-end="url(#broadcast-ordering-trap-arrow)"/>
+  <text class="dg-text" x="20" y="358">Timer applies the rule in force at the event's time:</text>
+  <text class="dg-text" x="20" y="378">flagged in both arrival orders.</text>
+</svg>

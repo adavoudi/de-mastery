@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 300" role="img" aria-labelledby="commit-on-checkpoint-t">
+  <title id="commit-on-checkpoint-t">Change events are buffered by the Flink writer and become visible in Iceberg only when a checkpoint completes</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}.dg-dot-ok{fill:#2c7a4b}.dg-dot-bad{fill:#b3372b}
+  </style>
+  <defs><marker id="commit-on-checkpoint-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <rect class="dg-box" x="20" y="60" width="130" height="70" rx="10"/>
+  <text class="dg-text dg-b" x="85" y="92" text-anchor="middle">Debezium</text>
+  <text class="dg-muted" x="85" y="112" text-anchor="middle">+I -U +U -D</text>
+  <rect class="dg-accent" x="210" y="60" width="150" height="70" rx="10"/>
+  <text class="dg-text dg-b" x="285" y="92" text-anchor="middle">Flink writer</text>
+  <text class="dg-muted" x="285" y="112" text-anchor="middle">buffers data files</text>
+  <rect class="dg-warn" x="420" y="60" width="110" height="70" rx="10"/>
+  <text class="dg-text dg-b" x="475" y="92" text-anchor="middle">Committer</text>
+  <text class="dg-muted" x="475" y="112" text-anchor="middle">waits for ckpt</text>
+  <rect class="dg-ok" x="570" y="60" width="115" height="70" rx="10"/>
+  <text class="dg-text dg-b" x="627" y="92" text-anchor="middle">Iceberg</text>
+  <text class="dg-muted" x="627" y="112" text-anchor="middle">snapshot N</text>
+  <path class="dg-line" d="M150 95H208" marker-end="url(#commit-on-checkpoint-arrow)"/>
+  <path class="dg-line" d="M360 95H418" marker-end="url(#commit-on-checkpoint-arrow)"/>
+  <path class="dg-line dg-dash" d="M530 95H568" marker-end="url(#commit-on-checkpoint-arrow)"/>
+  <rect class="dg-box" x="150" y="190" width="400" height="44" rx="10"/>
+  <text class="dg-text dg-b" x="350" y="217" text-anchor="middle">Checkpoint N completes</text>
+  <path class="dg-line" d="M475 190V132" marker-end="url(#commit-on-checkpoint-arrow)"/>
+  <text class="dg-muted" x="485" y="165">commit</text>
+  <circle class="dg-dot-ok" r="6" cx="627" cy="150"/>
+  <text class="dg-muted" x="637" y="154">visible</text>
+  <circle class="dg-dot-bad" r="6" cx="285" cy="150"/>
+  <text class="dg-muted" x="295" y="154">not yet visible</text>
+  <text class="dg-text" x="350" y="270" text-anchor="middle">No checkpoint, no commit: readers keep seeing snapshot N-1.</text>
+</svg>

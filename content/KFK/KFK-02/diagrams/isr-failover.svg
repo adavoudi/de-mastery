@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 340" role="img" aria-labelledby="isr-failover-t">
+  <title id="isr-failover-t">An acks=all write, then the leader fails and an ISR follower is elected</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}
+  </style>
+
+  <defs><marker id="isr-failover-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+<rect class="dg-accent" x="20" y="8" width="180" height="32" rx="8"/>
+<text class="dg-text dg-b" x="110" y="29" text-anchor="middle">Producer (acks=all)</text>
+<path class="dg-line" d="M110 40V58" marker-end="url(#isr-failover-arrow)"/>
+<rect class="dg-accent" x="20" y="60" width="180" height="120" rx="10"/>
+<text class="dg-text dg-b" x="110" y="84" text-anchor="middle">Broker 1: leader</text>
+<text class="dg-muted" x="110" y="102" text-anchor="middle">ISR member</text>
+<rect class="dg-box" x="34" y="122" width="44" height="30" rx="4"/><text class="dg-text dg-mono" x="56" y="142" text-anchor="middle">r1</text>
+<rect class="dg-box" x="84" y="122" width="44" height="30" rx="4"/><text class="dg-text dg-mono" x="106" y="142" text-anchor="middle">r2</text>
+<rect class="dg-box" x="134" y="122" width="44" height="30" rx="4"/><text class="dg-text dg-mono" x="156" y="142" text-anchor="middle">r3</text>
+<rect class="dg-ok" x="260" y="60" width="180" height="120" rx="10"/>
+<text class="dg-text dg-b" x="350" y="84" text-anchor="middle">Broker 2: follower</text>
+<text class="dg-muted" x="350" y="102" text-anchor="middle">ISR member</text>
+<rect class="dg-box" x="274" y="122" width="44" height="30" rx="4"/><text class="dg-text dg-mono" x="296" y="142" text-anchor="middle">r1</text>
+<rect class="dg-box" x="324" y="122" width="44" height="30" rx="4"/><text class="dg-text dg-mono" x="346" y="142" text-anchor="middle">r2</text>
+<rect class="dg-box" x="374" y="122" width="44" height="30" rx="4"/><text class="dg-text dg-mono" x="396" y="142" text-anchor="middle">r3</text>
+<rect class="dg-warn" x="500" y="60" width="180" height="120" rx="10"/>
+<text class="dg-text dg-b" x="590" y="84" text-anchor="middle">Broker 3: follower</text>
+<text class="dg-muted" x="590" y="102" text-anchor="middle">lagging, not in ISR</text>
+<rect class="dg-box" x="514" y="122" width="44" height="30" rx="4"/><text class="dg-text dg-mono" x="536" y="142" text-anchor="middle">r1</text>
+<rect class="dg-box" x="564" y="122" width="44" height="30" rx="4"/><text class="dg-text dg-mono" x="586" y="142" text-anchor="middle">r2</text>
+<rect class="dg-box dg-dash" x="614" y="122" width="44" height="30" rx="4"/><text class="dg-muted dg-mono" x="636" y="142" text-anchor="middle">r3?</text>
+<path class="dg-line" d="M200 137H258" marker-end="url(#isr-failover-arrow)"/>
+<text class="dg-muted" x="229" y="128" text-anchor="middle">pull</text>
+<!-- failure and election -->
+<g opacity="0"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.3;0.35;0.95;1" dur="10s" repeatCount="indefinite"/>
+<rect class="dg-bad" x="20" y="60" width="180" height="120" rx="10" fill-opacity="0.85"/>
+<path class="dg-line" d="M70 100L150 170M150 100L70 170"/></g>
+<rect class="dg-ok" x="256" y="56" width="188" height="128" rx="12" fill="none" stroke-width="4" opacity="0"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.6;0.65;0.95;1" dur="10s" repeatCount="indefinite"/></rect>
+<circle class="dg-dot" r="7" cx="110" cy="45" opacity="0">
+<animate attributeName="cy" values="45;110;110" keyTimes="0;0.08;1" dur="10s" repeatCount="indefinite"/>
+<animate attributeName="opacity" values="1;1;0;0" keyTimes="0;0.08;0.1;1" dur="10s" repeatCount="indefinite"/></circle>
+<circle class="dg-dot" r="7" cx="200" cy="137" opacity="0">
+<animate attributeName="cx" values="200;200;258;258" keyTimes="0;0.1;0.2;1" dur="10s" repeatCount="indefinite"/>
+<animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.1;0.2;0.22;1" dur="10s" repeatCount="indefinite"/></circle>
+<rect class="dg-accent" x="12" y="216" width="676" height="28" rx="6" fill-opacity="1"><animate attributeName="fill-opacity" values="1;0;0;1" keyTimes="0;0.3;0.6;1" calcMode="discrete" dur="10s" repeatCount="indefinite"/></rect>
+<text class="dg-text" x="24" y="235"><tspan class="dg-b">1</tspan>  acks=all: r3 is acknowledged only after every ISR member (B1, B2) has it.</text>
+<rect class="dg-accent" x="12" y="250" width="676" height="28" rx="6" fill-opacity="0"><animate attributeName="fill-opacity" values="0;1;0;0" keyTimes="0;0.3;0.6;1" calcMode="discrete" dur="10s" repeatCount="indefinite"/></rect>
+<text class="dg-text" x="24" y="269"><tspan class="dg-b">2</tspan>  B1, the leader, dies. B3 never got r3 and is not in the ISR.</text>
+<rect class="dg-accent" x="12" y="284" width="676" height="28" rx="6" fill-opacity="0"><animate attributeName="fill-opacity" values="0;0;1;0" keyTimes="0;0.3;0.6;1" calcMode="discrete" dur="10s" repeatCount="indefinite"/></rect>
+<text class="dg-text" x="24" y="303"><tspan class="dg-b">3</tspan>  The controller elects B2 from the ISR as leader, so r3 survives.</text>
+<text class="dg-muted" x="24" y="328">Unclean election (off by default) could pick B3 instead and silently lose r3.</text>
+</svg>

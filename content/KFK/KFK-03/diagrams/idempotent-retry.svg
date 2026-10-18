@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 400" role="img" aria-labelledby="idempotent-retry-t">
+  <title id="idempotent-retry-t">A lost ack makes the producer retry; the producer id and sequence number let the broker reject the duplicate</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}
+  </style>
+
+  <defs><marker id="idempotent-retry-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <rect class="dg-accent" x="30" y="15" width="140" height="44" rx="10"/>
+  <text class="dg-text dg-b" x="100" y="43" text-anchor="middle">Producer</text>
+  <rect class="dg-box" x="515" y="15" width="140" height="44" rx="10"/>
+  <text class="dg-text dg-b" x="585" y="43" text-anchor="middle">Broker (leader)</text>
+  <path class="dg-line dg-dash" d="M100 59V285M585 59V285"/>
+  <text class="dg-text dg-mono" x="342" y="84" text-anchor="middle">1. batch A  (pid=7, seq=0)</text>
+  <path class="dg-line" d="M100 95H583" marker-end="url(#idempotent-retry-arrow)"/>
+  <text class="dg-muted" x="342" y="134" text-anchor="middle">2. broker appends A, but the ack is lost</text>
+  <path class="dg-line dg-dash" d="M583 145H100" marker-end="url(#idempotent-retry-arrow)"/>
+  <path class="dg-bad" d="M335 140l14 12M349 140l-14 12" stroke-width="3"/>
+  <text class="dg-text dg-mono" x="342" y="194" text-anchor="middle">3. timeout, retry A  (pid=7, seq=0)</text>
+  <path class="dg-line" d="M100 205H583" marker-end="url(#idempotent-retry-arrow)"/>
+  <text class="dg-text dg-mono" x="342" y="244" text-anchor="middle">4. seq 0 already seen: not appended, ack</text>
+  <path class="dg-line" d="M583 255H100" marker-end="url(#idempotent-retry-arrow)"/>
+  <rect class="dg-bad" x="30" y="300" width="305" height="84" rx="10"/>
+  <text class="dg-text dg-b" x="182" y="322" text-anchor="middle">idempotence off</text>
+  <text class="dg-text dg-mono" x="182" y="347" text-anchor="middle">log: A  A</text>
+  <text class="dg-muted" x="182" y="370" text-anchor="middle">duplicate (or reordered)</text>
+  <rect class="dg-ok" x="365" y="300" width="305" height="84" rx="10"/>
+  <text class="dg-text dg-b" x="517" y="322" text-anchor="middle">idempotence on</text>
+  <text class="dg-text dg-mono" x="517" y="347" text-anchor="middle">log: A</text>
+  <text class="dg-muted" x="517" y="370" text-anchor="middle">retry rejected, no duplicate</text>
+  <circle class="dg-dot" r="7" cy="95" cx="100">
+    <animate attributeName="cx" values="100;583;583" keyTimes="0;0.15;1" dur="10s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="1;1;0;0" keyTimes="0;0.15;0.16;1" dur="10s" repeatCount="indefinite"/>
+  </circle>
+  <circle class="dg-dot-bad" r="7" cy="145" cx="583">
+    <animate attributeName="cx" values="583;583;342;342" keyTimes="0;0.2;0.35;1" dur="10s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.2;0.35;0.36;1" dur="10s" repeatCount="indefinite"/>
+  </circle>
+  <circle class="dg-dot" r="7" cy="205" cx="100">
+    <animate attributeName="cx" values="100;100;583;583" keyTimes="0;0.45;0.6;1" dur="10s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.45;0.6;0.61;1" dur="10s" repeatCount="indefinite"/>
+  </circle>
+  <circle class="dg-dot-ok" r="7" cy="255" cx="583">
+    <animate attributeName="cx" values="583;583;100;100" keyTimes="0;0.7;0.85;1" dur="10s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.7;0.85;0.86;1" dur="10s" repeatCount="indefinite"/>
+  </circle>
+</svg>

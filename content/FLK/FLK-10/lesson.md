@@ -72,6 +72,8 @@ checkpoint and the sink's committer is idempotent per checkpoint id, so a snapsh
 double-committed and never lost. You can see it on disk — the table's `metadata/` grows a new
 `vN.metadata.json` and a `snap-*.avro` manifest list per committed checkpoint.
 
+![Buffered changes become visible in Iceberg only when a checkpoint completes and the committer creates a snapshot](diagrams/commit-on-checkpoint.svg)
+
 ### 4. Schema evolution
 
 When the source adds a column, evolve the target with an Iceberg `ALTER TABLE … ADD`:

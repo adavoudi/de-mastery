@@ -48,6 +48,8 @@ Key ideas:
   a bare JVM throws `NoClassDefFoundError` for the first dependency class touched. A **fat jar**
   copies the dependency classes in.
 
+![Thin jar has only your classes and fails with NoClassDefFoundError; fat jar bundles implementation dependencies while compileOnly Flink stays out](diagrams/thin-vs-fat-jar.svg)
+
 ### Building a fat jar
 
 The production approach is the **Shadow plugin** (`com.gradleup.shadow`), which also *relocates*

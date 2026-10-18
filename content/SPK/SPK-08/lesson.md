@@ -19,6 +19,8 @@ Each executor's heap is split by Spark into regions:
 - **User memory** — your data structures, UDF state.
 - **Reserved memory** — a fixed slice Spark keeps for itself.
 
+![Execution and storage share the unified region and borrow across a movable boundary](diagrams/unified-memory.svg)
+
 When execution memory is exhausted, Spark **spills** sorted/aggregated data to disk — correct but
 slow. When even that is not enough, or a single record/partition is too big, you get an **OOM**.
 Common causes, each with a signature:

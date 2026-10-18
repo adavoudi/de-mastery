@@ -27,6 +27,8 @@ decides the surviving row:
 | `aggregation` | combine columns with per-column aggregate functions (sum, max, ...) |
 | `first-row` | keep the first record for a key, ignore later ones |
 
+![Same key from two writers: deduplicate wipes out the CRM name, partial-update keeps both, aggregation also sums points](diagrams/pk-merge-engines.svg)
+
 **`partial-update` is the one for an MDM golden record.** Three source systems each know *part* of
 the customer: the CRM knows the name, billing knows the email, the loyalty app knows the phone. Each
 writes a row keyed by `customer_id` with only its own column filled and the others `NULL`. With

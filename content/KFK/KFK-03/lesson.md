@@ -45,6 +45,8 @@ retry neither duplicates nor reorders. Enabling it also sets safe defaults: `ack
 That last bound is the subtle one: idempotence preserves ordering across retries **only** up to 5
 in-flight requests; set it to `6+` and you can still reorder on retry.
 
+![A lost ack triggers a retry; the producer id and sequence number let the broker reject the duplicate](diagrams/idempotent-retry.svg)
+
 So the throughput-safe recipe is: **`enable.idempotence=true`** (which pins `acks=all` and bounded
 in-flight), a tuned `linger.ms`/`batch.size`/`compression.type` for throughput, and a key per record
 so each key's events stay ordered in one partition. You get bigger batches AND no dup / no reorder.

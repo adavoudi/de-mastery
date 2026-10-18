@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 390" role="img" aria-labelledby="watermark-window-lifecycle-t">
+  <title id="watermark-window-lifecycle-t">Out-of-order events, the watermark advancing, a window firing, re-firing within allowed lateness, and a late event sent to the side output</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}.dg-dot-ok{fill:#2c7a4b}.dg-dot-bad{fill:#b3372b}
+  </style>
+  <defs><marker id="watermark-window-lifecycle-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <text class="dg-text dg-b" x="40" y="24">Window 09:00-10:00 · bound 5 s · allowedLateness 1 min (example)</text>
+  <text class="dg-muted" x="40" y="44">Dots sit at their event time; numbers show arrival order. Watermark = max event time seen - 5 s.</text>
+  <path class="dg-line" d="M40 150H700" marker-end="url(#watermark-window-lifecycle-arrow)"/>
+  <path class="dg-line" d="M40 142V158"/>
+  <path class="dg-line" d="M292 142V158"/>
+  <path class="dg-line" d="M544 142V158"/>
+  <text class="dg-text dg-mono" x="40" y="182">09:59:00</text>
+  <text class="dg-text dg-mono dg-b" x="292" y="182" text-anchor="middle">10:00:00</text><text class="dg-muted" x="292" y="198" text-anchor="middle">window end</text>
+  <text class="dg-text dg-mono dg-b" x="544" y="182" text-anchor="middle">10:01:00</text><text class="dg-muted" x="544" y="198" text-anchor="middle">end + lateness</text>
+  <text class="dg-muted" x="700" y="132" text-anchor="end">event time</text>
+  <g><animateTransform attributeName="transform" type="translate" values="145 0;145 0;229 0;300 0;565 0;565 0" keyTimes="0;0.06;0.16;0.38;0.66;1" dur="10s" repeatCount="indefinite" calcMode="discrete"/>
+    <path class="dg-line dg-dash" d="M0 100V168"/><text class="dg-text dg-b" x="0" y="92" text-anchor="middle">watermark</text></g>
+  <rect class="dg-box" x="40" y="232" width="248" height="100" rx="10"/>
+  <rect class="dg-box" x="296" y="232" width="244" height="100" rx="10"/>
+  <rect class="dg-box" x="544" y="232" width="156" height="100" rx="10"/>
+  <text class="dg-text dg-b" x="52" y="256">Open</text>
+  <text class="dg-muted" x="52" y="278">collects 1, 2, 3</text>
+  <text class="dg-muted" x="52" y="296">3 is out of order</text>
+  <text class="dg-muted" x="52" y="314">WM 09:59:45 &lt; end</text>
+  <text class="dg-text dg-b" x="308" y="256">Fires, then re-fires</text>
+  <text class="dg-muted" x="308" y="278">4 lifts WM to 10:00:02: FIRE</text>
+  <text class="dg-muted" x="308" y="296">5 is late but allowed: RE-FIRE</text>
+  <text class="dg-text dg-b" x="556" y="256">Purged</text>
+  <text class="dg-muted" x="556" y="278">6 purges the state</text>
+  <text class="dg-muted" x="556" y="296">7 is too late:</text>
+  <text class="dg-muted" x="556" y="314">to side output</text>
+  <rect class="dg-accent" x="296" y="232" width="244" height="100" rx="10" fill-opacity="0" stroke-opacity="0"><animate attributeName="fill-opacity" values="0;0;0.55;0.55;0;0" keyTimes="0;0.38;0.4;0.47;0.5;1" dur="10s" repeatCount="indefinite"/><animate attributeName="stroke-opacity" values="0;0;1;1;0;0" keyTimes="0;0.38;0.4;0.47;0.5;1" dur="10s" repeatCount="indefinite"/></rect>
+  <rect class="dg-warn" x="296" y="232" width="244" height="100" rx="10" fill-opacity="0" stroke-opacity="0"><animate attributeName="fill-opacity" values="0;0;0.55;0.55;0;0" keyTimes="0;0.52;0.54;0.61;0.64;1" dur="10s" repeatCount="indefinite"/><animate attributeName="stroke-opacity" values="0;0;1;1;0;0" keyTimes="0;0.52;0.54;0.61;0.64;1" dur="10s" repeatCount="indefinite"/></rect>
+  <rect class="dg-bad" x="544" y="232" width="156" height="100" rx="10" fill-opacity="0" stroke-opacity="0"><animate attributeName="fill-opacity" values="0;0;0.55;0.55;0;0" keyTimes="0;0.8;0.8200000000000001;0.95;0.98;1" dur="10s" repeatCount="indefinite"/><animate attributeName="stroke-opacity" values="0;0;1;1;0;0" keyTimes="0;0.8;0.8200000000000001;0.95;0.98;1" dur="10s" repeatCount="indefinite"/></rect>
+  <circle class="dg-box" cx="166" cy="150" r="4"/>
+  <circle class="dg-box" cx="250" cy="150" r="4"/>
+  <circle class="dg-box" cx="208" cy="150" r="4"/>
+  <circle class="dg-box" cx="321" cy="150" r="4"/>
+  <circle class="dg-box" cx="271" cy="150" r="4"/>
+  <circle class="dg-box" cx="586" cy="150" r="4"/>
+  <circle class="dg-box" cx="124" cy="150" r="4"/>
+  <g><animateTransform attributeName="transform" type="translate" values="0 0;0 -48;0 -48;0 0;0 0" keyTimes="0;0.001;0.06;0.1;1" dur="10s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0;0;1;1" keyTimes="0;0.001;0.059;0.06;1" dur="10s" repeatCount="indefinite"/><circle class="dg-ok" cx="166" cy="150" r="11"/><text class="dg-text dg-b" x="166" y="155" text-anchor="middle">1</text></g>
+  <g><animateTransform attributeName="transform" type="translate" values="0 0;0 -48;0 -48;0 0;0 0" keyTimes="0;0.001;0.16;0.2;1" dur="10s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0;0;1;1" keyTimes="0;0.001;0.159;0.16;1" dur="10s" repeatCount="indefinite"/><circle class="dg-ok" cx="250" cy="150" r="11"/><text class="dg-text dg-b" x="250" y="155" text-anchor="middle">2</text></g>
+  <g><animateTransform attributeName="transform" type="translate" values="0 0;0 -48;0 -48;0 0;0 0" keyTimes="0;0.001;0.26;0.3;1" dur="10s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0;0;1;1" keyTimes="0;0.001;0.259;0.26;1" dur="10s" repeatCount="indefinite"/><circle class="dg-ok" cx="208" cy="150" r="11"/><text class="dg-text dg-b" x="208" y="155" text-anchor="middle">3</text></g>
+  <g><animateTransform attributeName="transform" type="translate" values="0 0;0 -48;0 -48;0 0;0 0" keyTimes="0;0.001;0.38;0.42;1" dur="10s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0;0;1;1" keyTimes="0;0.001;0.379;0.38;1" dur="10s" repeatCount="indefinite"/><circle class="dg-accent" cx="321" cy="150" r="11"/><text class="dg-text dg-b" x="321" y="155" text-anchor="middle">4</text></g>
+  <g><animateTransform attributeName="transform" type="translate" values="0 0;0 -48;0 -48;0 0;0 0" keyTimes="0;0.001;0.52;0.56;1" dur="10s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0;0;1;1" keyTimes="0;0.001;0.519;0.52;1" dur="10s" repeatCount="indefinite"/><circle class="dg-warn" cx="271" cy="150" r="11"/><text class="dg-text dg-b" x="271" y="155" text-anchor="middle">5</text></g>
+  <g><animateTransform attributeName="transform" type="translate" values="0 0;0 -48;0 -48;0 0;0 0" keyTimes="0;0.001;0.66;0.7000000000000001;1" dur="10s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0;0;1;1" keyTimes="0;0.001;0.659;0.66;1" dur="10s" repeatCount="indefinite"/><circle class="dg-accent" cx="586" cy="150" r="11"/><text class="dg-text dg-b" x="586" y="155" text-anchor="middle">6</text></g>
+  <g><animateTransform attributeName="transform" type="translate" values="0 0;0 -48;0 -48;0 0;0 0" keyTimes="0;0.001;0.8;0.8400000000000001;1" dur="10s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0;0;1;1" keyTimes="0;0.001;0.799;0.8;1" dur="10s" repeatCount="indefinite"/><circle class="dg-bad" cx="124" cy="150" r="11"/><text class="dg-text dg-b" x="124" y="155" text-anchor="middle">7</text></g>
+  <text class="dg-muted" x="40" y="362">Green: on time. Amber: late, inside allowed lateness. Red: past the lateness, so dropped unless routed to a side output.</text>
+  <text class="dg-muted" x="40" y="380">Teal: events that move the watermark past a boundary.</text>
+</svg>

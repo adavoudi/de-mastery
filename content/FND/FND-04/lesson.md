@@ -39,6 +39,8 @@ watermark is `W`:
 - `t ≤ W` and beyond the grace → **dropped** (or sent to a *side output* / dead-letter so it is not
   silently lost).
 
+![Events arrive out of order while maxEventTime moves right and the watermark trails it by the allowed delay; each event is on-time, late or dropped depending on where it lands relative to W](diagrams/watermark-event-time.svg)
+
 The whole design is a trade-off: a larger `allowedLateness` catches more stragglers but delays
 results and costs state; a smaller one is faster but drops more. There is no "correct" value —
 only a value justified by the data's observed lateness distribution.

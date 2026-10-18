@@ -31,18 +31,7 @@ Iceberg metadata is a four-level pointer chain, newest-first:
 4. **manifest → data files.** The leaves are the immutable **Parquet data files** (plus, in v2+,
    **delete files**, LKH-04).
 
-```
-Glue catalog  ──▶  vN.metadata.json
-                        │  (schema, specs, snapshots[], current-snapshot-id)
-                        ▼
-                   snap-<id>.avro        ← manifest list (one row per manifest)
-                        │
-                        ▼
-                   <uuid>-m0.avro        ← manifest (per-file stats: counts, min/max, nulls)
-                        │
-                        ▼
-                   00000-….parquet       ← data files (and delete files)
-```
+![Iceberg metadata tree: the catalog points to one metadata.json, which leads through a manifest list and manifests down to the data files](diagrams/iceberg-metadata-tree.svg)
 
 **Why two index levels (manifest list *and* manifests)?** So a query planner can prune cheaply.
 It reads the small manifest list, drops whole manifests whose partition range can't match, then

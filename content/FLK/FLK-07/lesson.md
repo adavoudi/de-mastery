@@ -31,6 +31,8 @@ inactivity. With a process function you build it explicitly:
 Everything is driven by **event time and watermarks**, never `sleep()` — so the result is
 deterministic and replayable. The gap is measured in the data's own clock, not wall-clock.
 
+![Three events each replace the pending timer; after the last one, 30 minutes of event-time silence fires onTimer](diagrams/session-timeout-timers.svg)
+
 ## How broadcast rules work (and the ordering trap)
 
 A fraud rule — say "flag any transaction over threshold T" — changes over time: compliance tightens
@@ -46,6 +48,8 @@ each event, and evaluate it on an **event-time timer** so that, by the time you 
 has advanced and the rule in force *as of the event's time* is known. "Apply the rule that was in
 effect when the event happened" is both the correct business semantics (a transaction is judged by
 the policy of its day) and what makes the test deterministic.
+
+![The same event and rule give different verdicts by arrival order; buffering plus an event-time timer gives one](diagrams/broadcast-ordering-trap.svg)
 
 ## From your world
 

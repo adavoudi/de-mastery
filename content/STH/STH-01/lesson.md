@@ -56,6 +56,8 @@ Four yes/no signals decide it, applied in order:
    storage) that serves **both** a streaming/changelog read path **and** a batch/OLAP read path from
    **one copy** → **Streamhouse**.
 
+![Four yes/no signals applied in order: the first yes decides the architecture](diagrams/classify-architecture.svg)
+
 The exercise encodes exactly these signals as booleans and asserts the classification is
 deterministic.
 

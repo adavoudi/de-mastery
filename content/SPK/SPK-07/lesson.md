@@ -30,6 +30,8 @@ write time, and that is where the small-file problem is born or avoided.
 The exam loves the contrast: *to reduce files cheaply after a selective filter, use `coalesce`; to
 rebalance or grow partitions, use `repartition`.*
 
+![coalesce merges neighbouring partitions with no shuffle and may stay uneven; repartition shuffles every partition into even ones](diagrams/repartition-vs-coalesce.svg)
+
 ## The small-file problem (objective 4.1)
 
 Thousands of tiny files cripple a query: each file costs a metadata lookup and an open, listing

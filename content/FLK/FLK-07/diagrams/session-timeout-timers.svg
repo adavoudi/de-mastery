@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 270" role="img" aria-labelledby="session-timeout-timers-t">
+  <title id="session-timeout-timers-t">Each event deletes the old timer and registers a new one at event time plus 30 minutes; only the last timer fires</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}.dg-dot-ok{fill:#2c7a4b}.dg-dot-bad{fill:#b3372b}
+    .dg-dot-ok{fill:#2c7a4b}.dg-dot-bad{fill:#b3372b}
+  </style>
+  <defs><marker id="session-timeout-timers-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <text class="dg-muted" x="20" y="28">timers registered (event time + 30 min gap)</text>
+  <rect class="dg-box dg-dash" x="305" y="40" width="90" height="40" rx="8"/>
+  <text class="dg-mono dg-text" x="350" y="58" text-anchor="middle">t=30</text>
+  <text class="dg-muted" x="350" y="74" text-anchor="middle">deleted by e2</text>
+  <rect class="dg-box dg-dash" x="405" y="40" width="90" height="40" rx="8"/>
+  <text class="dg-mono dg-text" x="450" y="58" text-anchor="middle">t=40</text>
+  <text class="dg-muted" x="450" y="74" text-anchor="middle">deleted by e3</text>
+  <rect class="dg-bad" x="555" y="40" width="90" height="40" rx="8"/>
+  <text class="dg-mono dg-text dg-b" x="600" y="58" text-anchor="middle">t=55</text>
+  <text class="dg-muted" x="600" y="74" text-anchor="middle">fires</text>
+  <path class="dg-line dg-dash" d="M350 80V140M450 80V140M600 80V140"/>
+  <path class="dg-line" d="M30 150H670" marker-end="url(#session-timeout-timers-arrow)"/>
+  <text class="dg-muted" x="30" y="136">event time (min)</text>
+  <circle class="dg-dot" r="7" cx="50" cy="150"/><circle class="dg-dot" r="7" cx="150" cy="150"/><circle class="dg-dot" r="7" cx="300" cy="150"/>
+  <circle class="dg-dot-bad" r="7" cx="600" cy="150"/>
+  <text class="dg-text dg-b" x="50" y="178" text-anchor="middle">e1</text><text class="dg-muted" x="50" y="196" text-anchor="middle">t=0</text>
+  <text class="dg-text dg-b" x="150" y="178" text-anchor="middle">e2</text><text class="dg-muted" x="150" y="196" text-anchor="middle">t=10</text>
+  <text class="dg-text dg-b" x="300" y="178" text-anchor="middle">e3</text><text class="dg-muted" x="300" y="196" text-anchor="middle">t=25</text>
+  <text class="dg-text dg-b" x="600" y="178" text-anchor="middle">onTimer</text><text class="dg-muted" x="600" y="196" text-anchor="middle">watermark passes 55</text>
+  <path class="dg-line" d="M300 225H598" marker-start="url(#session-timeout-timers-arrow)" marker-end="url(#session-timeout-timers-arrow)"/>
+  <text class="dg-text" x="449" y="248" text-anchor="middle">30 min of silence: emit session, clear state</text>
+</svg>

@@ -23,6 +23,8 @@ file or record the change separately:
   files against the data files at scan time. You trade read cost for write cost, and you accumulate
   deletes until compaction (LKH-05) folds them back in.
 
+![The same UPDATE: copy-on-write rewrites the data file, merge-on-read adds a delete file merged at read time](diagrams/cow-vs-mor.svg)
+
 You can **see** which mode happened in the metadata — this is how you verify it rather than guess:
 
 ```sql

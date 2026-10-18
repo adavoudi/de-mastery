@@ -51,6 +51,8 @@ progress" forever. Symptom: reassignment in progress long after it should be don
 rate is tiny. Cause: `leader.replication.throttled.rate` / `follower...` too low (or left set).
 Fix: raise or remove the throttle so the move completes. Health = reassignment verifies complete.
 
+![Triage the six incidents: match the symptom, run the check, and the likely cause follows](diagrams/incident-triage.svg)
+
 ## From your world
 
 | Warehouse / platform incident | Kafka incident |

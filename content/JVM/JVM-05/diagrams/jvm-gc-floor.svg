@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 290" role="img" aria-labelledby="jvm-gc-floor-t">
+  <title id="jvm-gc-floor-t">Heap occupancy over time: flat floor is healthy, rising floor is a leak</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}.dg-dot-ok{fill:#2c7a4b}.dg-dot-bad{fill:#b3372b}
+  </style>
+  <text class="dg-text dg-b" x="50" y="28">Healthy: floor stays flat</text>
+  <text class="dg-text dg-b" x="390" y="28">Leak: floor keeps rising</text>
+  <path class="dg-line" d="M50 55V230H320"/>
+  <path class="dg-line" d="M390 55V230H660"/>
+  <path class="dg-line dg-dash" d="M50 62H320"/>
+  <path class="dg-line dg-dash" d="M390 62H660"/>
+  <text class="dg-muted" x="56" y="80">heap max</text>
+  <text class="dg-muted" x="396" y="80">heap max</text>
+  <path class="dg-line" d="M50 180L100 110V180L150 110V180L200 110V180L250 110V180L300 110V180"/>
+  <path class="dg-line" d="M390 180L440 120V168L490 114V152L540 108V138L590 100V122L640 92V104"/>
+  <circle class="dg-dot-ok" r="5" cx="100" cy="180"/><circle class="dg-dot-ok" r="5" cx="150" cy="180"/><circle class="dg-dot-ok" r="5" cx="200" cy="180"/><circle class="dg-dot-ok" r="5" cx="250" cy="180"/><circle class="dg-dot-ok" r="5" cx="300" cy="180"/>
+  <circle class="dg-dot-bad" r="5" cx="440" cy="168"/><circle class="dg-dot-bad" r="5" cx="490" cy="152"/><circle class="dg-dot-bad" r="5" cx="540" cy="138"/><circle class="dg-dot-bad" r="5" cx="590" cy="122"/><circle class="dg-dot-bad" r="5" cx="640" cy="104"/>
+  <text class="dg-muted" x="185" y="212" text-anchor="middle">live set after each GC (dots)</text>
+  <text class="dg-muted" x="525" y="212" text-anchor="middle">live set climbs toward OOM</text>
+  <text class="dg-muted" x="185" y="252" text-anchor="middle">time</text>
+  <text class="dg-muted" x="525" y="252" text-anchor="middle">time</text>
+</svg>

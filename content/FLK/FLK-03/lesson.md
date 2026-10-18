@@ -63,6 +63,8 @@ Without a late side output, Flink **silently drops** events that arrive after th
 passed their window. That silent drop is the classic streaming bug: your totals are quietly short
 and nothing tells you.
 
+![Watermark and window on an event-time axis: events 1-3 fill the window, event 4 lifts the watermark past 10:00:00 so it fires, event 5 re-fires it within allowed lateness, event 6 purges it, and event 7 goes to the late side output](diagrams/watermark-window-lifecycle.svg)
+
 ## Idleness: the stuck-watermark trap
 
 A keyed/partitioned source has **per-partition** watermarks, and the operator's watermark is the

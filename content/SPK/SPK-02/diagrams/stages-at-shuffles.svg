@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 330" role="img" aria-labelledby="stages-at-shuffles-t">
+  <title id="stages-at-shuffles-t">Each shuffle cuts the job into another stage: no shuffle is 1 stage, groupBy makes 2, orderBy makes 3</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}
+  </style>
+
+  <defs><marker id="stages-at-shuffles-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <text class="dg-muted" x="20" y="24">One action = one job. Stages = shuffles + 1.</text>
+  <text class="dg-text dg-b dg-mono" x="20" y="76">filter.select</text>
+  <text class="dg-muted" x="20" y="94">0 shuffles = 1 stage</text>
+  <rect class="dg-accent" x="150" y="52" width="485" height="56" rx="8"/>
+  <text class="dg-text dg-mono" x="392.5" y="78" text-anchor="middle">filter, select, count</text>
+  <text class="dg-muted" x="392.5" y="96" text-anchor="middle">stage 1</text>
+  <circle class="dg-dot" r="6" cx="160" cy="80" opacity="0">
+    <animate attributeName="cx" values="160;160;625;625" keyTimes="0;0.02;0.3;1" dur="9s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.02;0.3;0.301;1" dur="9s" repeatCount="indefinite"/>
+  </circle>
+  <text class="dg-text dg-b dg-mono" x="20" y="176">+ groupBy</text>
+  <text class="dg-muted" x="20" y="194">1 shuffle = 2 stages</text>
+  <rect class="dg-accent" x="150" y="152" width="180" height="56" rx="8"/>
+  <text class="dg-text dg-mono" x="240.0" y="178" text-anchor="middle">filter, select</text>
+  <text class="dg-muted" x="240.0" y="196" text-anchor="middle">stage 1</text>
+  <path class="dg-line dg-dash" d="M330 180H385" marker-end="url(#stages-at-shuffles-arrow)"/>
+  <text class="dg-muted" x="357" y="172" text-anchor="middle">shuffle</text>
+  <rect class="dg-accent" x="385" y="152" width="250" height="56" rx="8"/>
+  <text class="dg-text dg-mono" x="510.0" y="178" text-anchor="middle">groupBy, count</text>
+  <text class="dg-muted" x="510.0" y="196" text-anchor="middle">stage 2</text>
+  <circle class="dg-dot" r="6" cx="160" cy="180" opacity="0">
+    <animate attributeName="cx" values="160;160;625;625" keyTimes="0;0.35;0.63;1" dur="9s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.35;0.63;0.631;1" dur="9s" repeatCount="indefinite"/>
+  </circle>
+  <text class="dg-text dg-b dg-mono" x="20" y="276">+ orderBy</text>
+  <text class="dg-muted" x="20" y="294">2 shuffles = 3 stages</text>
+  <rect class="dg-accent" x="150" y="252" width="125" height="56" rx="8"/>
+  <text class="dg-text dg-mono" x="212.5" y="278" text-anchor="middle">filter, select</text>
+  <text class="dg-muted" x="212.5" y="296" text-anchor="middle">stage 1</text>
+  <path class="dg-line dg-dash" d="M275 280H330" marker-end="url(#stages-at-shuffles-arrow)"/>
+  <text class="dg-muted" x="302" y="272" text-anchor="middle">shuffle</text>
+  <rect class="dg-accent" x="330" y="252" width="125" height="56" rx="8"/>
+  <text class="dg-text dg-mono" x="392.5" y="278" text-anchor="middle">groupBy, count</text>
+  <text class="dg-muted" x="392.5" y="296" text-anchor="middle">stage 2</text>
+  <path class="dg-line dg-dash" d="M455 280H510" marker-end="url(#stages-at-shuffles-arrow)"/>
+  <text class="dg-muted" x="482" y="272" text-anchor="middle">shuffle</text>
+  <rect class="dg-accent" x="510" y="252" width="125" height="56" rx="8"/>
+  <text class="dg-text dg-mono" x="572.5" y="278" text-anchor="middle">orderBy, count</text>
+  <text class="dg-muted" x="572.5" y="296" text-anchor="middle">stage 3</text>
+  <circle class="dg-dot" r="6" cx="160" cy="280" opacity="0">
+    <animate attributeName="cx" values="160;160;625;625" keyTimes="0;0.68;0.96;1" dur="9s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.68;0.96;0.961;1" dur="9s" repeatCount="indefinite"/>
+  </circle>
+</svg>

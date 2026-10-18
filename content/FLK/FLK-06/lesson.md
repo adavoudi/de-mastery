@@ -18,6 +18,8 @@ same logical point in the stream". On failure, Flink restores every operator fro
 checkpoint and **rewinds the sources to the matching offsets**, so processing resumes exactly where
 the consistent snapshot was taken.
 
+![A barrier flows with the records and each operator snapshots to the state backend; after a crash, state is restored from checkpoint 7 and the source rewinds to offset 1200](diagrams/checkpoint-barrier.svg)
+
 ## How exactly-once actually holds end to end
 
 Checkpoints give exactly-once *for state*. To get exactly-once *to the sink* you need one more thing:

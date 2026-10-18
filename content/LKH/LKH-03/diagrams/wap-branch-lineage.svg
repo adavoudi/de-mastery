@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" role="img" aria-labelledby="wap-branch-lineage-t">
+  <title id="wap-branch-lineage-t">Write-audit-publish: write to an audit branch, audit it, then fast-forward main</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}
+  </style>
+  <defs><marker id="wap-branch-lineage-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <rect class="dg-accent" x="190" y="14" width="80" height="32" rx="8"/>
+  <text class="dg-text dg-b dg-mono" x="230" y="35" text-anchor="middle">main</text>
+  <path class="dg-line" d="M230 46V78" marker-end="url(#wap-branch-lineage-arrow)"/>
+  <circle class="dg-box" cx="90" cy="100" r="22"/><text class="dg-text dg-b" x="90" y="105" text-anchor="middle">S1</text>
+  <circle class="dg-box" cx="230" cy="100" r="22"/><text class="dg-text dg-b" x="230" y="105" text-anchor="middle">S2</text>
+  <path class="dg-line" d="M112 100H206" marker-end="url(#wap-branch-lineage-arrow)"/>
+  <text class="dg-muted" x="90" y="146" text-anchor="middle">main history</text>
+  <text class="dg-muted" x="230" y="146" text-anchor="middle">readers see this</text>
+  <path class="dg-line" d="M246 117L350 196" marker-end="url(#wap-branch-lineage-arrow)"/>
+  <circle class="dg-warn" cx="370" cy="210" r="22"/><text class="dg-text dg-b" x="370" y="215" text-anchor="middle">S3</text>
+  <circle class="dg-warn" cx="500" cy="210" r="22"/><text class="dg-text dg-b" x="500" y="215" text-anchor="middle">S4</text>
+  <path class="dg-line" d="M392 210H476" marker-end="url(#wap-branch-lineage-arrow)"/>
+  <text class="dg-text dg-b" x="290" y="190" text-anchor="end">1 Write</text>
+  <rect class="dg-warn" x="440" y="262" width="120" height="32" rx="8"/>
+  <text class="dg-text dg-b dg-mono" x="500" y="283" text-anchor="middle">audit</text>
+  <path class="dg-line" d="M500 262V234" marker-end="url(#wap-branch-lineage-arrow)"/>
+  <rect class="dg-ok" x="560" y="170" width="150" height="80" rx="10"/>
+  <text class="dg-text dg-b" x="635" y="194" text-anchor="middle">2 Audit S4</text>
+  <text class="dg-muted" x="635" y="214" text-anchor="middle">row counts, nulls,</text>
+  <text class="dg-muted" x="635" y="232" text-anchor="middle">control totals</text>
+  <path class="dg-line" d="M522 210H558" marker-end="url(#wap-branch-lineage-arrow)"/>
+  <path class="dg-line dg-dash" d="M270 30H500V184" marker-end="url(#wap-branch-lineage-arrow)"/>
+  <text class="dg-text dg-b" x="290" y="54">3 Publish: fast-forward main to S4</text>
+  <text class="dg-muted" x="290" y="74">only if the audit passes</text>
+</svg>

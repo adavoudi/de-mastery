@@ -76,6 +76,8 @@ Side outputs are how you implement a **dead-letter stream**: good records go dow
 to a quarantine topic — in **one pass**, without re-reading the input. (The `OutputTag` must be an
 *anonymous subclass* `new OutputTag<T>("id"){}` so Flink can capture the generic type at runtime.)
 
+![One ProcessFunction splits the stream in a single pass: valid orders go to the main sink, rejects go out through the side output to a dead-letter sink](diagrams/side-output-pipeline.svg)
+
 ### 4. Sinks
 
 A `KafkaSink` (FLIP-143) is attached with `stream.sinkTo(sink)`. Delivery guarantees range from

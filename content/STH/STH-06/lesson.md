@@ -21,6 +21,8 @@ streaming form of "the load balanced".
 
 A streaming DQ stage is a routing step, not a filter:
 
+![The input splits by complementary predicates into a good stream for the mart and a bad stream for quarantine, each rejected row tagged with a reason](diagrams/dq-split.svg)
+
 1. **Define the rules as a data contract.** For orders: `cid` not null (not-null), `amt` present and
    `> 0` (a value/accepted-range rule), and `cid` must reference a real customer (a relationship /
    referential rule). These are exactly dbt's `not_null`, accepted-values and `relationships` tests,

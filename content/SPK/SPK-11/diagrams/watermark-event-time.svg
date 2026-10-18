@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 290" role="img" aria-labelledby="watermark-event-time-t">
+  <title id="watermark-event-time-t">Event-time windows, the watermark, and when state is dropped</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}
+  </style>
+  <defs><marker id="tpl-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <defs><marker id="watermark-event-time-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <text class="dg-text dg-b" x="360" y="22" text-anchor="middle">After an event with event_ts 00:15 arrives (append mode, 10 min delay)</text>
+  <rect class="dg-ok" x="60" y="40" width="150" height="50" rx="8"/>
+  <text class="dg-text dg-mono" x="135" y="70" text-anchor="middle">[00:00, 00:05)</text>
+  <rect class="dg-warn" x="210" y="40" width="150" height="50" rx="8"/>
+  <text class="dg-text dg-mono" x="285" y="70" text-anchor="middle">[00:05, 00:10)</text>
+  <rect class="dg-warn" x="360" y="40" width="150" height="50" rx="8"/>
+  <text class="dg-text dg-mono" x="435" y="70" text-anchor="middle">[00:10, 00:15)</text>
+  <text class="dg-text" x="135" y="108" text-anchor="middle">finalized: emit once</text>
+  <text class="dg-text" x="135" y="124" text-anchor="middle">state dropped</text>
+  <text class="dg-text" x="285" y="108" text-anchor="middle">open: state kept</text>
+  <text class="dg-text" x="285" y="124" text-anchor="middle">no output yet</text>
+  <text class="dg-text" x="435" y="108" text-anchor="middle">open: state kept</text>
+  <text class="dg-text" x="435" y="124" text-anchor="middle">no output yet</text>
+  <path class="dg-line dg-dash" d="M210 135V215"/>
+  <text class="dg-text dg-b" x="204" y="150" text-anchor="end">watermark 00:05</text>
+  <path class="dg-line" d="M510 135V215"/>
+  <text class="dg-text dg-b" x="516" y="150">max event_ts 00:15</text>
+  <path class="dg-line" d="M508 178H212" marker-end="url(#watermark-event-time-arrow)"/>
+  <text class="dg-muted" x="360" y="170" text-anchor="middle">trails max by the 10 min delay</text>
+  <path class="dg-line" d="M50 215H690" marker-end="url(#watermark-event-time-arrow)"/>
+  <circle class="dg-dot-bad" r="6" cx="150" cy="215"/>
+  <text class="dg-text" x="150" y="198" text-anchor="middle">late 00:03: dropped</text>
+  <text class="dg-muted" x="60" y="236" text-anchor="middle">00:00</text>
+  <text class="dg-muted" x="210" y="236" text-anchor="middle">00:05</text>
+  <text class="dg-muted" x="360" y="236" text-anchor="middle">00:10</text>
+  <text class="dg-muted" x="510" y="236" text-anchor="middle">00:15</text>
+  <text class="dg-muted" x="660" y="236" text-anchor="middle">00:20</text>
+  <text class="dg-muted" x="690" y="256" text-anchor="end">event time</text>
+  <text class="dg-muted" x="50" y="276">Processing time (arrival order) never moves a window; only event_ts does.</text>
+</svg>

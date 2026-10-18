@@ -32,6 +32,8 @@ Three mechanisms stack up:
 Together these give **exactly-once semantics (EOS)** for a read-process-write loop: each source
 record contributes to the output exactly once, even across crashes and retries.
 
+![One read-process-write transaction: output records and input offsets commit together via the commit marker](diagrams/eos-read-process-write.svg)
+
 ## Zombie fencing (objective ccdak:2)
 
 The dangerous failure is a **zombie**: a producer everyone thinks is dead (so a replacement took
@@ -41,6 +43,8 @@ this with the `transactional.id` + an **epoch**: `init_transactions()` bumps the
 with the same `transactional.id`, the old zombie is fenced out and its commits fail. This is why the
 `transactional.id` must be **stable per logical processor**, not random per run — randomness defeats
 fencing (two instances would have different ids and both could commit).
+
+![A zombie committing with epoch 4 is rejected once the new instance bumps the epoch to 5](diagrams/eos-zombie-fencing.svg)
 
 ## Ledger invariants the test checks
 

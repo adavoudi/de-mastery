@@ -29,6 +29,8 @@ and watching what the next consumer picks up.
   graded exercise; know that it exists and when you'd reach for it (fan-out work queues where strict
   partition ownership is the wrong model).
 
+![Four partitions split between two consumers in one group; when C2 crashes its partitions move to C1](diagrams/group-rebalance.svg)
+
 ## Commit strategies and delivery semantics (objective ccdak:2)
 
 - **Auto-commit** (`enable.auto.commit=true`): the client commits the latest polled offsets every
@@ -40,6 +42,8 @@ and watching what the next consumer picks up.
   reprocesses from the last commit → **at-least-once** (no loss, possible duplicates).
 - **Manual commit before processing**: the anti-pattern — commit, then do the work; a crash in the
   work loses records → at-most-once. Don't.
+
+![Poll, process, commit and a crash: committing first loses records 5-8, committing last reprocesses them](diagrams/commit-crash-timeline.svg)
 
 **At-least-once is the default correct choice** for a completeness-critical feed: you never drop an
 event, and you handle the rare duplicate downstream with an idempotent write (an upsert keyed by a

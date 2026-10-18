@@ -12,6 +12,8 @@ to the end; each append gets a monotonically increasing **offset** (0, 1, 2, …
 forward from an offset they choose. That is nearly the whole model, and almost everything else
 (replication, consumer groups, exactly-once) is machinery to make that log durable and sharable.
 
+![One partition as an append-only log: two groups read at their own offsets, old records fall off at the retention cutoff, and a replay moves only a pointer back](diagrams/partition-log.svg)
+
 The reason this is worth a whole system: it **decouples producers and consumers in time.** A
 database row is *state* — the latest value, the old value overwritten and gone. A log keeps the
 *events* that produced the state, in order, and keeps them around (retention). So a consumer that

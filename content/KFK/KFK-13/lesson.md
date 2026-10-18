@@ -27,6 +27,8 @@ the default `DefaultReplicationPolicy` to avoid loops in active/active setups. F
 **manual or orchestrated** cutover: point producers/consumers at the target, translate offsets, and
 resume — so RTO is dominated by how automated that cutover is.
 
+![MirrorMaker 2 mirrors orders asynchronously to us-west as us-east.orders; on failover, clients repoint and offsets are translated](diagrams/mm2-failover.svg)
+
 **Topologies.**
 
 - **Active/Passive (warm standby).** One region serves; the other is a replica kept warm by MM2.

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 210" role="img" aria-labelledby="cdc-pipeline-t">
+  <title id="cdc-pipeline-t">CDC pipeline: Postgres WAL, Debezium on Kafka Connect, a Kafka topic, a sink connector</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}
+  </style>
+  <defs><marker id="cdc-pipeline-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <rect class="dg-box" x="10" y="60" width="140" height="80" rx="10"/>
+  <text class="dg-text dg-b" x="80" y="94" text-anchor="middle">Postgres</text>
+  <text class="dg-muted" x="80" y="116" text-anchor="middle">WAL (wal_level=logical)</text>
+  <rect class="dg-accent" x="190" y="60" width="150" height="80" rx="10"/>
+  <text class="dg-text dg-b" x="265" y="94" text-anchor="middle">Debezium</text>
+  <text class="dg-muted" x="265" y="116" text-anchor="middle">source connector</text>
+  <rect class="dg-box" x="380" y="60" width="140" height="80" rx="10"/>
+  <text class="dg-text dg-b" x="450" y="94" text-anchor="middle">Kafka topic</text>
+  <text class="dg-muted" x="450" y="116" text-anchor="middle">one event per change</text>
+  <rect class="dg-accent" x="560" y="60" width="150" height="80" rx="10"/>
+  <text class="dg-text dg-b" x="635" y="94" text-anchor="middle">Sink connector</text>
+  <text class="dg-muted" x="635" y="116" text-anchor="middle">to warehouse / SCD2</text>
+  <path class="dg-line" d="M150 100H188" marker-end="url(#cdc-pipeline-arrow)"/>
+  <path class="dg-line" d="M340 100H378" marker-end="url(#cdc-pipeline-arrow)"/>
+  <path class="dg-line" d="M520 100H558" marker-end="url(#cdc-pipeline-arrow)"/>
+  <path class="dg-line dg-dash" d="M190 40H710" />
+  <text class="dg-muted" x="450" y="30" text-anchor="middle">Kafka Connect workers run both connectors</text>
+  <text class="dg-muted" x="170" y="176" text-anchor="middle">reads the log, not the tables</text>
+  <text class="dg-muted" x="450" y="176" text-anchor="middle">ordered by commit, per key</text>
+</svg>

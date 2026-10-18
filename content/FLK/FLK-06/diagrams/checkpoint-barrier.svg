@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" role="img" aria-labelledby="checkpoint-barrier-t">
+  <title id="checkpoint-barrier-t">A checkpoint barrier flows with records, operators snapshot state, then a crash restores from the checkpoint and rewinds the source</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}.dg-dot-ok{fill:#2c7a4b}.dg-dot-bad{fill:#b3372b}
+  </style>
+  <defs><marker id="checkpoint-barrier-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <rect class="dg-box" x="20" y="90" width="130" height="70" rx="10"/>
+  <text class="dg-text dg-b" x="85" y="118" text-anchor="middle">Source</text>
+  <text class="dg-muted dg-mono" x="85" y="142" text-anchor="middle">offset 1500
+    <animate attributeName="opacity" values="1;0;1" keyTimes="0;0.7000;1" calcMode="discrete" dur="12s" repeatCount="indefinite"/></text>
+  <text class="dg-muted dg-mono" x="85" y="142" text-anchor="middle" opacity="0">offset 1200
+    <animate attributeName="opacity" values="0;1;0" keyTimes="0;0.7000;1" calcMode="discrete" dur="12s" repeatCount="indefinite"/></text>
+  <rect class="dg-box" x="205" y="90" width="130" height="70" rx="10"/>
+  <text class="dg-text dg-b" x="270" y="118" text-anchor="middle">Parse</text>
+  <text class="dg-muted" x="270" y="142" text-anchor="middle">stateless</text>
+  <rect class="dg-box" x="390" y="90" width="130" height="70" rx="10"/>
+  <text class="dg-text dg-b" x="455" y="118" text-anchor="middle">Ledger</text>
+  <text class="dg-muted" x="455" y="142" text-anchor="middle">keyed balances</text>
+  <rect class="dg-box" x="575" y="90" width="125" height="70" rx="10"/>
+  <text class="dg-text dg-b" x="637" y="118" text-anchor="middle">Sink</text>
+  <text class="dg-muted" x="637" y="142" text-anchor="middle">2PC</text>
+  <path class="dg-line" d="M150 125H203" marker-end="url(#checkpoint-barrier-arrow)"/>
+  <path class="dg-line" d="M335 125H388" marker-end="url(#checkpoint-barrier-arrow)"/>
+  <path class="dg-line" d="M520 125H573" marker-end="url(#checkpoint-barrier-arrow)"/>
+  <rect class="dg-ok" x="20" y="90" width="130" height="70" rx="10" opacity="0"><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.0350;0.0558;0.5167;0.5333;1" dur="12s" repeatCount="indefinite"/></rect>
+  <rect class="dg-ok" x="205" y="90" width="130" height="70" rx="10" opacity="0"><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.1375;0.1583;0.5167;0.5333;1" dur="12s" repeatCount="indefinite"/></rect>
+  <rect class="dg-ok" x="390" y="90" width="130" height="70" rx="10" opacity="0"><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.2400;0.2608;0.5167;0.5333;1" dur="12s" repeatCount="indefinite"/></rect>
+  <rect class="dg-bad" x="390" y="90" width="130" height="70" rx="10" opacity="0"><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.5500;0.5708;0.7000;0.7167;1" dur="12s" repeatCount="indefinite"/></rect>
+  <path class="dg-line dg-dash" d="M85 160V268M270 160V268M455 160V268"/>
+  <rect class="dg-accent" x="40" y="270" width="480" height="62" rx="10"/>
+  <text class="dg-text dg-b" x="280" y="296" text-anchor="middle">State backend (durable)</text>
+  <text class="dg-muted dg-mono" x="280" y="318" text-anchor="middle">checkpoint 7 = offset 1200 + operator state</text>
+  <circle class="dg-dot-ok" r="6" cx="85" cy="160" opacity="0"><animate attributeName="cy" values="160;160;270;270" keyTimes="0;0.0350;0.1375;1" dur="12s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.0350;0.1142;0.1375" dur="12s" repeatCount="indefinite"/></circle><circle class="dg-dot-ok" r="6" cx="270" cy="160" opacity="0"><animate attributeName="cy" values="160;160;270;270" keyTimes="0;0.1375;0.2400;1" dur="12s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1375;0.2167;0.2400" dur="12s" repeatCount="indefinite"/></circle><circle class="dg-dot-ok" r="6" cx="455" cy="160" opacity="0"><animate attributeName="cy" values="160;160;270;270" keyTimes="0;0.2400;0.3233;1" dur="12s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.2400;0.3192;0.3233" dur="12s" repeatCount="indefinite"/></circle>
+  <circle class="dg-dot-ok" r="6" cx="85" cy="270" opacity="0"><animate attributeName="cy" values="270;270;160;160" keyTimes="0;0.7000;0.8000;1" dur="12s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.7000;0.7958;0.8000;1" dur="12s" repeatCount="indefinite"/></circle><circle class="dg-dot-ok" r="6" cx="270" cy="270" opacity="0"><animate attributeName="cy" values="270;270;160;160" keyTimes="0;0.7000;0.8000;1" dur="12s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.7000;0.7958;0.8000;1" dur="12s" repeatCount="indefinite"/></circle><circle class="dg-dot-ok" r="6" cx="455" cy="270" opacity="0"><animate attributeName="cy" values="270;270;160;160" keyTimes="0;0.7000;0.8000;1" dur="12s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.7000;0.7958;0.8000;1" dur="12s" repeatCount="indefinite"/></circle>
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="-35 0;565 0;565 0" keyTimes="0;0.3333;1" dur="12s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="1;1;0;0" keyTimes="0;0.3333;0.3750;1" dur="12s" repeatCount="indefinite"/>
+    <rect class="dg-warn" x="54" y="62" width="6" height="108" rx="2"/>
+    <text class="dg-text dg-b" x="46" y="52">barrier 7</text>
+    <circle class="dg-dot" r="5" cx="80" cy="75"/><circle class="dg-dot" r="5" cx="96" cy="75"/>
+  </g>
+  <text class="dg-muted" x="20" y="362">1 barrier travels with the records · 2 each operator snapshots to the backend</text>
+  <text class="dg-muted" x="20" y="382">3 TaskManager crash (red) · 4 restore state from checkpoint 7 and rewind source to offset 1200</text>
+</svg>

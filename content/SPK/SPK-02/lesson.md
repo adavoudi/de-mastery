@@ -71,6 +71,8 @@ side being shuffled (unless one side is broadcast, which adds none — SPK-06). 
 this module make you predict these numbers and then check them against the plan Spark actually
 built, so your intuition is calibrated against ground truth rather than a hand-written key.
 
+![Adding groupBy, then orderBy, adds a shuffle each time and cuts the job into more stages](diagrams/stages-at-shuffles.svg)
+
 The DAG itself is visible: `df.explain("formatted")` prints the physical plan, where each
 `Exchange` node is a shuffle (a stage boundary). The Spark UI's DAG visualization draws the same
 thing graphically. `Exchange` count + 1 = stage count for a linear plan.

@@ -52,6 +52,8 @@ The new job's operators restore their state by UID. A keyed counter that stood a
 the deploy stands at 1,000,000 after it, and processing continues from exactly where it left off —
 no double-counting, no reset.
 
+![Stop writes the state to a savepoint keyed by operator UID; the new jar restores it by the same UID](diagrams/savepoint-upgrade-swimlane.svg)
+
 ### 4. Managed vs cloud runs
 
 Locally you drive this with a standing JobManager + TaskManager (the graded path here). In

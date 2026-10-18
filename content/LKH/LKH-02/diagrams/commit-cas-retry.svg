@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 410" role="img" aria-labelledby="commit-cas-retry-t">
+  <title id="commit-cas-retry-t">Two writers read version N; writer A wins the compare-and-swap, writer B gets a conflict, refreshes and retries</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}
+  </style>
+
+  <defs><marker id="commit-cas-retry-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <path class="dg-line dg-dash" d="M110 56V405M350 56V405M590 56V405"/>
+  <rect class="dg-accent" x="40" y="14" width="140" height="42" rx="8"/>
+  <text class="dg-text dg-b" x="110" y="40" text-anchor="middle">Writer A</text>
+  <rect class="dg-box" x="270" y="14" width="160" height="42" rx="8"/>
+  <text class="dg-text dg-b" x="350" y="40" text-anchor="middle">Catalog pointer</text>
+  <rect class="dg-accent" x="520" y="14" width="140" height="42" rx="8"/>
+  <text class="dg-text dg-b" x="590" y="40" text-anchor="middle">Writer B</text>
+  <path class="dg-line" d="M110 95H350" marker-end="url(#commit-cas-retry-arrow)"/>
+  <path class="dg-line" d="M590 95H350" marker-end="url(#commit-cas-retry-arrow)"/>
+  <text class="dg-muted" x="230" y="86" text-anchor="middle">1 read: pointer = N</text>
+  <text class="dg-muted" x="470" y="86" text-anchor="middle">1 read: pointer = N</text>
+  <rect class="dg-box" x="40" y="122" width="140" height="36" rx="8"/>
+  <text class="dg-text" x="110" y="145" text-anchor="middle">2 build N+1 (A) on N</text>
+  <rect class="dg-box" x="520" y="122" width="140" height="36" rx="8"/>
+  <text class="dg-text" x="590" y="145" text-anchor="middle">2 build N+1 (B) on N</text>
+  <path class="dg-line" d="M110 215H350" marker-end="url(#commit-cas-retry-arrow)"/>
+  <text class="dg-text" x="230" y="206" text-anchor="middle">3 CAS: N → N+1 (A)</text>
+  <text class="dg-text dg-b" x="360" y="238" text-anchor="start">4 ok: pointer = N+1 (A)</text>
+  <path class="dg-line" d="M590 275H350" marker-end="url(#commit-cas-retry-arrow)"/>
+  <text class="dg-text" x="470" y="266" text-anchor="middle">5 CAS: N → N+1 (B)</text>
+  <path class="dg-line dg-dash" d="M350 315H592" marker-end="url(#commit-cas-retry-arrow)"/>
+  <text class="dg-text dg-b" x="470" y="306" text-anchor="middle">6 conflict: pointer is not N</text>
+  <rect class="dg-warn" x="480" y="327" width="200" height="34" rx="8"/>
+  <text class="dg-text" x="580" y="349" text-anchor="middle">7 refresh, rebuild on N+1 (A)</text>
+  <path class="dg-line" d="M590 385H350" marker-end="url(#commit-cas-retry-arrow)"/>
+  <text class="dg-text" x="470" y="376" text-anchor="middle">8 CAS: N+1 → N+2 (B) ok</text>
+  <circle class="dg-dot" r="6" cx="110" cy="95" opacity="0">
+    <animate attributeName="cx" values="110;110;350;350;350" keyTimes="0;0.040;0.150;0.151;1" dur="10s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.040;0.150;0.151;1" dur="10s" repeatCount="indefinite"/>
+  </circle>
+  <circle class="dg-dot" r="6" cx="590" cy="95" opacity="0">
+    <animate attributeName="cx" values="590;590;350;350;350" keyTimes="0;0.190;0.300;0.301;1" dur="10s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.190;0.300;0.301;1" dur="10s" repeatCount="indefinite"/>
+  </circle>
+  <circle class="dg-dot-ok" r="6" cx="110" cy="215" opacity="0">
+    <animate attributeName="cx" values="110;110;350;350;350" keyTimes="0;0.340;0.450;0.451;1" dur="10s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.340;0.450;0.451;1" dur="10s" repeatCount="indefinite"/>
+  </circle>
+  <circle class="dg-dot-bad" r="6" cx="590" cy="275" opacity="0">
+    <animate attributeName="cx" values="590;590;350;350;350" keyTimes="0;0.490;0.600;0.601;1" dur="10s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.490;0.600;0.601;1" dur="10s" repeatCount="indefinite"/>
+  </circle>
+  <circle class="dg-dot-bad" r="6" cx="350" cy="315" opacity="0">
+    <animate attributeName="cx" values="350;350;590;590;590" keyTimes="0;0.640;0.750;0.751;1" dur="10s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.640;0.750;0.751;1" dur="10s" repeatCount="indefinite"/>
+  </circle>
+  <circle class="dg-dot-ok" r="6" cx="590" cy="385" opacity="0">
+    <animate attributeName="cx" values="590;590;350;350;350" keyTimes="0;0.790;0.900;0.901;1" dur="10s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.790;0.900;0.901;1" dur="10s" repeatCount="indefinite"/>
+  </circle>
+</svg>

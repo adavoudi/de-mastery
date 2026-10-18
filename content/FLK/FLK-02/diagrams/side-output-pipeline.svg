@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 260" role="img" aria-labelledby="side-output-pipeline-t">
+  <title id="side-output-pipeline-t">One pass: a ProcessFunction sends valid orders downstream and rejects to a side output</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}
+  </style>
+  <defs><marker id="side-output-pipeline-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <rect class="dg-box" x="20" y="60" width="110" height="60" rx="10"/>
+  <text class="dg-text dg-b" x="75" y="86" text-anchor="middle">Source</text>
+  <text class="dg-muted dg-mono" x="75" y="105" text-anchor="middle">orders</text>
+  <rect class="dg-accent" x="210" y="60" width="200" height="60" rx="10"/>
+  <text class="dg-text dg-b" x="310" y="86" text-anchor="middle">process(...)</text>
+  <text class="dg-muted dg-mono" x="310" y="105" text-anchor="middle">ProcessFunction</text>
+  <rect class="dg-ok" x="540" y="60" width="140" height="60" rx="10"/>
+  <text class="dg-text dg-b" x="610" y="86" text-anchor="middle">Main sink</text>
+  <text class="dg-muted" x="610" y="105" text-anchor="middle">good records</text>
+  <rect class="dg-bad" x="540" y="170" width="140" height="60" rx="10"/>
+  <text class="dg-text dg-b" x="610" y="196" text-anchor="middle">Dead-letter sink</text>
+  <text class="dg-muted" x="610" y="215" text-anchor="middle">quarantine topic</text>
+  <path class="dg-line" d="M130 90H208" marker-end="url(#side-output-pipeline-arrow)"/>
+  <path class="dg-line" d="M410 90H538" marker-end="url(#side-output-pipeline-arrow)"/>
+  <path class="dg-line dg-dash" d="M310 120V200H538" marker-end="url(#side-output-pipeline-arrow)"/>
+  <text class="dg-muted dg-mono" x="474" y="80" text-anchor="middle">out.collect(o)</text>
+  <text class="dg-muted dg-mono" x="324" y="190">ctx.output(rejects, o)</text>
+  <text class="dg-muted dg-mono" x="324" y="150">getSideOutput(rejects)</text>
+  <circle class="dg-dot" r="7" cx="130" cy="90">
+    <animate attributeName="cx" values="130;310;310" keyTimes="0;0.5;1" dur="8s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="1;1;0" keyTimes="0;0.5;1" dur="8s" repeatCount="indefinite"/>
+  </circle>
+</svg>

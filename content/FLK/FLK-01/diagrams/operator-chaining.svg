@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 260" role="img" aria-labelledby="flink-chain-t">
+  <title id="flink-chain-t">Operator chains run in one thread; keyBy forces a network exchange between them</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}
+  </style>
+  <defs><marker id="flink-chain-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <text class="dg-text dg-b" x="160" y="40" text-anchor="middle">Chain 1 (one JobGraph vertex)</text>
+  <text class="dg-text dg-b" x="540" y="40" text-anchor="middle">Chain 2 (one JobGraph vertex)</text>
+  <rect class="dg-accent" x="30" y="55" width="260" height="110" rx="10"/>
+  <rect class="dg-box" x="42" y="95" width="68" height="40" rx="6"/><text class="dg-text" x="76" y="120" text-anchor="middle">source</text>
+  <rect class="dg-box" x="132" y="95" width="68" height="40" rx="6"/><text class="dg-text" x="166" y="120" text-anchor="middle">filter</text>
+  <rect class="dg-box" x="222" y="95" width="56" height="40" rx="6"/><text class="dg-text" x="250" y="120" text-anchor="middle">map</text>
+  <path class="dg-line" d="M110 115H130" marker-end="url(#flink-chain-arrow)"/>
+  <path class="dg-line" d="M200 115H220" marker-end="url(#flink-chain-arrow)"/>
+  <rect class="dg-accent" x="410" y="55" width="260" height="110" rx="10"/>
+  <rect class="dg-box" x="430" y="95" width="90" height="40" rx="6"/><text class="dg-text" x="475" y="120" text-anchor="middle">window</text>
+  <rect class="dg-box" x="560" y="95" width="90" height="40" rx="6"/><text class="dg-text" x="605" y="120" text-anchor="middle">sink</text>
+  <path class="dg-line" d="M520 115H558" marker-end="url(#flink-chain-arrow)"/>
+  <path class="dg-line dg-dash" d="M290 110H408" marker-end="url(#flink-chain-arrow)"/>
+  <text class="dg-text dg-b" x="350" y="95" text-anchor="middle">keyBy</text>
+  <text class="dg-muted" x="350" y="132" text-anchor="middle">network exchange</text>
+  <text class="dg-muted" x="160" y="190" text-anchor="middle">one task, one thread</text>
+  <text class="dg-muted" x="160" y="208" text-anchor="middle">records pass by method call</text>
+  <text class="dg-muted" x="540" y="190" text-anchor="middle">one task, one thread</text>
+  <text class="dg-muted" x="540" y="208" text-anchor="middle">records pass by method call</text>
+  <text class="dg-muted" x="350" y="244" text-anchor="middle">keyBy, rebalance or rescale breaks the chain, like a Spark shuffle</text>
+</svg>

@@ -37,6 +37,8 @@ The order is the whole point. Auditing *before* publishing is what makes the con
 the wrong snapshot (main instead of the branch), or publishing before the audit, defeats it — the
 same way signing off a SOX control on last quarter's numbers, or publishing before sign-off, would.
 
+![Writes land on the audit branch; main only moves, by fast-forward, after the audit of S4 passes](diagrams/wap-branch-lineage.svg)
+
 In Spark SQL (Iceberg extensions) the moves are:
 
 ```sql

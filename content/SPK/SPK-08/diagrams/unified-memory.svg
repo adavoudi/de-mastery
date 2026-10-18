@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300" role="img" aria-labelledby="unified-memory-t">
+  <title id="unified-memory-t">Executor heap: reserved, user and unified memory, with execution and storage sharing a movable boundary</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}
+  </style>
+
+  <defs><marker id="unified-memory-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <text class="dg-text dg-b" x="20" y="28">Executor heap</text>
+  <rect class="dg-box" x="20" y="40" width="50" height="50"/>
+  <rect class="dg-warn" x="70" y="40" width="240" height="50"/>
+  <rect class="dg-accent" x="310" y="40" width="390" height="50"/>
+  <text class="dg-text dg-b" x="45" y="70" text-anchor="middle">Rsv</text>
+  <text class="dg-text dg-b" x="190" y="62" text-anchor="middle">User memory</text>
+  <text class="dg-muted" x="190" y="80" text-anchor="middle">your structures, UDF state</text>
+  <text class="dg-text dg-b" x="505" y="62" text-anchor="middle">Unified region</text>
+  <text class="dg-muted" x="505" y="80" text-anchor="middle">default 60% of the usable heap</text>
+  <text class="dg-muted" x="20" y="108">Reserved: fixed slice</text>
+  <path class="dg-line dg-dash" d="M310 90L20 180M700 90L700 180"/>
+  <text class="dg-text dg-b" x="360" y="158" text-anchor="middle">Inside the unified region</text>
+  <rect class="dg-ok" x="20" y="180" width="340" height="64"/>
+  <rect class="dg-bad" x="360" y="180" width="340" height="64"/>
+  <text class="dg-text dg-b" x="190" y="208" text-anchor="middle">Storage memory</text>
+  <text class="dg-muted" x="190" y="228" text-anchor="middle">cached / persisted blocks</text>
+  <text class="dg-text dg-b" x="530" y="208" text-anchor="middle">Execution memory</text>
+  <text class="dg-muted" x="530" y="228" text-anchor="middle">shuffles, joins, sorts, aggregations</text>
+  <path class="dg-line" d="M360 178V250"/>
+  <path class="dg-line" d="M315 268H405" marker-start="url(#unified-memory-arrow)" marker-end="url(#unified-memory-arrow)"/>
+  <text class="dg-muted" x="360" y="290" text-anchor="middle">movable boundary: each side can borrow from the other</text>
+</svg>

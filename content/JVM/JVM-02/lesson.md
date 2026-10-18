@@ -44,6 +44,8 @@ lazy and return a new stream; the terminal op (`collect`, `reduce`, `count`, `fo
 transformation/action split (SPK-02), and exactly a Python generator that only produces when
 consumed.
 
+![Elements only move once collect() pulls them, one at a time through filter and map; one is dropped at the filter](diagrams/stream-lazy-pipeline.svg)
+
 ```java
 import java.util.stream.Collectors;
 

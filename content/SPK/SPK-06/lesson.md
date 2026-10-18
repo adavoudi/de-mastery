@@ -23,6 +23,8 @@ and proving it from the plan.
   hash table per partition. Used when one side is medium-sized and building a hash is cheaper than
   sorting. Spark picks it under specific size/config conditions.
 
+![Where data moves in broadcast, shuffle hash and sort-merge joins](diagrams/join-strategies.svg)
+
 The rule of thumb that matches your warehouse intuition: **broadcast the small dimension, sort-merge
 two big facts.** Broadcasting the *large* side is a classic, expensive mistake — it tries to pull a
 huge table to the driver and ship it everywhere.
@@ -50,6 +52,8 @@ runs for ages. This is **data skew**. Classic fixes:
 - **Salting:** add a random suffix to the hot key on both sides so its rows spread across many
   partitions, then aggregate back. Salting must **not change the result** — a salt that drops or
   duplicates rows is a bug.
+
+![One hot key makes a straggler partition; salting splits it into even ones](diagrams/skew-salting.svg)
 - **AQE skew-join handling (SPK-08):** `spark.sql.adaptive.skewJoin.enabled` splits oversized
   shuffle partitions at runtime. You will see this in the plan in SPK-08.
 

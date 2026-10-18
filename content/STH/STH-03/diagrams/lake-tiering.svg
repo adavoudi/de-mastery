@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 330" role="img" aria-labelledby="lake-tiering-t">
+  <title id="lake-tiering-t">Fluss tiering service moves rows from the hot store to the Paimon lake; the table name reads both tiers, table$lake reads only the lake</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}.dg-dot-ok{fill:#2c7a4b}.dg-dot-bad{fill:#b3372b}
+  </style>
+  <defs><marker id="lake-tiering-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <rect class="dg-accent" x="20" y="40" width="170" height="110" rx="10"/>
+  <text class="dg-text dg-b" x="105" y="72" text-anchor="middle">Fluss hot store</text>
+  <text class="dg-muted" x="105" y="92" text-anchor="middle">PK table, sub-second</text>
+  <rect class="dg-warn" x="265" y="40" width="170" height="110" rx="10"/>
+  <text class="dg-text dg-b" x="350" y="72" text-anchor="middle">Tiering service</text>
+  <text class="dg-muted" x="350" y="92" text-anchor="middle">Flink job, async</text>
+  <rect class="dg-ok" x="510" y="40" width="170" height="110" rx="10"/>
+  <text class="dg-text dg-b" x="595" y="72" text-anchor="middle">Paimon lake</text>
+  <text class="dg-muted" x="595" y="92" text-anchor="middle">cheap, columnar</text>
+  <path class="dg-line" d="M190 125H508" marker-end="url(#lake-tiering-arrow)"/>
+  <circle class="dg-dot" r="6" cx="190" cy="125">
+    <animate attributeName="cx" values="190;505;505" keyTimes="0;0.7;1" dur="9s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="1;1;0" keyTimes="0;0.65;1" dur="9s" repeatCount="indefinite"/>
+  </circle>
+  <circle class="dg-dot" r="6" cx="190" cy="125">
+    <animate attributeName="cx" values="190;190;505;505" keyTimes="0;0.15;0.8;1" dur="9s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="1;1;1;0" keyTimes="0;0.15;0.75;1" dur="9s" repeatCount="indefinite"/>
+  </circle>
+  <circle class="dg-dot" r="6" cx="190" cy="125">
+    <animate attributeName="cx" values="190;190;505;505" keyTimes="0;0.3;0.9;1" dur="9s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="1;1;1;0" keyTimes="0;0.3;0.85;1" dur="9s" repeatCount="indefinite"/>
+  </circle>
+  <text class="dg-muted" x="350" y="115" text-anchor="middle">rows tier down</text>
+  <path class="dg-line dg-dash" d="M105 240V152" marker-end="url(#lake-tiering-arrow)"/>
+  <path class="dg-line dg-dash" d="M300 240V200H560V152" marker-end="url(#lake-tiering-arrow)"/>
+  <path class="dg-line dg-dash" d="M595 240V152" marker-end="url(#lake-tiering-arrow)"/>
+  <rect class="dg-box" x="20" y="240" width="300" height="70" rx="10"/>
+  <text class="dg-text dg-b dg-mono" x="170" y="268" text-anchor="middle">orders</text>
+  <text class="dg-muted" x="170" y="290" text-anchor="middle">real-time view: hot + tiered, merged</text>
+  <rect class="dg-box" x="400" y="240" width="280" height="70" rx="10"/>
+  <text class="dg-text dg-b dg-mono" x="540" y="268" text-anchor="middle">orders$lake</text>
+  <text class="dg-muted" x="540" y="290" text-anchor="middle">lake tier only: batch, no Flink needed</text>
+</svg>

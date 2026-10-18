@@ -34,6 +34,8 @@ A Flink → Iceberg pipeline has three moving parts:
    applies the changelog's `+I/-U/+U/-D` by key (row-level deletes); without the PK the sink can
    only append and the table never reflects deletes/updates.
 
+![Many small jobs commit one snapshot and one tiny file each; one batched job commits one snapshot and one file](diagrams/commit-cadence.svg)
+
 **Iceberg vs Paimon for the streaming write.** Both land on the lake and both commit per
 checkpoint, so both suffer the small-files dial. The difference is the *merge model*: Iceberg v2 is
 **copy-on-write-ish / merge-on-read** with equality or positional delete files — great for mostly-

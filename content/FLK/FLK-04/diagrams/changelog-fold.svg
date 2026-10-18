@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 330" role="img" aria-labelledby="changelog-fold-t">
+  <title id="changelog-fold-t">A changelog stream folds into a dynamic table, and the table's changes unfold back into the stream</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}
+  </style>
+
+  <defs><marker id="changelog-fold-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <text class="dg-text dg-b" x="190" y="50" text-anchor="middle">Changelog of GROUP BY k</text>
+  <text class="dg-text dg-b" x="560" y="50" text-anchor="middle">Dynamic table</text>
+  <rect class="dg-box" x="30" y="76" width="320" height="36" rx="6"/>
+  <text class="dg-text dg-mono dg-b" x="46" y="99">+I  (k, 1)</text>
+  <text class="dg-muted" x="226" y="99">new row</text>
+  <rect class="dg-box" x="30" y="120" width="320" height="36" rx="6"/>
+  <text class="dg-text dg-mono dg-b" x="46" y="143">-U  (k, 1)</text>
+  <text class="dg-muted" x="226" y="143">retract old</text>
+  <rect class="dg-box" x="30" y="164" width="320" height="36" rx="6"/>
+  <text class="dg-text dg-mono dg-b" x="46" y="187">+U  (k, 2)</text>
+  <text class="dg-muted" x="226" y="187">new version</text>
+  <rect class="dg-box" x="30" y="208" width="320" height="36" rx="6"/>
+  <text class="dg-text dg-mono dg-b" x="46" y="231">-D  (k, 2)</text>
+  <text class="dg-muted" x="226" y="231">remove row</text>
+  <rect class="dg-accent" fill-opacity="0.45" x="30" y="76" width="320" height="36" rx="6">
+    <animate attributeName="y" values="76;120;164;208" keyTimes="0;0.25;0.5;0.75" calcMode="discrete" dur="10s" repeatCount="indefinite"/>
+  </rect>
+  <rect class="dg-box" x="450" y="100" width="220" height="70" rx="10"/>
+  <text class="dg-muted" x="560" y="92" text-anchor="middle">key  |  count</text>
+  <text class="dg-text dg-mono dg-b" x="560" y="146" text-anchor="middle" opacity="1">k  |  1<animate attributeName="opacity" values="1;0;0;0" keyTimes="0;0.25;0.5;0.75" calcMode="discrete" dur="10s" repeatCount="indefinite"/></text>
+  <text class="dg-text dg-mono dg-b" x="560" y="146" text-anchor="middle" opacity="0">row retracted<animate attributeName="opacity" values="0;1;0;0" keyTimes="0;0.25;0.5;0.75" calcMode="discrete" dur="10s" repeatCount="indefinite"/></text>
+  <text class="dg-text dg-mono dg-b" x="560" y="146" text-anchor="middle" opacity="0">k  |  2<animate attributeName="opacity" values="0;0;1;0" keyTimes="0;0.25;0.5;0.75" calcMode="discrete" dur="10s" repeatCount="indefinite"/></text>
+  <text class="dg-text dg-mono dg-b" x="560" y="146" text-anchor="middle" opacity="0">(empty)<animate attributeName="opacity" values="0;0;0;1" keyTimes="0;0.25;0.5;0.75" calcMode="discrete" dur="10s" repeatCount="indefinite"/></text>
+  <path class="dg-line" d="M352 130H448" marker-end="url(#changelog-fold-arrow)"/>
+  <text class="dg-muted" x="400" y="120" text-anchor="middle">fold</text>
+  <path class="dg-line dg-dash" d="M448 160H354" marker-end="url(#changelog-fold-arrow)"/>
+  <text class="dg-muted" x="400" y="182" text-anchor="middle">diff</text>
+  <text class="dg-muted" x="190" y="276" text-anchor="middle">Highlighted row = change being applied now</text>
+  <text class="dg-text" x="350" y="306" text-anchor="middle">Folding every change gives the table; every table change is a -U/+U/-D/+I.</text>
+</svg>

@@ -21,6 +21,8 @@ In the Flink Web UI (or REST `/jobs/<id>/vertices/<v>/backpressure`), the **busy
 vertex is the bottleneck. Upstream of it everything is backpressured (red); downstream is idle.
 The bottleneck is where you spend your tuning.
 
+![Full buffers propagate upstream from the bottleneck operator to the source](diagrams/backpressure-chain.svg)
+
 ### 2. Raise the parallelism of the bottleneck operator
 
 If a heavy operator runs at parallelism 1 while slots are free, it processes records on a single
@@ -44,6 +46,8 @@ the heavy operator decides this via its **ship strategy**:
 For a non-keyed heavy map, `rebalance()` before the map (and a higher map parallelism) turns a
 single busy subtask into `n` evenly-loaded ones. For a keyed operator with a hot key, you fix skew
 by changing the key (e.g. salting), the streaming analogue of SPK-06's salted aggregation.
+
+![Hot key lands on one subtask while rebalance spreads the same records evenly](diagrams/skew-vs-rebalance.svg)
 
 ### 4. The plan changes — and that's how you prove the fix
 

@@ -27,6 +27,8 @@ Flink job) continuously moves committed data from Fluss's hot store down into th
   Paimon), readable in **batch** by Flink or by a pure-Python engine (pypaimon) with **no Flink at
   all**.
 
+![Tiering moves rows from the Fluss hot store to Paimon; the table name reads both tiers, table$lake reads only the lake](diagrams/lake-tiering.svg)
+
 The invariant you must preserve — and the thing this module grades — is **read consistency**: once
 the data has been tiered and quiesced, a **streaming** read of the table and a **batch** read of the
 lake tier return the **same set of rows**. If they disagree, the streamhouse's whole promise ("one

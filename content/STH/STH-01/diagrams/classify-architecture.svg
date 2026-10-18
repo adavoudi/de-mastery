@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 410" role="img" aria-labelledby="classify-architecture-t">
+  <title id="classify-architecture-t">Decision tree: four yes/no signals, applied in order, end in Lambda, Kappa, Lakehouse or Streamhouse</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}.dg-dot-ok{fill:#2c7a4b}.dg-dot-bad{fill:#b3372b}
+  </style>
+
+  <defs><marker id="classify-architecture-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <rect class="dg-box" x="20" y="15" width="400" height="56" rx="10"/>
+  <text class="dg-text dg-b" x="34" y="39">1. Two parallel pipelines?</text>
+  <text class="dg-muted" x="34" y="59">batch recompute + speed path, merged at serving</text>
+  <path class="dg-line" d="M420 43H518" marker-end="url(#classify-architecture-arrow)"/>
+  <text class="dg-text" x="469" y="35" text-anchor="middle">yes</text>
+  <rect class="dg-warn" x="520" y="23" width="180" height="40" rx="10"/>
+  <text class="dg-text dg-b" x="610" y="48" text-anchor="middle">Lambda</text>
+  <path class="dg-line" d="M220 71V98" marker-end="url(#classify-architecture-arrow)"/>
+  <text class="dg-text" x="232" y="90">no</text>
+  <rect class="dg-box" x="20" y="100" width="400" height="56" rx="10"/>
+  <text class="dg-text dg-b" x="34" y="124">2. One pipeline, append-only log as record?</text>
+  <text class="dg-muted" x="34" y="144">Kafka/Pulsar, no lake table as primary store</text>
+  <path class="dg-line" d="M420 128H518" marker-end="url(#classify-architecture-arrow)"/>
+  <text class="dg-text" x="469" y="120" text-anchor="middle">yes</text>
+  <rect class="dg-box" x="520" y="108" width="180" height="40" rx="10"/>
+  <text class="dg-text dg-b" x="610" y="133" text-anchor="middle">Kappa</text>
+  <path class="dg-line" d="M220 156V183" marker-end="url(#classify-architecture-arrow)"/>
+  <text class="dg-text" x="232" y="175">no</text>
+  <rect class="dg-box" x="20" y="185" width="400" height="56" rx="10"/>
+  <text class="dg-text dg-b" x="34" y="209">3. One lake table, minute-level commits?</text>
+  <text class="dg-muted" x="34" y="229">Iceberg/Delta/Hudi for SQL/BI, no stream-native tier</text>
+  <path class="dg-line" d="M420 213H518" marker-end="url(#classify-architecture-arrow)"/>
+  <text class="dg-text" x="469" y="205" text-anchor="middle">yes</text>
+  <rect class="dg-accent" x="520" y="193" width="180" height="40" rx="10"/>
+  <text class="dg-text dg-b" x="610" y="218" text-anchor="middle">Lakehouse</text>
+  <path class="dg-line" d="M220 241V268" marker-end="url(#classify-architecture-arrow)"/>
+  <text class="dg-text" x="232" y="260">no</text>
+  <rect class="dg-box" x="20" y="270" width="400" height="56" rx="10"/>
+  <text class="dg-text dg-b" x="34" y="294">4. Stream-native storage, one copy?</text>
+  <text class="dg-muted" x="34" y="314">Paimon/Fluss: streaming + batch/OLAP reads</text>
+  <path class="dg-line" d="M420 298H518" marker-end="url(#classify-architecture-arrow)"/>
+  <text class="dg-text" x="469" y="290" text-anchor="middle">yes</text>
+  <rect class="dg-ok" x="520" y="278" width="180" height="40" rx="10"/>
+  <text class="dg-text dg-b" x="610" y="303" text-anchor="middle">Streamhouse</text>
+  <path class="dg-line" d="M220 326V353" marker-end="url(#classify-architecture-arrow)"/>
+  <text class="dg-text" x="232" y="345">no</text>
+  <rect class="dg-box dg-dash" x="20" y="355" width="400" height="40" rx="10"/>
+  <text class="dg-muted" x="220" y="380" text-anchor="middle">None of the four: classify by storage and pipeline shape</text>
+</svg>

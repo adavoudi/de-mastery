@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 250" role="img" aria-labelledby="flk11-backpressure-t">
+  <title id="flk11-backpressure-t">Backpressure: full buffers propagate upstream from the bottleneck operator to the source</title>
+  <style>
+    /* Standalone fallback only: the site drops this block and styles the dg-* classes itself. Keep in sync with static/style.css. */
+    svg{font-family:system-ui,sans-serif;font-size:14px}
+    .dg-box{fill:#fff;stroke:#4b463c;stroke-width:1.5}.dg-accent{fill:#e3eeee;stroke:#1d5c63;stroke-width:1.5}
+    .dg-ok{fill:#e1f0e6;stroke:#2c7a4b;stroke-width:1.5}.dg-bad{fill:#f8e4e0;stroke:#b3372b;stroke-width:1.5}
+    .dg-warn{fill:#f7edd2;stroke:#b8860b;stroke-width:1.5}
+    .dg-text{fill:#26231d}.dg-muted{fill:#7b7467;font-size:12px}.dg-mono{font-family:ui-monospace,monospace}.dg-b{font-weight:600}
+    .dg-line{fill:none;stroke:#4b463c;stroke-width:1.5}.dg-dash{stroke-dasharray:5 4}.dg-head{fill:#4b463c}
+    .dg-dot{fill:#1d5c63}.dg-dot-ok{fill:#2c7a4b}.dg-dot-bad{fill:#b3372b}.dg-dot-ok{fill:#2c7a4b}.dg-dot-bad{fill:#b3372b}
+  </style>
+  <defs><marker id="flk11-backpressure-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="dg-head" d="M0 0L10 5L0 10z"/></marker></defs>
+  <rect class="dg-warn" x="20" y="50" width="120" height="70" rx="10"/>
+  <text class="dg-text dg-b" x="80" y="90" text-anchor="middle">Source</text>
+  <rect class="dg-warn" x="200" y="50" width="120" height="70" rx="10"/>
+  <text class="dg-text dg-b" x="260" y="90" text-anchor="middle">map</text>
+  <rect class="dg-bad" x="380" y="50" width="120" height="70" rx="10"/>
+  <text class="dg-text dg-b" x="440" y="90" text-anchor="middle">heavy enrich</text>
+  <rect class="dg-ok" x="560" y="50" width="120" height="70" rx="10"/>
+  <text class="dg-text dg-b" x="620" y="90" text-anchor="middle">Sink</text>
+  <text class="dg-muted" x="80" y="142" text-anchor="middle">slowed down</text>
+  <text class="dg-muted" x="260" y="142" text-anchor="middle">backpressured</text>
+  <text class="dg-muted" x="440" y="142" text-anchor="middle">bottleneck (busy)</text>
+  <text class="dg-muted" x="620" y="142" text-anchor="middle">idle</text>
+  <rect class="dg-box" x="148" y="72" width="44" height="26" rx="4"/>
+  <rect class="dg-box" x="328" y="72" width="44" height="26" rx="4"/>
+  <rect class="dg-box" x="508" y="72" width="44" height="26" rx="4"/>
+  <rect class="dg-bad" x="326" y="72" width="44" height="26" rx="4" opacity="0.9">
+    <animate attributeName="width" values="0;0;44;44;44" keyTimes="0;0.05;0.3;0.9;1" dur="9s" repeatCount="indefinite"/>
+    <animate attributeName="x" values="372;372;328;328;328" keyTimes="0;0.05;0.3;0.9;1" dur="9s" repeatCount="indefinite"/>
+  </rect>
+  <rect class="dg-warn" x="148" y="72" width="0" height="26" rx="4">
+    <animate attributeName="width" values="0;0;44;44;44" keyTimes="0;0.3;0.55;0.9;1" dur="9s" repeatCount="indefinite"/>
+    <animate attributeName="x" values="192;192;148;148;148" keyTimes="0;0.3;0.55;0.9;1" dur="9s" repeatCount="indefinite"/>
+  </rect>
+  <rect class="dg-ok" x="548" y="72" width="4" height="26" rx="2"/>
+  <text class="dg-muted" x="170" y="64" text-anchor="middle">buffer</text>
+  <text class="dg-muted" x="350" y="64" text-anchor="middle">buffer</text>
+  <text class="dg-muted" x="530" y="64" text-anchor="middle">buffer</text>
+  <path class="dg-line dg-dash" d="M440 170H80" marker-end="url(#flk11-backpressure-arrow)"/>
+  <text class="dg-text" x="260" y="196" text-anchor="middle">full buffers push back upstream</text>
+  <circle class="dg-dot-bad" r="7" cx="440" cy="170">
+    <animate attributeName="cx" values="440;440;80;80" keyTimes="0;0.05;0.6;1" dur="9s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="1;1;1;0" keyTimes="0;0.05;0.6;1" dur="9s" repeatCount="indefinite"/>
+  </circle>
+  <text class="dg-muted" x="350" y="232" text-anchor="middle">Find the first busy operator: everything upstream is backpressured, downstream is idle.</text>
+</svg>

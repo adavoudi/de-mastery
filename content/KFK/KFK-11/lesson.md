@@ -40,6 +40,8 @@ production traffic — a throttle set too low makes the reassignment never finis
 incident, revisited in KFK-14). The controller drives the move; the preferred leader is only used
 once the new replica is in the ISR.
 
+![A new replica copies the partition, joins the ISR, and only then is the old replica dropped](diagrams/reassign-catch-up.svg)
+
 ## Broker & topic configuration you tune alongside (objective ccaak:3, ccaak:5)
 
 - **`min.insync.replicas`** + producer `acks=all`: how many replicas must acknowledge for a write to

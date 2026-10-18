@@ -74,6 +74,8 @@ partition, ordered by a time attribute. `DEFINE` gives the predicate for each pa
 "this, then that, then the other" rules (fraud, funnels, SLA breaches). `ORDER BY` **must** be a
 time attribute.
 
+![PATTERN (A B) as a state machine: any row becomes A, a larger next row completes B and emits one match row](diagrams/match-recognize-states.svg)
+
 ### 5. OVER aggregation
 
 ```sql

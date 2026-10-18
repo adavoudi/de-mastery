@@ -38,6 +38,8 @@ Here Spark tracks the max `event_ts` seen; the watermark trails it by 10 minutes
 `[00:00, 00:05)` is finalized once the watermark passes `00:05`, i.e. once an event with
 `event_ts >= 00:15` arrives. Events for that window arriving after that are dropped as late.
 
+![A 5-minute window is finalized, emitted once and its state dropped when the watermark (max event time minus 10 min) passes its end; later events for it are late](diagrams/watermark-event-time.svg)
+
 ## Stateful aggregation and the output modes it unlocks (objective 5.3)
 
 With a watermark, a windowed aggregation can be written in **append** mode: each window is emitted
