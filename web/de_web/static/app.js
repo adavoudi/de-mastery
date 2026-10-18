@@ -65,4 +65,28 @@
     }, { rootMargin: "-72px 0px -70% 0px" });
     Object.keys(map).forEach(function (id) { var h = document.getElementById(id); if (h) obs.observe(h); });
   }
+
+  // progress, saved in this browser only (shared with the roadmap page)
+  var KEY = "de-roadmap-done", done = {};
+  try { done = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) {}
+  function paintProgress() {
+    document.querySelectorAll(".side li[data-filter] a").forEach(function (a) {
+      var m = a.getAttribute("href").match(/^\/(?:m|byo)\/([^\/]+)$/);
+      a.classList.toggle("is-done", !!(m && done[m[1]]));
+    });
+    document.querySelectorAll(".mark-done").forEach(function (b) {
+      var on = !!done[b.getAttribute("data-done-id")];
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+      b.textContent = on ? "Done \u2713" : "Mark as done";
+    });
+  }
+  document.querySelectorAll(".mark-done").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var id = b.getAttribute("data-done-id");
+      if (done[id]) delete done[id]; else done[id] = 1;
+      try { localStorage.setItem(KEY, JSON.stringify(done)); } catch (e) {}
+      paintProgress();
+    });
+  });
+  paintProgress();
 })();

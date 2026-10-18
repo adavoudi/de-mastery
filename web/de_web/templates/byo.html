@@ -6,6 +6,7 @@
   <header class="phead">
     <p class="eyebrow"><a href="/track/{{ challenge.track }}">{{ lib.tracks[challenge.track].name }}</a> · Build your own · {{ challenge.id }}</p>
     <h1>{{ challenge.title }}</h1>
+    <button class="btn small mark-done" type="button" data-done-id="{{ challenge.id }}" aria-pressed="false">Mark as done</button>
     <ul class="chips"><li>{{ challenge.hours|round|int }} h</li><li>{{ challenge.stages|length }} stages</li></ul>
     <p class="lede-s">Build the real thing from scratch, one stage at a time. Each stage has its own tests, and you move on when it passes.</p>
   </header>

@@ -15,7 +15,7 @@ def lib():
 
 
 def all_paths(lib):
-    paths = ["/"]
+    paths = ["/", "/roadmap"]
     paths += [f"/track/{t}" for t in lib.tracks]
     for m in lib.modules.values():
         paths += [f"/m/{m.id}", f"/m/{m.id}/exercises"]
@@ -24,7 +24,7 @@ def all_paths(lib):
     for c in lib.challenges.values():
         paths.append(f"/byo/{c.id}")
         paths += [f"/byo/{c.id}/{s.number:02d}" for s in c.stages]
-    paths += [f"/docs/{d}" for d in lib.docs] + [f"/capstone/{c}" for c in lib.capstones]
+    paths += [f"/docs/{d}" for d in lib.docs]
     return paths
 
 
@@ -67,7 +67,7 @@ def test_solution_code_never_appears_in_exercise_pages(client, lib):
 
 def test_unknown_ids_are_404_and_paths_are_not_files(client):
     for p in ("/m/NOPE-99", "/track/ZZZ", "/account", "/auth/login", "/api/sync", "/m/SPK-07/x/..%2f..%2fsolution", "/m/SPK-07/secret",
-              "/byo/NOPE", "/byo/KFK-BYO/99", "/docs/..%2fpyproject", "/capstone/x"):
+              "/byo/NOPE", "/byo/KFK-BYO/99", "/docs/..%2fpyproject", "/capstone/x", "/docs/certs", "/track/CDW"):
         assert client.get(p).status_code in (404, 405, 422), p
 
 
@@ -78,7 +78,7 @@ def test_static_fonts_and_assets_served(client):
 
 def test_links_resolve_to_site_routes_or_github(lib):
     r = lib.make_resolver("tracks/SPK-spark.md")
-    assert r("../certs/README.md#x")[0] == "/docs/certs#x"
+    assert r("../ROADMAP.md#x")[0] == "/roadmap#x"
     href, ext = lib.make_resolver("docs/TUTORIAL.md")("../labs/README.md")
     assert ext and href.endswith("/blob/main/labs/README.md")
     assert lib.make_resolver("a.md")("https://example.com") == ("https://example.com", True)
@@ -124,3 +124,11 @@ def test_healthz(client):
 def test_no_account_or_sync_features_remain(client):
     html = client.get("/").text.lower()
     assert "sign in" not in html and "oauth" not in html
+
+
+def test_roadmap_lists_every_module_and_syllabus_only_tracks_are_gone(client, lib):
+    html = client.get("/roadmap").text
+    for m in lib.modules.values():
+        assert f'href="/m/{m.id}"' in html, m.id
+    assert "CDW" not in lib.tracks and "ARC" not in lib.tracks
+    assert "Certifications" not in client.get("/").text

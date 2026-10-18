@@ -24,12 +24,21 @@ def register(app: FastAPI, lib: Library, templates) -> None:
     def home(request: Request):
         return page(request, "home.html")
 
+    @app.get("/roadmap", response_class=HTMLResponse)
+    def roadmap(request: Request):
+        return page(request, "roadmap.html")
+
     @app.get("/track/{tid}", response_class=HTMLResponse)
     def track(tid: str, request: Request):
         t = lib.tracks.get(tid)
         if t is None:
             return not_found(request)
-        syllabus = lib.render_file(t.syllabus) if t.syllabus else None
+        syllabus = None
+        if t.syllabus:
+            # intro only: the title is the page heading and the BYO stages have their own pages
+            body = t.syllabus.read_text().split("\n", 1)[-1]
+            intro = body.split("\n## ", 1)[0].strip()
+            syllabus = lib.render_text(intro, t.syllabus) if intro else None
         return page(request, "track.html", track=t, syllabus=syllabus)
 
     def module_page(request: Request, m, part: str, **ctx):
@@ -100,9 +109,4 @@ def register(app: FastAPI, lib: Library, templates) -> None:
     @app.get("/docs/{slug}", response_class=HTMLResponse)
     def doc(slug: str, request: Request):
         d = lib.docs.get(slug)
-        return page(request, "doc.html", doc_meta=d, doc=lib.render_file(d.path)) if d else not_found(request)
-
-    @app.get("/capstone/{cid}", response_class=HTMLResponse)
-    def capstone(cid: str, request: Request):
-        d = lib.capstones.get(cid)
         return page(request, "doc.html", doc_meta=d, doc=lib.render_file(d.path)) if d else not_found(request)

@@ -37,7 +37,8 @@
       <h2>Start</h2>
       <ul>
         <li><a href="/" {% if path == '/' %}aria-current="page"{% endif %}>Curriculum</a></li>
-        {% for d in lib.docs.values() %}{% if d.slug in ('tutorial','roadmap','certs','capstones') %}
+        <li><a href="/roadmap" {% if path == '/roadmap' %}aria-current="page"{% endif %}>Roadmap</a></li>
+        {% for d in lib.docs.values() %}{% if d.slug in ('tutorial',) %}
         <li><a href="/docs/{{ d.slug }}" {% if path == '/docs/' ~ d.slug %}aria-current="page"{% endif %}>{{ d.title }}</a></li>
         {% endif %}{% endfor %}
       </ul>
@@ -60,10 +61,6 @@
       </details>
       {% endfor %}
     </section>
-    {% if lib.capstones %}<section>
-      <h2>Capstones</h2>
-      <ul>{% for c in lib.capstones.values() %}<li><a href="/capstone/{{ c.slug }}" {% if path == '/capstone/' ~ c.slug %}aria-current="page"{% endif %}>{{ c.title }}</a></li>{% endfor %}</ul>
-    </section>{% endif %}
   </div>
 </nav>
 <div class="scrim" id="scrim"></div>

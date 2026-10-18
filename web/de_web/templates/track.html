@@ -9,6 +9,8 @@
     <h1>{{ track.name }}</h1>
   </header>
 
+  {% if syllabus %}<div class="prose">{{ syllabus.html|safe }}</div>{% endif %}
+
   {% if track.modules or lib.challenges.values()|selectattr('track','equalto',track.id)|list %}
   <h2 class="section-h">Modules</h2>
   <ol class="modlist">
@@ -24,10 +26,9 @@
       <span class="mm">{{ c.hours|round|int }} h · {{ c.stages|length }} stages</span></a></li>
     {% endfor %}
   </ol>
-  {% else %}<p class="note">No exercises are published for this track yet. The syllabus below shows what is planned.</p>{% endif %}
+  {% endif %}
 
-  {% if syllabus %}<h2 class="section-h">Syllabus</h2><div class="prose">{{ syllabus.html|safe }}</div>{% endif %}
 </article>
-{% if syllabus %}{{ toc(syllabus.toc) }}{% endif %}
+
 </div>
 {% endblock %}

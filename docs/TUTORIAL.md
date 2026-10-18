@@ -1,235 +1,118 @@
-# How to use this repo (start here)
+# How to study with this course
 
-This guide shows you how to study with the repo: what to read, in what order, and how the
-`de` CLI grades your work. It takes about 15 minutes to read. After that, you only need the
-loop in section 1.
+Read this once (5 minutes). After that, the loop in section 2 is all you need.
 
-## 1. The short version
-
-Each module follows the same loop:
+## 1. Setup (once)
 
 ```bash
-uv run de next                      # 1. which exercise is next?
-#    read content/<TRACK>/<MODULE>/lesson.md   # 2. read the lesson first
-uv run de start <EXERCISE_ID>       # 3. copy the starter into workspace/
-#    read the exercise README.md, edit files in workspace/...  # 4. do the work
-uv run de test                      # 5. grade it (repeat 4-5 until PASSED)
-uv run de quiz <MODULE_ID>          # 6. exam-style quiz for the module
-#    do explain.md, then drills.md  # 7. explain it, then rehearse for interviews
+uv sync                                # install the tooling
+cp learner.example.yaml learner.yaml   # your pace and dates (optional)
+uv run de doctor                       # every row should say OK; follow any fix it prints
 ```
 
-Repeat until `de next` reports nothing pending.
+Later tracks need Kafka, Flink, Paimon or Fluss. Fetch them only when you reach that track
+(scripts are in [labs/README.md](../labs/README.md)). `uv run de web` serves the course in your
+browser, but you run and grade exercises in the terminal.
 
-## 2. One-time setup
+## 2. The loop
 
-```bash
-uv sync                  # install the Python tooling into .venv
-cp learner.example.yaml learner.yaml   # your pace and dates (gitignored)
-uv run de doctor         # every row should say OK; follow any "fix" it prints
-```
+Every module works the same way:
 
-`de doctor` also checks the native runtimes that later tracks need: JDK, Spark jars, Kafka,
-Flink, Paimon and Fluss. You can fetch them only when you reach the track that uses them. The
-scripts are listed in [labs/README.md](../labs/README.md).
-
-To avoid typing `uv run` before every command, activate the virtualenv once per shell:
-
-```bash
-source .venv/bin/activate
-de status
-```
-
-The examples below leave out `uv run`.
-
-## 3. What to read and what to skip
-
-| Path | What it is | As a learner |
+| Step | What you do | Command |
 |---|---|---|
-| `README.md`, `ROADMAP.md` | Overview, track order, the "from your world" mapping | Read once. Come back to ROADMAP at each track boundary |
-| `tracks/*.md` | Syllabus for each track | Skim when you **start** a track to see where it leads |
-| `content/<TRACK>/<MODULE>/` | **The actual course** | This is where you spend your time |
-| `byo/<challenge>/` | "Build your own X" challenges | One per core track, done at the end of that track |
-| `capstones/` | Large portfolio projects | After SPK+LKH (C1), KFK (C2), FLK+STH (C3) |
-| `certs/README.md` | Exam objectives mapped to modules | Read when you plan to book an exam |
-| `learner.example.yaml` | Template for your pace, dates and skips. Copy to `learner.yaml` (gitignored) | Edit whenever you like |
-| `docs/PLATFORM.md` | How the course format and CLI are designed | Optional |
-| `docs/TESTING.md` | How exercise tests are proven valid | **Skip** (for contributors) |
+| 1 | Find what is next | `de next` |
+| 2 | Read the lesson | `content/<TRACK>/<MODULE>/lesson.md` |
+| 3 | Start an exercise | `de start <EXERCISE_ID>` |
+| 4 | Edit your code in `workspace/` and grade it. Repeat until it says PASSED | `de test` |
+| 5 | Take the quiz | `de quiz <MODULE_ID>` |
+| 6 | Explain the module in your own words (`explain.md`), then rehearse `drills.md` | – |
 
-### Spoiler folders: don't open them
+Do not skip step 6. It is what turns "the tests pass" into an answer you can give in an interview.
 
-Every exercise and BYO stage contains its answers right next to the starter. To learn anything,
-open only `README.md`, `starter/` and `tests/`, plus the copy of the starter in `workspace/`.
-Avoid these:
-
-- `solution/`: the reference answer. Use `de solution` instead (section 5).
-- `alt_solutions/`: other correct answers.
-- `mutants/`: deliberately broken answers used to prove the tests work.
-- `quiz.yaml`: the answers are inside. Take the quiz with `de quiz`.
-
-## 4. Anatomy of one module, using FND-01 as the example
+## 3. What is in a module
 
 ```
 content/FND/FND-01/
-├── module.yaml        # hours, prerequisites, "from your world" one-liner
-├── lesson.md          # read first
-├── exercises/01-.../  # graded coding work
-├── quiz.yaml          # taken via `de quiz FND-01`
-├── explain.md         # Feynman write-up + self-check rubric
-└── drills.md          # interview questions with model answers
+├── lesson.md        read first: why it exists → how it works → from your world → when NOT to use it
+├── exercises/       graded coding work; do them in number order
+├── quiz.yaml        take it with `de quiz FND-01` (answers are inside, so don't open it)
+├── explain.md       write ~200 words, then tick the self-check rubric (aim for 5 of 6)
+└── drills.md        interview questions: cover the answer, say yours out loud, compare
 ```
 
-Work through it in this order:
-
-1. **`module.yaml`.** Ten seconds. Note `hours` (your budget) and `from_your_world` (the hook
-   to what you already know).
-2. **`lesson.md`.** Every lesson has the same four parts: *Why it exists → How it works → From
-   your world → When NOT to use it*. Read the whole lesson before coding. Take notes on anything
-   that surprises you, because those notes are what you will need in an interview.
-3. **Exercises.** See section 5. A module can have more than one exercise. Do them in number
-   order.
-4. **Quiz.** `de quiz FND-01` asks each question interactively. Type one letter, or
-   comma-separated letters such as `A,C` for multi-answer questions. It then shows the correct
-   answers, explanations and a source link. Your best score is saved. If you score below ~80%,
-   reread the matching section of the lesson.
-5. **`explain.md`.** Write your answer in a scratch file or out loud. Keep it short, roughly
-   200 words or 5 minutes of talking. Then tick the rubric. Aim for 5 of 6 boxes. This step
-   shows whether you understood the module or only got the tests to pass.
-6. **`drills.md`.** Cover the model answer, answer out loud, then compare. Mark the ones you
-   fumbled and revisit them next week. (`de review` will automate this spaced repetition in
-   Phase 6.)
-
-## 5. Doing an exercise
+## 4. Doing an exercise
 
 ```bash
-de start FND-01/01-scale-up-vs-out
-# Started FND-01/01-scale-up-vs-out. Edit files in:
-#   workspace/FND-01/01-scale-up-vs-out
+de start FND-01/01-scale-up-vs-out    # copies the starter to workspace/FND-01/01-scale-up-vs-out
+de test                               # grades the exercise you started last
 ```
 
-- **Spec:** `content/FND/FND-01/exercises/01-scale-up-vs-out/README.md`. It lists the functions
-  you must implement and a section called *What the tests check*. Read it closely.
-- **Your code:** `workspace/FND-01/01-scale-up-vs-out/`. Edit only here. The starter has
-  function stubs, and sometimes an `explain.txt` that the tests also check.
-- **The tests:** `content/.../tests/`. You may read them. They are the precise spec. Many
-  compare your output against an independent DuckDB "oracle".
+- The exercise `README.md` is the spec. Read *What the tests check* closely.
+- Edit only files in `workspace/`. All tests fail on a fresh starter; that is expected.
+- Stuck? `de hint` gives a nudge. `--level 2` and `--level 3` get closer to the answer.
+- `de solution` unlocks after a pass or 3 failed attempts. Read it after you pass too, and
+  compare it with your code.
+- To start over, delete the workspace folder and run `de start` again.
 
-Then iterate:
+**Don't open these folders.** They contain answers: `solution/`, `alt_solutions/`, `mutants/`.
 
-```bash
-de test                 # runs pytest against your workspace copy; prints PASSED ✓ / FAILED ✗
-de hint                 # hint 1 (a nudge)
-de hint --level 2       # hints 1-2
-de hint --level 3       # hints 1-3 (close to the answer)
-de solution             # unlocks after a pass OR 3 failed `de test` attempts
-```
+## 5. Build-your-own challenges
 
-Tips:
-
-- On a fresh starter every test fails. That is expected. Turn the failures green one at a time,
-  reading pytest's assertion message each time.
-- Read the reference solution with `de solution` **after you pass** as well. Comparing it with
-  your own code is one of the best ways to learn here.
-- `de test` with no argument always grades the *current* exercise, which is the last one you
-  started. To grade a different one: `de test <EXERCISE_ID>`.
-- **Starting over:** `de start` never overwrites existing work. To reset, delete the workspace
-  folder (for example `rm -r workspace/FND-01/01-scale-up-vs-out`) and run `de start` again.
-- **Prerequisites:** `de start` warns, but does not block, when a required module isn't passed
-  yet. `de next` only suggests exercises whose prerequisites are met.
-- Exercises need no Docker unless their `exercise.yaml` says otherwise. Only `KFK-07` uses
-  `lab: streaming`.
-
-## 6. Build-your-own (BYO) challenges
-
-There are four, one per core track. Do each one after you finish that track's modules:
+Each core track ends with one challenge. You write a single codebase that grows over several
+stages, and each stage has its own tests.
 
 | After | Challenge | You build |
 |---|---|---|
-| SPK | `SPK-BYO` (`byo/mini-query-engine`) | A columnar query engine: scan, pushdown, join, shuffle, spill |
-| LKH | `LKH-BYO` (`byo/mini-table-format`) | An Iceberg-like table format: snapshots, atomic commits, MoR deletes |
-| KFK | `KFK-BYO` (`byo/mini-kafka`) | A Kafka-protocol broker: log segments, fetch, consumer groups, replication |
-| FLK | `FLK-BYO` (`byo/mini-stream-processor`) | A stream processor: watermarks, windows, keyed state, checkpoint barriers |
+| SPK | `SPK-BYO` | A columnar query engine |
+| LKH | `LKH-BYO` | An Iceberg-like table format |
+| KFK | `KFK-BYO` | A Kafka-protocol broker |
+| FLK | `FLK-BYO` | A stream processor with watermarks and checkpoints |
 
 ```bash
-de start SPK-BYO            # stage 1; the codebase lives in workspace/byo/SPK-BYO/
-de test                     # runs this stage's tests + all earlier stages (regressions)
-de start SPK-BYO/02         # once stage 1 passes, move on; same codebase, it grows
+de start SPK-BYO       # stage 1
+de test                # this stage plus all earlier ones
+de start SPK-BYO/02    # next stage, once stage 1 passes
 ```
 
-- You write **one codebase** across all stages. The spec for each stage is in
-  `byo/<challenge>/stage-NN-<slug>/README.md`.
-- `de next` suggests BYO stages only once all regular exercises are done, so start them
-  yourself at the end of each track.
-- **Known gap:** `de hint` and `de solution` do not work for BYO stages yet. They print "No
-  exercise selected". The hints are in the `hints:` list of each stage's `stage.yaml`. Read one
-  at a time. The reference is in that stage's `solution/` folder. Only open it after you pass,
-  or when you are truly stuck.
+`de next` does not suggest BYO stages, so start them yourself at the end of each track.
+`de hint` and `de solution` don't work for BYO stages yet. Hints are in each stage's
+`stage.yaml`, and the reference is in its `solution/` folder.
 
-## 7. What order to do things in
+## 6. Order
 
-Follow `de next`. It walks the tracks in the order set in `learner.yaml`
-(`FND → SPK → LKH → CDW → JVM → KFK → FLK → STH → ARC`) and respects module prerequisites.
-On top of that:
+Follow the [roadmap](../ROADMAP.md): **FND → SPK → LKH → JVM → KFK → FLK → STH**. `de next` respects
+prerequisites for you. If you already know a module, take its quiz first, and if you pass, add
+it to `tracks.skip_modules` in `learner.yaml`.
 
-- **Track boundaries.** When you finish a track, do its BYO challenge, then check
-  [ROADMAP.md → ARC checkpoints](../ROADMAP.md#arc-checkpoints) and the capstone table.
-- **CDW and ARC** have syllabi in `tracks/` but no graded content yet, so `de next` skips them.
-  Study them from the syllabus at the checkpoints in ROADMAP. Graded CDW content comes in
-  Phase 7.
-- **Capstones.** Only C3 is scaffolded (`capstones/C3/`, with its own README). C1 and C2 are
-  specified in `capstones/README.md`. Build them in your own repo as portfolio pieces.
-- **Certs.** The suggested exam points are in ROADMAP → *Cert checkpoints*. Change each cert's
-  `status` in `learner.yaml` as you go.
-- **Already know something?** Add the module to `tracks.skip_modules` in `learner.yaml`. For
-  example, LKH-01 may be review for you after years of Iceberg. Take its quiz first to make sure.
+## 7. A weekly rhythm (6 h/week)
 
-## 8. A sustainable weekly rhythm (6 h/week)
-
-`de plan` currently projects about 455 h, which is roughly 76 weeks at 6 h/week. One way to fill
-your three study days:
-
-| Session | ~Time | Do |
+| Session | Time | Do |
 |---|---|---|
-| Wed | 1.5 h | Read the next lesson; start its first exercise |
-| Sat | 2.5 h | Finish the exercises; read `de solution`; take the quiz |
-| Sun | 2 h | `explain.md` + `drills.md`; re-drill last week's misses; start the next lesson |
+| Wed | 1.5 h | Read the next lesson; start the first exercise |
+| Sat | 2.5 h | Finish the exercises; read the solution; take the quiz |
+| Sun | 2 h | `explain.md` and `drills.md`; redo last week's misses |
 
-Habits that make this work:
+Stuck for more than 30 minutes? Take the next hint. Run `de plan` after changing `pace` or
+`target_date` in `learner.yaml` to see your projected finish date.
 
-- **Finish the module before moving on.** The quiz, explain-it and drills take maybe 30 minutes,
-  and they are what turns passing tests into interview answers.
-- **Check `de status`** at the start of a session to see where you are.
-- **Rerun `de plan`** after you edit `pace` or `target_date` in `learner.yaml`. If you set a
-  target date, it tells you whether that date is feasible.
-- **Stuck for more than 30 minutes?** Use the next hint level. The point is to learn, not to
-  suffer.
+## 8. Where your progress lives
 
-## 9. Where your progress lives
+`progress.json` (grades), `workspace/` (your code) and `learner.yaml` (your profile) are
+gitignored, so `git pull` never conflicts with your work and nothing is uploaded. To keep them,
+commit them in a fork with `git add -f`. To move machines, copy those paths.
 
-`de test` and `de quiz` write results to `progress.json` at the repo root. Your code lives in
-`workspace/`, and your profile is `learner.yaml` (copy it from `learner.example.yaml`). All three
-are gitignored: the course repo contains content only, so `git pull` never conflicts with your
-work, and nothing is uploaded anywhere.
+The tick marks on the website's roadmap are separate: they live in your browser only.
 
-To keep a history of your own solutions, fork the repo and commit `workspace/` and `progress.json`
-there (use `git add -f`). To move to another machine, copy those two paths across.
-
-Prefer reading in a browser? `uv run de web` serves every lesson, exercise statement, quiz and
-syllabus at http://127.0.0.1:8000 (see [WEB.md](WEB.md)). Running and grading exercises still happens in
-the terminal.
-
-## 10. Command cheat sheet
+## 9. Commands
 
 | Command | Use |
 |---|---|
-| `de status` | Passed/total per track and BYO challenge, plus the current exercise |
+| `de status` | Passed/total per track, and the current exercise |
 | `de next` | Next exercise with its prerequisites met |
-| `de start <ID>` | Begin an exercise (`FND-01/01-scale-up-vs-out`) or BYO stage (`SPK-BYO/03`) |
-| `de test [ID]` | Grade the current (or given) exercise/stage |
-| `de hint [--level N]` | Progressive hints 1-3 (regular exercises only) |
-| `de solution [ID]` | Reference solution, after a pass or 3 failed attempts (regular exercises only) |
-| `de quiz <MODULE>` | Interactive module quiz; best score saved |
-| `de plan` | Projected finish date / required hours per week from `learner.yaml` |
-| `de doctor` | Environment check with fixes |
-| `de lab up/down/status <profile>` | Optional Docker labs (`core`, `streaming`, `flink`, `streamhouse`) |
-
-`de mock`, `de review`, `de cost` and `de dispute` are placeholders for later phases.
+| `de start <ID>` | Begin an exercise or BYO stage |
+| `de test [ID]` | Grade the current (or given) exercise |
+| `de hint [--level N]` | Hints 1–3 |
+| `de solution [ID]` | Reference solution (after a pass or 3 failures) |
+| `de quiz <MODULE>` | Interactive quiz; best score saved |
+| `de plan` | Projected finish date from `learner.yaml` |
+| `de doctor` | Environment check |

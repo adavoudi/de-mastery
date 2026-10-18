@@ -124,7 +124,6 @@ class Library:
         self.exercises: dict[str, Exercise] = {}
         self.challenges: dict[str, Challenge] = {}
         self.docs: dict[str, Doc] = {}
-        self.capstones: dict[str, Doc] = {}
         self._routes: dict[str, str] = {}
         self._load()
 
@@ -173,6 +172,8 @@ class Library:
                 self.tracks[mod.track] = Track(mod.track, mod.track, "", None)
             self.tracks[mod.track].modules.append(mod)
 
+        # syllabus-only tracks (no published modules) are not part of the site
+        self.tracks = {k: t for k, t in self.tracks.items() if t.modules}
         # order tracks: configured order first, then any others
         rank = {t: i for i, t in enumerate(order)}
         self.tracks = dict(sorted(self.tracks.items(), key=lambda kv: (rank.get(kv[0], 99), kv[0])))
@@ -190,21 +191,12 @@ class Library:
             ("tutorial", "docs/TUTORIAL.md", "How to study with this course", "Guide"),
             ("platform", "docs/PLATFORM.md", "Platform design", "Guide"),
             ("testing", "docs/TESTING.md", "How the tests are proven valid", "Guide"),
-            ("roadmap", "ROADMAP.md", "Roadmap", "Guide"),
-            ("certs", "certs/README.md", "Certifications", "Guide"),
             ("web", "docs/WEB.md", "Running the course website", "Guide"),
         ]:
             if (self.root / rel).is_file():
                 self.docs[slug] = Doc(slug, title, self.root / rel, group)
                 self._routes[rel] = f"/docs/{slug}"
-        cap = self.root / "capstones"
-        if (cap / "README.md").is_file():
-            self.docs["capstones"] = Doc("capstones", "Projects & capstones", cap / "README.md", "Guide")
-            self._routes["capstones/README.md"] = "/docs/capstones"
-            for d in sorted(p for p in cap.iterdir() if p.is_dir() and (p / "README.md").is_file()):
-                meta = _yaml(d / "capstone.yaml")
-                self.capstones[d.name] = Doc(d.name, meta.get("title", d.name), d / "README.md", "Capstone")
-                self._routes[f"capstones/{d.name}/README.md"] = f"/capstone/{d.name}"
+        self._routes["ROADMAP.md"] = "/roadmap"
         self._routes["README.md"] = "/"
 
     @staticmethod

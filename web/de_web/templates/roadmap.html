@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Roadmap · DE Mastery{% endblock %}
+{% block head %}<script src="{{ asset('roadmap.js') }}" defer></script>{% endblock %}
+{% block body %}
+<div class="rm">
+<header class="rm-head">
+  <p class="eyebrow">Roadmap</p>
+  <h1>Analytics engineer to data platform engineer</h1>
+  <p class="lede">Follow the line from the top. Click a node to open it, and tick the circle when you finish it.
+  Your progress is kept in this browser only.</p>
+  <p class="rm-legend"><span class="rm-key rm-key-track"></span> Track
+    <span class="rm-key rm-key-mod"></span> Module
+    <span class="rm-key rm-key-byo"></span> Build your own
+    <span class="rm-key rm-key-done"></span> Done</p>
+  <p class="rm-progress"><strong id="rm-count">0</strong> of <span id="rm-total">{{ lib.modules|length + lib.challenges|length }}</span> done
+    <span class="rm-bar"><span class="rm-bar-fill" id="rm-fill"></span></span>
+    <button class="btn small" id="rm-reset" type="button" hidden>Reset</button></p>
+</header>
+
+{% for t in lib.tracks.values() %}
+<section class="rm-track" id="{{ t.id }}">
+  <a class="rm-node rm-track-node" href="/track/{{ t.id }}">
+    <span class="rm-tid">{{ t.id }}</span>
+    <span class="rm-tname">{{ t.name }}</span>
+    <span class="rm-thours">{{ t.hours }}</span>
+  </a>
+  <ol class="rm-mods">
+    {% set ns = namespace(i=0) %}
+    {% for m in t.modules %}{% set ns.i = ns.i + 1 %}
+    <li class="rm-m {{ 'l' if ns.i is odd else 'r' }}" data-id="{{ m.id }}">
+      <button class="rm-done" type="button" aria-pressed="false" aria-label="Mark {{ m.id }} done"></button>
+      <a class="rm-node" href="/m/{{ m.id }}">
+        <span class="rm-mid">{{ m.id.split('-')[1] }}</span>
+        <span class="rm-mt">{{ m.title }}</span>
+        <span class="rm-mh">{{ m.hours|round|int }} h</span>
+      </a>
+    </li>
+    {% endfor %}
+    {% for c in lib.challenges.values() if c.track == t.id %}{% set ns.i = ns.i + 1 %}
+    <li class="rm-m byo {{ 'l' if ns.i is odd else 'r' }}" data-id="{{ c.id }}">
+      <button class="rm-done" type="button" aria-pressed="false" aria-label="Mark {{ c.title }} done"></button>
+      <a class="rm-node" href="/byo/{{ c.id }}">
+        <span class="rm-mid">BYO</span>
+        <span class="rm-mt">{{ c.title }}</span>
+        <span class="rm-mh">{{ c.hours|round|int }} h</span>
+      </a>
+    </li>
+    {% endfor %}
+  </ol>
+</section>
+{% endfor %}
+<p class="rm-end">You can now design and run batch, streaming and streamhouse pipelines.</p>
+</div>
+{% endblock %}

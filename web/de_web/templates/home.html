@@ -4,21 +4,32 @@
 <section class="hero">
   <p class="eyebrow">A self-paced course</p>
   <h1>From analytics engineer to<br>data platform engineer.</h1>
-  <p class="lede">Spark, Kafka, Flink, open table formats and the streamhouse. Short lessons, exercises graded by
-  tests that have themselves been tested, and build-your-own challenges that teach the internals.</p>
+  <p class="lede">Learn Spark, Kafka, Flink, open table formats and the streamhouse. You know SQL and dbt;
+  this course builds on that.</p>
   <p class="cta"><a class="btn primary" href="/m/FND-01">Start with the foundations</a>
-  <a class="btn" href="/docs/tutorial">How to study with this course</a></p>
+  <a class="btn" href="/roadmap">See the roadmap</a>
+  <a class="btn" href="/docs/tutorial">How to study</a></p>
 </section>
 
 <section>
-  <h2 class="section-h">The curriculum</h2>
+  <h2 class="section-h">How each module works</h2>
+  <div class="cards">
+    <div class="card"><span class="card-t">1. Read</span><span class="card-b">A short lesson: why the tool exists, how it works, how it maps to what you know, and when not to use it.</span></div>
+    <div class="card"><span class="card-t">2. Practice</span><span class="card-b">Coding exercises graded by automated tests, then a quiz.</span></div>
+    <div class="card"><span class="card-t">3. Explain</span><span class="card-b">Say it in your own words and rehearse interview questions.</span></div>
+    <div class="card"><span class="card-t">4. Build</span><span class="card-b">Finish each core track by building a small version of the tool yourself.</span></div>
+  </div>
+</section>
+
+<section>
+  <h2 class="section-h">Tracks, in order</h2>
   <div class="cards">
   {% for t in lib.tracks.values() %}
     <a class="card" href="/track/{{ t.id }}">
-      <span class="card-top"><span class="tid">{{ t.id }}</span><span class="muted">{{ t.hours }}</span></span>
+      <span class="card-top"><span class="tid">{{ loop.index }} · {{ t.id }}</span><span class="muted">{{ t.hours }}</span></span>
       <span class="card-t">{{ t.name }}</span>
       <span class="card-b">{{ t.blurb|truncate(130, True, '…') if t.blurb else '' }}</span>
-      <span class="card-f">{% if t.modules %}{{ t.modules|length }} modules{% else %}Syllabus only{% endif %}</span>
+      <span class="card-f">{{ t.modules|length }} modules</span>
     </a>
   {% endfor %}
   </div>
