@@ -1,0 +1,9 @@
+id: KFK-09
+title: Event & topic design
+track: KFK
+hours: 4
+requires: [KFK-08]
+labs: []
+cost: free
+cert_objectives: [ccdak:1]
+from_your_world: "fact grain and multi-company marts, decided at the topic layer"

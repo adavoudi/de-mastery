@@ -1,0 +1,7 @@
+title: Atomic commit via put-if-absent
+entry: tableformat.py
+timeout_s: 60
+hints:
+  - "Route append through a _commit(base_meta, new_manifest) helper that targets v{N+1}.json."
+  - "Use store.put_if_absent for the version object; if it returns False, re-read the latest version and rebuild N+1 before trying again."
+  - "A pre-existing v{N+1}.json must NOT be overwritten: if put_if_absent returns False your new metadata is discarded and you retry against the newer base."

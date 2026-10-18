@@ -1,0 +1,10 @@
+id: FND-06/01-parquet-pruning
+title: Read Parquet footers and predict row-group pruning
+entry: solution.py
+lab: none
+timeout_s: 180
+hints:
+  - "Open the file with pyarrow.parquet.ParquetFile(path). Its .metadata gives num_row_groups; for each row group, .row_group(i).column(j) exposes path_in_schema and .statistics with .min, .max, .null_count. Match the column by path_in_schema."
+  - "A row group CAN match a predicate when its [min, max] overlaps the predicate's possible values. For '>' value v, skip the group iff max <= v. For '>=' skip iff max < v. For '<' skip iff min >= v. For '==' v, skip iff v < min or v > max. If statistics are missing (None), you must NOT prune — assume the group matches."
+  - "footer_stats should return, per row group, the min/max/null_count/num_rows for the chosen column by reading ONLY the metadata (no data pages). row_groups_to_scan returns the sorted list of row-group indices that cannot be pruned for (column, op, value)."
+cert_objectives: []

@@ -1,0 +1,7 @@
+title: "Metadata + multiple topics & partitions"
+entry: broker.py
+timeout_s: 120
+hints:
+  - "Metadata (api 3) must list every requested topic with its partitions, each partition naming this broker as leader and sole replica/isr. When the client asks for an unknown topic, auto-create it (one partition) so a producer can proceed."
+  - "A Produce/Fetch request names a partition index; key your logs by (topic, partition) and create as many partitions as the highest index you see (or the count a CreateTopics request asked for)."
+  - "Implement CreateTopics (api 19, flexible from v5) so AdminClient.create_topics can set the partition count; store it and report it back in Metadata."

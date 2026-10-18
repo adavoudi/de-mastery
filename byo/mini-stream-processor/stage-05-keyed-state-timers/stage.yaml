@@ -1,0 +1,7 @@
+title: Keyed state + timers (process functions)
+entry: processor.py
+timeout_s: 60
+hints:
+  - "TimerService.advance(watermark) returns the (key, ts) timers with ts <= watermark, in (ts, key) order, and removes them (they fire once). ValueState is already implemented: value/update/clear/snapshot/restore keyed by the current key."
+  - "run_process drives the chain with one ValueState and one TimerService shared by the ProcessFunction (call pf.open(state, timers) once). For each data Event: set pf._current_key = key_fn(event), then call pf.process_element(event, out). For each Watermark: fire due timers in order, calling pf.on_timer(key, ts, out) for each."
+  - "A session-timeout function registers a timer at event.ts + GAP on every element and stores the last ts in state; on_timer only closes the session if ts == last + GAP (i.e. no later event extended it). out is a plain callback appending to the result list."

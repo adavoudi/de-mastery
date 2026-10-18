@@ -1,0 +1,5 @@
+The win is about bytes, not cores. Parquet is columnar, so projecting two columns reads two
+small column chunks instead of the whole file; the CSV pool reads every byte of every row.
+This single aggregation needs no shuffle, but a cluster group-by would, and that network
+movement dominates. Amdahl's law caps the pool because the parse and final serial combine
+can't be parallelized. Fewer bytes read is the reason one box can beat scale-out here.

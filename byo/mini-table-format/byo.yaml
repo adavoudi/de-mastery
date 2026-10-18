@@ -1,0 +1,13 @@
+id: LKH-BYO
+title: Build your own mini table format
+track: LKH
+hours: 8
+# Stage order (slugs; dirs are stage-NN-<slug>).
+stages:
+  - parquet-manifest
+  - snapshots-time-travel
+  - atomic-commit
+  - concurrent-writers
+  - delete-merge-on-read
+  - stats-pruning
+  - compaction-expiration

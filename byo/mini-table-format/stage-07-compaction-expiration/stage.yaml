@@ -1,0 +1,7 @@
+title: Compaction + snapshot expiration
+entry: tableformat.py
+timeout_s: 60
+hints:
+  - "compact(): materialize the current live rows (scan with deletes applied), write ONE new data file with fresh stats, and commit a snapshot whose manifest is just that file and whose deletes list is empty. Don't delete old files."
+  - "expire(older_than_ms): keep snapshots with timestamp_ms >= older_than_ms (plus always the latest). Delete the metadata of the rest."
+  - "GC: collect the set of data/delete keys referenced by any RETAINED snapshot; delete only store keys not in that set. Never delete a file a retained snapshot still points to."

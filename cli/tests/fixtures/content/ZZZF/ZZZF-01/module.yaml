@@ -1,0 +1,9 @@
+id: ZZZF-01
+title: Flink self-test (keyed sum)
+track: ZZZF
+hours: 1
+requires: []
+labs: []
+cost: free
+cert_objectives: [dse-flink:selftest]
+from_your_world: "a GROUP BY SUM, but streaming"

@@ -1,0 +1,9 @@
+id: ZZZ-01
+title: Self-test fixture module
+track: ZZZ
+hours: 1
+requires: []
+labs: []
+cost: free
+cert_objectives: []
+from_your_world: "dbt staging dedup/clean"

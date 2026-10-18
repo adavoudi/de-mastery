@@ -1,0 +1,8 @@
+- id: ZZZJ-01-q1
+  type: single
+  prompt: "Which Map method accumulates values per key in one call?"
+  options: {A: "put", B: "merge", C: "get", D: "containsKey"}
+  answer: [B]
+  explanation: "Map.merge(key, value, remappingFn) combines with any existing value."
+  source: "https://docs.oracle.com/en/java/javase/21/docs/api/"
+  objectives: [dse-found]

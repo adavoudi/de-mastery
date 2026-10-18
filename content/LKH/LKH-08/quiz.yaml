@@ -1,0 +1,113 @@
+- id: LKH-08-q1
+  type: single
+  prompt: >-
+    A query on a lakehouse table is slow. In the Spark physical plan you see the filter as a separate
+    Filter node ABOVE the scan, and the scan has no pushed predicate. What does this indicate?
+  options:
+    A: "The engine pushed the filter down optimally"
+    B: "The engine is reading all rows and filtering in memory — no predicate pushdown"
+    C: "The table is corrupt"
+    D: "Partition pruning succeeded"
+  answer: [B]
+  explanation: >-
+    If the predicate is not recorded in the scan (no PushedFilters / no filters= on the Iceberg
+    BatchScan) and appears only as a Filter node, the engine read everything and filtered late. The
+    fix is to enable/allow pushdown (and prune partitions) so fewer bytes are read.
+  source: "https://spark.apache.org/docs/4.0.0/sql-performance-tuning.html"
+  objectives: [databricks-de-pro:6]
+
+- id: LKH-08-q2
+  type: single
+  prompt: "What is the difference between partition pruning and predicate pushdown?"
+  options:
+    A: "They are the same thing"
+    B: "Partition pruning skips whole partitions using a predicate on the partition column before reading files; predicate pushdown skips files/row-groups within read partitions using column statistics"
+    C: "Pruning happens after pushdown"
+    D: "Pushdown only works on Delta"
+  answer: [B]
+  explanation: >-
+    Pruning is coarse and first: it eliminates entire partitions by a partition-column predicate.
+    Pushdown pushes the predicate into the scan so file/row-group min-max stats skip chunks within the
+    partitions still read. Both reduce bytes scanned; they operate at different granularities.
+  source: "https://iceberg.apache.org/docs/1.10.0/spark-queries/"
+  objectives: [databricks-de-pro:6]
+
+- id: LKH-08-q3
+  type: single
+  prompt: "Why does an Iceberg sort order (LKH-05) improve file skipping for a filter on the sorted column?"
+  options:
+    A: "It compresses the data more"
+    B: "Clustering rows by the column gives each data file tight min/max bounds, so files whose range can't match the predicate are skipped"
+    C: "It builds a B-tree index"
+    D: "It converts the table to Delta"
+  answer: [B]
+  explanation: >-
+    Sorting clusters similar values together, so each file's min/max on that column is narrow. A
+    predicate can then exclude files whose [min,max] cannot contain matching rows — the same
+    statistics-driven skipping as Redshift zone maps / SORTKEY.
+  source: "https://iceberg.apache.org/docs/1.10.0/spark-queries/"
+  objectives: [databricks-de-pro:6]
+
+- id: LKH-08-q4
+  type: single
+  prompt: "What are Iceberg Puffin files used for?"
+  options:
+    A: "Storing the data rows"
+    B: "Storing table-level statistics (e.g. NDV sketches) that cost-based optimizers use to plan joins"
+    C: "Caching query results"
+    D: "Holding delete vectors only"
+  answer: [B]
+  explanation: >-
+    Puffin files hold auxiliary statistics such as distinct-count sketches. Cost-based optimizers in
+    Trino/Spark read them to choose join order and strategy. Without stats the optimizer guesses —
+    the same reason ANALYZE mattered on Redshift.
+  source: "https://iceberg.apache.org/puffin-spec/"
+  objectives: [databricks-de-pro:6]
+
+- id: LKH-08-q5
+  type: single
+  prompt: "For a sub-second interactive BI query over a modest dataset that fits on one node, which is usually the WRONG tool and why?"
+  options:
+    A: "DuckDB, because it is single-node"
+    B: "Spark, because its job startup and shuffle overhead lose to Trino/DuckDB on small latency-sensitive queries"
+    C: "Trino, because it cannot read Iceberg"
+    D: "Athena, because it needs a cluster"
+  answer: [B]
+  explanation: >-
+    Spark excels at large ETL/streaming/ML but carries startup and shuffle overhead that hurts
+    sub-second interactive queries. Trino/Athena (MPP SQL) or DuckDB (in-process, vectorized) are
+    better fits for small, latency-sensitive BI on the same table.
+  source: "https://trino.io/docs/current/connector/iceberg.html"
+  objectives: [databricks-de-pro:6]
+
+- id: LKH-08-q6
+  type: single
+  prompt: "Athena is best described as:"
+  options:
+    A: "A proprietary format competing with Iceberg"
+    B: "A serverless MPP SQL engine (Presto/Trino lineage) that queries open table formats on S3 with no cluster to manage"
+    C: "A storage layer like S3"
+    D: "A catalog like Glue"
+  answer: [B]
+  explanation: >-
+    Athena is Trino/Presto-as-a-service: you run SQL over Iceberg/Parquet on S3 without operating a
+    cluster, billed by bytes scanned — which is exactly why pushdown and pruning matter for cost.
+  source: "https://trino.io/docs/current/connector/iceberg.html"
+  objectives: [databricks-de-pro:6]
+
+- id: LKH-08-q7
+  type: single
+  prompt: "Two engines (Spark and DuckDB) run the same WHERE/GROUP BY on the same table and return different totals. Most likely cause?"
+  options:
+    A: "Open table formats guarantee engines disagree"
+    B: "A logic difference in one query (filter, null handling, or type coercion) — on the same committed snapshot both engines must agree"
+    C: "DuckDB cannot aggregate"
+    D: "Spark rounds all doubles"
+  answer: [B]
+  explanation: >-
+    On the same committed table snapshot, two correct engines must produce the same result for the
+    same logical query; a discrepancy points to a difference in the queries themselves (predicate,
+    NULL semantics, casting), not the format. This agreement is exactly why a second engine makes a
+    good oracle.
+  source: "https://duckdb.org/docs/stable/core_extensions/iceberg/overview.html"
+  objectives: [databricks-de-pro:6]

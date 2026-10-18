@@ -1,0 +1,7 @@
+title: Snapshots & time travel
+entry: tableformat.py
+timeout_s: 60
+hints:
+  - "A snapshot is just a parsed v<N>.json. snapshots() = read v1..vLatest in order; each carries snapshot_id, version, timestamp_ms, manifest."
+  - "Give each commit a monotonically increasing snapshot_id and a timestamp_ms. append returns that id."
+  - "scan(snapshot_id=k): find the snapshot whose snapshot_id == k and read ONLY its manifest's files. No snapshot_id => current snapshot. Old data files are never overwritten, so this just works."

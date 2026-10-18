@@ -1,0 +1,9 @@
+id: KFK-06
+title: Schema Registry & contracts
+track: KFK
+hours: 5
+requires: [KFK-05]
+labs: []
+cost: free
+cert_objectives: [dse-found, ccdak:2]
+from_your_world: "dbt contracts and conformed dimensions, enforced on the wire"

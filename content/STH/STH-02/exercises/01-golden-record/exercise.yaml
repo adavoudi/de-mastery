@@ -1,0 +1,10 @@
+id: STH-02/01-golden-record
+title: Build a customer golden record from 3 streams with Paimon partial-update
+entry: solution.py
+lab: none
+timeout_s: 300
+hints:
+  - "A golden record assembled from partial source rows needs the partial-update merge engine, not the default deduplicate. Declare PRIMARY KEY(customer_id) NOT ENFORCED and set 'merge-engine'='partial-update'."
+  - "Pin 'bucket'='1' so the small table has a deterministic layout. Each source writes a row keyed by customer_id with only its own column(s) filled and the rest CAST(NULL AS STRING)."
+  - "partial-update keeps the latest NON-NULL value per column, so a later NULL never erases an earlier value. The three partial rows for one customer merge into one complete row; your DDL + the per-source inserts are what the test runs."
+cert_objectives: [sth:paimon, sth:mdm]

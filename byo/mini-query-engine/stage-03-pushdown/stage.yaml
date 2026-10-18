@@ -1,0 +1,7 @@
+title: Predicate pushdown using Parquet row-group statistics
+entry: engine.py
+timeout_s: 60
+hints:
+  - "Each row group carries per-column statistics. Read them with pf.metadata.row_group(rg).column(idx).statistics (check has_min_max) to get (min, max) without reading the data."
+  - "Skip a row group only when the predicate PROVES no row can match. For `col > v` skip iff max <= v; for `col >= v` skip iff max < v; for `col < v` skip iff min >= v; for `col = v` skip iff v < min or v > max. When in doubt, do NOT skip (soundness)."
+  - "Keep counters on the ScanStats object (row_groups_total/read/skipped) and surface them plus a 'PushedFilters=' line in explain(). Pushdown prunes row groups only; keep the Filter operator too so surviving rows are still filtered exactly."

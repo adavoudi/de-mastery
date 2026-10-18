@@ -1,0 +1,10 @@
+id: LKH-07/01-decision-memo
+title: Format decision memo (machine-graded rubric)
+entry: decision.yaml
+lab: none
+timeout_s: 120
+hints:
+  - "Each scenario has ONE defensible format: match the scenario's dominant need to a format's defining strength (Delta=Databricks/Unity/liquid clustering; Iceberg=engine-neutral + partition evolution/hidden partitioning; Hudi=record-level index + upserts + incremental pulls)."
+  - "The `factors` list for each scenario must INCLUDE every required factor key (a controlled vocabulary listed in the README). Extra factors are allowed; missing a required one fails."
+  - "Use the exact factor keys from the README (snake_case), e.g. databricks_native, unity_catalog, engine_neutral, partition_evolution, record_level_index, incremental_pulls. Case and spelling must match."
+cert_objectives: [databricks-de-pro:6]

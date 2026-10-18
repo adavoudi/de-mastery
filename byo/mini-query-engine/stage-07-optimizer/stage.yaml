@@ -1,0 +1,7 @@
+title: Rule-based optimizer (filter pushdown, projection pruning)
+entry: engine.py
+timeout_s: 60
+hints:
+  - "optimize(plan) returns a rewritten plan TREE (don't execute). Write recursive rewrite rules that walk the tree and return new frozen nodes (dataclasses.replace helps)."
+  - "Filter pushdown: a Filter above a Project can move BELOW it only if the predicate's columns all survive the projection. Over a Scan, record the predicate as Scan.pushdown but keep the Filter (pushdown prunes row groups, it doesn't filter rows)."
+  - "Projection pruning: thread a 'needed columns' set down the tree. A Filter adds its predicate's columns to the needed set; an Aggregate needs its keys + agg inputs; a Scan under all that reads only the needed columns. Never prune a column an upstream operator still uses, and never push a filter to the wrong side of a join."

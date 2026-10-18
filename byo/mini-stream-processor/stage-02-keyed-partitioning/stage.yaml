@@ -1,0 +1,7 @@
+title: Keyed partitioning across workers
+entry: processor.py
+timeout_s: 60
+hints:
+  - "keyBy sends every record with the same key to the SAME worker. The partition of a key is a stable hash of the key modulo the worker count: partition_of(key, n) = stable_hash(key) % n. stable_hash is provided (blake2b of repr) so it is identical across processes — do NOT use Python's built-in hash(), which is salted per interpreter."
+  - "run_parallel drives the chain, groups data events by key, routes each key to its worker via partition_of, and reduces per key with reduce_fn. Because a key lives on exactly ONE worker, merging workers never has a key collision — so the result is identical for any parallelism (the key-group invariance the tests assert)."
+  - "worker_assignment(keys, n) returns {key: partition_of(key, n)}. Keep reduce associative-friendly: start a key's accumulator at its first value, then reduce_fn(acc, next_value)."

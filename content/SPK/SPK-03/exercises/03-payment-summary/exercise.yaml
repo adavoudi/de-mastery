@@ -1,0 +1,10 @@
+id: SPK-03/03-payment-summary
+title: Aggregate payments with correct NULL semantics
+entry: solution.py
+lab: none
+timeout_s: 240
+hints:
+  - "count(F.lit(1)) counts every payment row; count('amount') counts only non-NULL amounts. They differ because some amounts are NULL."
+  - "sum('amount') over an all-NULL group is NULL, not 0. Wrap it: F.coalesce(F.sum('amount'), F.lit(0.0))."
+  - "Group by company_id and return company_id, n_payments, n_amounts, total_amount. Row/column order are not checked; floats compared with tolerance."
+cert_objectives: [spark-assoc:3.3, spark-assoc:3.7]

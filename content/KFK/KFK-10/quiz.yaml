@@ -1,0 +1,125 @@
+- id: KFK-10-q1
+  type: single
+  prompt: "How is a consumer group's lag for a partition defined?"
+  options:
+    A: "The number of consumers currently in the group."
+    B: "end_offset (log end offset / high watermark) minus the group's committed offset for that partition."
+    C: "The time since the last message was produced."
+    D: "The consumer's in-memory position minus the first offset in the log."
+  answer: [B]
+  explanation: >-
+    Lag = how many records have been produced but not yet confirmed processed by the group =
+    end_offset - committed_offset. It is computed from the committed offset (what survives a crash),
+    not the in-memory position.
+  source: "https://kafka.apache.org/documentation/#basic_ops_consumer_lag"
+  objectives: [ccdak:5]
+
+- id: KFK-10-q2
+  type: single
+  prompt: "Why compute lag from the COMMITTED offset rather than the consumer's current in-memory position?"
+  options:
+    A: "The in-memory position is always zero."
+    B: "The committed offset is what a restarted or rebalanced member resumes from, so it reflects the group's durable progress."
+    C: "The committed offset is faster to read."
+    D: "There is no difference; they are always equal."
+  answer: [B]
+  explanation: >-
+    After a crash or rebalance, processing resumes from the last committed offset. Lag based on the
+    committed offset therefore measures real, durable backlog; the in-memory position can be ahead of
+    what has been safely committed.
+  source: "https://kafka.apache.org/documentation/#consumerconfigs"
+  objectives: [ccdak:5]
+
+- id: KFK-10-q3
+  type: single
+  prompt: "A topic is fed by a nightly batch producer. Every night lag spikes to 50,000 then drains to 0 within an hour. What is the best alerting rule?"
+  options:
+    A: "Page whenever lag > 1,000."
+    B: "Page when lag is high AND not decreasing over several intervals (stuck), not on the instantaneous spike."
+    C: "Never alert on lag for this topic."
+    D: "Page on every produced record."
+  answer: [B]
+  explanation: >-
+    A bursty producer makes instantaneous lag spikes normal. The real signal is lag that stays high
+    and does not drain — a stuck or too-slow consumer. Alert on non-draining lag or on liveness.
+  source: "https://kafka.apache.org/documentation/#basic_ops_consumer_lag"
+  objectives: [ccdak:5]
+
+- id: KFK-10-q4
+  type: single
+  prompt: "Which layer of the Kafka testing pyramid runs an in-process Kafka Streams topology with NO broker and NO RocksDB?"
+  options:
+    A: "A Testcontainers integration test."
+    B: "TopologyTestDriver."
+    C: "An end-to-end test against the production cluster."
+    D: "A load test."
+  answer: [B]
+  explanation: >-
+    TopologyTestDriver drives a Streams topology in-process with deterministic event time and no
+    external broker or state-store disk, so it is the fast, deterministic layer for Streams logic.
+  source: "https://kafka.apache.org/documentation/streams/developer-guide/testing.html"
+  objectives: [ccdak:4]
+
+- id: KFK-10-q5
+  type: multi
+  prompt: "Which of these should live in the FAST unit layer (plain data, no broker) rather than an integration test? (Select all that apply.)"
+  options:
+    A: "A function that computes lag from committed and end offsets."
+    B: "An alert rule that maps lag to ok/warn/page."
+    C: "Verifying that the app actually commits offsets to a real broker after processing."
+    D: "A record transform / serializer."
+  answer: [A, B, D]
+  explanation: >-
+    Pure logic (lag math, alert rules, transforms, serializers) belongs in the fast unit layer.
+    Proving the app truly commits to a broker is wiring that needs a real (or embedded) broker — the
+    slow integration layer, used sparingly.
+  source: "https://kafka.apache.org/documentation/#monitoring"
+  objectives: [ccdak:4]
+
+- id: KFK-10-q6
+  type: single
+  prompt: "You want to read a consumer group's committed offsets and the partitions' end offsets WITHOUT joining the group. Which admin APIs do that?"
+  options:
+    A: "list_consumer_group_offsets for committed offsets, and list_offsets (latest spec) for end offsets."
+    B: "subscribe() and poll() in a loop."
+    C: "describe_topics only."
+    D: "There is no way without joining the group."
+  answer: [A]
+  explanation: >-
+    AdminClient.list_consumer_group_offsets returns the committed offsets for a group, and
+    AdminClient.list_offsets with the LATEST spec returns each partition's end offset. Lag is their
+    difference. No group membership needed — the same thing kafka-consumer-groups.sh --describe does.
+  source: "https://kafka.apache.org/documentation/#basic_ops_consumer_lag"
+  objectives: [ccdak:5]
+
+- id: KFK-10-q7
+  type: single
+  prompt: "A consumer group shows a high rebalance rate and growing lag. Which configuration is the most likely culprit?"
+  options:
+    A: "compression.type is set to zstd."
+    B: "Processing a batch takes longer than max.poll.interval.ms, so the member is evicted and the group rebalances repeatedly."
+    C: "acks=all on the producer."
+    D: "The topic has too few partitions."
+  answer: [B]
+  explanation: >-
+    If a poll loop's processing exceeds max.poll.interval.ms, the broker considers the member dead and
+    triggers a rebalance; the churn prevents progress and lag grows. Fix by processing faster, polling
+    smaller batches, or raising the interval.
+  source: "https://kafka.apache.org/documentation/#consumerconfigs"
+  objectives: [ccdak:5]
+
+- id: KFK-10-q8
+  type: single
+  prompt: "Why make the alert RULE itself a pure, tested function instead of only wiring it into a dashboard?"
+  options:
+    A: "Dashboards cannot display numbers."
+    B: "So you can prove with unit tests that it fires exactly when it should and stays quiet otherwise — the same discipline as a dbt test's warn/error severity."
+    C: "Pure functions use less memory on the broker."
+    D: "It lets the broker evaluate the rule."
+  answer: [B]
+  explanation: >-
+    An alert rule you cannot test is an alert you cannot trust. Making it a pure function lets you unit
+    test the boundaries (just under vs just over threshold, warn vs page), exactly like asserting a
+    dbt test's severity.
+  source: "https://kafka.apache.org/documentation/#monitoring"
+  objectives: [ccdak:4, ccdak:5]

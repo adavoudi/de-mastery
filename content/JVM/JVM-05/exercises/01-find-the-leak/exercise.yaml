@@ -1,0 +1,10 @@
+id: JVM-05/01-find-the-leak
+title: Read a heap/GC log and find the leak
+entry: src/main/java/de/mastery/jvm05/GcLogAnalyzer.java
+lab: none
+timeout_s: 120
+hints:
+  - "Parse each line with a regex capturing GC id, the before->after(total) megabytes, and whether it is a 'Pause Full'. Ignore the OutOfMemoryError line (it has no occupancy numbers) but you may record that OOM occurred."
+  - "The live set is the 'after' value. A leak = the after-values trend upward toward the heap ceiling AND the final after is near 'total' (little reclaimed); a healthy log has a roughly flat after-floor."
+  - "isLeaking: compare the average of the last few 'after' values to the first few, require a clear rising trend to near total. diagnosis: return OLD_GEN_LEAK for the leaking log, HEALTHY_CHURN for the flat one, from the provided Diagnosis enum."
+cert_objectives: [dse-found, ccdak:2]

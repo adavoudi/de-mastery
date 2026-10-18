@@ -1,0 +1,1 @@
+keyBy a constant produces a HASH edge that routes every record to one subtask, so the work is not spread despite parallelism 4 — the bottleneck remains. Rejected because the heavy map is non-keyed and must use even redistribution (REBALANCE/RESCALE).

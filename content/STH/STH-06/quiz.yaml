@@ -1,0 +1,103 @@
+- id: STH-06-q1
+  type: single
+  prompt: "In a streaming data-quality stage, what is the key difference between filtering with a WHERE clause and using a quarantine/DLQ?"
+  options:
+    A: "There is no difference"
+    B: "A WHERE filter silently drops failing records; a quarantine routes them to a side table with the reason they failed"
+    C: "A quarantine is slower and always worse"
+    D: "WHERE keeps bad records in the mart"
+  answer: [B]
+  explanation: "Filtering discards failing records with no trace, so the mart is quietly incomplete. A quarantine/DLQ routes each failing record (with a reason) so every input is accounted for — valued in the mart or explained in the quarantine, triageable and replayable."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/side_output/"
+  objectives: [streamhouse:quarantine-dlq]
+
+- id: STH-06-q2
+  type: single
+  prompt: "Which invariant catches a silent-drop bug in a DQ stage?"
+  options:
+    A: "count(mart) > 0"
+    B: "count(mart) + count(quarantine) == count(input), with the two sets disjoint"
+    C: "The job runs without exceptions"
+    D: "count(quarantine) == 0"
+  answer: [B]
+  explanation: "Completeness: every input record must land in exactly one of the mart or the quarantine. If a record leaves the input and lands in neither, the counts no longer reconcile — the streaming form of 'the load balanced'."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/side_output/"
+  objectives: [streamhouse:dq-contracts]
+
+- id: STH-06-q3
+  type: single
+  prompt: "Why must the 'good' and 'quarantine' predicates be exact logical complements?"
+  options:
+    A: "So the job compiles"
+    B: "So no record is routed to both tables and no record is routed to neither (preserving completeness)"
+    C: "To make the query faster"
+    D: "To avoid using a CASE expression"
+  answer: [B]
+  explanation: "If the predicates overlap, a record is double-counted; if they leave a gap, a record is silently lost. Exact complements guarantee each input goes to exactly one destination, which is what makes the completeness invariant hold."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/overview/"
+  objectives: [streamhouse:dq-contracts]
+
+- id: STH-06-q4
+  type: single
+  prompt: "A record violates two DQ rules at once (null customer AND non-positive amount). How is it handled?"
+  options:
+    A: "Two quarantine rows, one per rule"
+    B: "One quarantine row with a single reason (the first matching rule in the CASE)"
+    C: "It is dropped because it is 'too broken'"
+    D: "It is sent to the mart with a warning"
+  answer: [B]
+  explanation: "Membership in the quarantine is independent of rule order; only the reason label depends on the CASE priority. The record appears exactly once, tagged with the first matching reason — double-counting it would break completeness."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/overview/"
+  objectives: [streamhouse:quarantine-dlq]
+
+- id: STH-06-q5
+  type: single
+  prompt: "Which dbt test corresponds to the DQ rule 'the order's customer id must reference a real customer'?"
+  options:
+    A: "not_null"
+    B: "accepted_values"
+    C: "relationships (a foreign-key / referential test)"
+    D: "unique"
+  answer: [C]
+  explanation: "A referential check that a value exists in a parent table is dbt's relationships test. In-flight it becomes a left-join miss → quarantine with reason 'unknown_customer'. not_null and accepted_values map to the null-customer and amount rules respectively."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/overview/"
+  objectives: [streamhouse:dq-contracts]
+
+- id: STH-06-q6
+  type: single
+  prompt: "What distinguishes a healthy DLQ from 'a silent drop with extra steps'?"
+  options:
+    A: "Its name"
+    B: "It is monitored, triaged and replayable — someone acts on the quarantined records and their reasons"
+    C: "It is stored in Iceberg rather than Paimon"
+    D: "It is never read"
+  answer: [B]
+  explanation: "A DLQ only adds value if it is watched and worked: alert on its size/reasons, fix the source, and replay. An unread quarantine loses data just as a WHERE filter would — the routing is necessary but not sufficient."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/side_output/"
+  objectives: [streamhouse:quarantine-dlq]
+
+- id: STH-06-q7
+  type: multi
+  prompt: "Which statements about in-flight DQ with a quarantine are correct? (choose all)"
+  options:
+    A: "Every input record ends up in the mart or the quarantine, never neither"
+    B: "A quarantine row carries the reason the record failed"
+    C: "Silently filtering bad rows preserves completeness"
+    D: "The good and quarantine sets are disjoint"
+  answer: [A, B, D]
+  explanation: "Completeness requires each input in exactly one destination (A, D) and the reason enables triage/replay (B). Silently filtering breaks completeness, so C is false — that is the anti-pattern this module exists to kill."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/side_output/"
+  objectives: [streamhouse:dq-contracts, streamhouse:quarantine-dlq]
+
+- id: STH-06-q8
+  type: single
+  prompt: "Why does streaming data quality route per-record instead of failing the run like a dbt test?"
+  options:
+    A: "Streaming engines cannot raise errors"
+    B: "A stream has no post-load gate; data flows to consumers continuously, so quality must be decided per record while keeping the mart flowing"
+    C: "dbt tests are not allowed in streaming"
+    D: "Failing the run is impossible in SQL"
+  answer: [B]
+  explanation: "In batch, a failing test blocks the run before anyone reads the data. A stream has no such boundary — consumers read immediately — so you decide fitness per event and quarantine the unfit rather than halting the whole pipeline."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/side_output/"
+  objectives: [streamhouse:dq-contracts]

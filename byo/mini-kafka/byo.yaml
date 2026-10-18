@@ -1,0 +1,14 @@
+id: KFK-BYO
+title: Build your own mini Kafka
+track: KFK
+hours: 10
+# Stage order (slugs; dirs are stage-NN-<slug>).
+stages:
+  - apiversions-tcp
+  - segmented-log-index
+  - produce-recordbatch-crc
+  - fetch-by-offset
+  - metadata-topics-partitions
+  - retention-compaction
+  - consumer-group-offsets
+  - replication-high-watermark

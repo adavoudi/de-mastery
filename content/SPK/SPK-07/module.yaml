@@ -1,0 +1,12 @@
+id: SPK-07
+title: Partitioning, bucketing, and the small-file problem
+track: SPK
+hours: 6
+requires: [SPK-06]
+labs: []
+cost: free
+cert_objectives:
+  - spark-assoc:1.5
+  - spark-assoc:4.1
+  - spark-assoc:2.3
+from_your_world: "Redshift DISTKEY / SORTKEY; Athena/Iceberg partitioning and file sizing"

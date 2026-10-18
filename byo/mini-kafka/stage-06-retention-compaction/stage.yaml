@@ -1,0 +1,7 @@
+title: "Retention and log compaction"
+entry: broker.py
+timeout_s: 120
+hints:
+  - "Read the topic's cleanup.policy (set via CreateTopics configs). For 'compact', keep only the LATEST record per key; for 'delete', keep everything (optionally drop old segments by retention.bytes)."
+  - "Compaction rewrites the log: scan all batches, remember the latest (value, offset) per key, then rebuild one record per surviving key IN OFFSET ORDER, preserving each record's original absolute offset as its batch baseOffset."
+  - "Compaction must NOT change the log-end offset (new records still get the next offset). Decode records from a v2 batch by walking the varint-length-prefixed records after the 61-byte header."

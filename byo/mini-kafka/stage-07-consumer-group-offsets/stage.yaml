@@ -1,0 +1,7 @@
+title: "Consumer-group offsets (OffsetCommit / OffsetFetch)"
+entry: broker.py
+timeout_s: 120
+hints:
+  - "FindCoordinator (api 10) must point the client at this broker (it is its own group coordinator). Then OffsetCommit (api 8) stores an offset for (group, topic, partition) and OffsetFetch (api 9) reads it back."
+  - "Key your committed offsets by (group, topic, partition). An OffsetFetch for a group/partition with no commit must return -1 (no committed offset)."
+  - "OffsetFetch v8+ uses a 'groups' array; v9 adds member_id + member_epoch in the request before the topics. Parse those or your topic array will be misaligned. Persist the offsets so a fresh consumer in the same group reads them."

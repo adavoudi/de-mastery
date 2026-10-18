@@ -1,0 +1,10 @@
+id: SPK-12
+title: Testing and production Spark
+track: SPK
+hours: 7
+requires: [SPK-08]
+labs: []
+cost: "💲"
+cert_objectives:
+  - spark-assoc:4.3
+from_your_world: "dbt tests and CI"

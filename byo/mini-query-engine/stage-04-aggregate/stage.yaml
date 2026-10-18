@@ -1,0 +1,7 @@
+title: Hash aggregate with partial vs. final aggregation
+entry: engine.py
+timeout_s: 60
+hints:
+  - "Build a dict keyed by the group-key tuple. partial_aggregate() folds one chunk into per-group accumulators; merge_partials() combines several partial states into one. Keep these two steps separate — that is the map-combine / reduce split."
+  - "Pick accumulators that MERGE associatively: sum=running sum, count=running count, min/max=running extreme. For avg carry (sum, count) and divide only at the very end — never average two averages."
+  - "Finalize by turning the merged state into columns (one per key + one per agg output). Aggregate(child, keys, aggs) where aggs is a tuple of (func, input_col, output_name); count uses input_col=None."

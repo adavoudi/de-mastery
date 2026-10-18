@@ -1,0 +1,10 @@
+id: SPK-05
+title: Catalyst and the physical plan
+track: SPK
+hours: 6
+requires: [SPK-04]
+labs: []
+cost: free
+cert_objectives:
+  - spark-assoc:1.3
+from_your_world: "Redshift EXPLAIN and the query planner"

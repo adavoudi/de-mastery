@@ -1,0 +1,1 @@
+counts with a transient field and only mirrors it into ValueState without ever reading the state back; on restore the field resets to 0 and the restored state is ignored, so the count resets (final 5, not 10).

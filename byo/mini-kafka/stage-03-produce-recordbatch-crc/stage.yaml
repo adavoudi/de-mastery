@@ -1,0 +1,7 @@
+title: "Produce: RecordBatch v2 + CRC32C"
+entry: broker.py
+timeout_s: 90
+hints:
+  - "A Produce request (api 0, flexible from v9) carries, per partition, a 'records' blob that is already a serialized RecordBatch v2. Append that blob to the active segment and reply with the base offset you assigned."
+  - "RecordBatch v2 layout: baseOffset int64, batchLength int32, partitionLeaderEpoch int32, magic int8 (=2), crc uint32, then attributes/lastOffsetDelta/timestamps/... The CRC is CRC32C (Castagnoli, poly 0x82F63B78) over every byte AFTER the crc field."
+  - "Before writing to disk, stamp the batch's baseOffset (the first 8 bytes) with the offset you assigned (the current log-end offset). Advance the log-end offset by the record count (bytes 57..60 of the batch)."

@@ -1,0 +1,7 @@
+title: Delete files / merge-on-read
+entry: tableformat.py
+timeout_s: 60
+hints:
+  - "delete(predicate): for each data file, read it, run predicate to get a boolean mask, collect the integer positions where it's True, and write a JSON delete file {data_file, positions}."
+  - "Record delete files in the snapshot (a `deletes` list). Commit through the same put_if_absent path as append."
+  - "scan: build a per-data-file set of deleted positions from the snapshot's delete files, then skip those row indices while reading. Never rewrite the data file."

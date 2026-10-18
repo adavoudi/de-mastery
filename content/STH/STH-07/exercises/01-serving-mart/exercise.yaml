@@ -1,0 +1,10 @@
+id: STH-07/01-serving-mart
+title: Serve a sub-second dashboard off the streaming revenue mart
+entry: solution.py
+lab: none
+timeout_s: 300
+hints:
+  - "Serving reads the MERGED state, not the changelog. The test hands you the merged rows (latest per order_id). Load them into DuckDB once, then build a SMALL pre-aggregated rollup table `mart_daily` = SUM(revenue) GROUP BY company, order_day."
+  - "The dashboard query must read `mart_daily` (not the raw `fct_orders`) and apply the company predicate so a columnar engine prunes it. Return rows ordered by revenue DESC. The EXPLAIN of your dashboard query must mention `mart_daily` and must NOT scan `fct_orders`."
+  - "SUM(revenue) — not COUNT(*), not AVG. Keep the company filter in the dashboard query. The OLAP recompute (`olap_scan`) reads the raw merged rows directly and must agree with the rollup-backed dashboard (G6 oracle)."
+cert_objectives: [sth:serving]

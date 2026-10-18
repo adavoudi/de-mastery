@@ -1,0 +1,9 @@
+id: STH-02
+title: Apache Paimon — primary-key tables, merge engines, partial-update
+track: STH
+hours: 6
+requires: [STH-01]
+labs: []
+cost: free
+cert_objectives: [sth:paimon, sth:mdm]
+from_your_world: "MDM golden record: one customer row assembled from three source systems"

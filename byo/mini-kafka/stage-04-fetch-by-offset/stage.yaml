@@ -1,0 +1,7 @@
+title: "Fetch by offset"
+entry: broker.py
+timeout_s: 120
+hints:
+  - "A Fetch request (api 1, flexible from v12) asks for a fetch_offset per partition. Return the raw record batches whose records cover offsets >= fetch_offset, as the 'records' bytes field of the response."
+  - "Use the offset index to seek near the fetch_offset, then skip whole batches whose last offset (baseOffset + lastOffsetDelta) is below fetch_offset. Respect partition_max_bytes so you don't return the whole log at once."
+  - "The response per partition also needs high_watermark and (v4+) last_stable_offset and (v5+) log_start_offset. ListOffsets (api 2) must answer earliest (timestamp -2) = log start and latest (-1) = end so get_watermark_offsets works."

@@ -1,0 +1,11 @@
+id: KFK-03
+title: Producers — batching, idempotence, ordering under retries
+track: KFK
+hours: 5
+requires: [KFK-02]
+labs: []
+cost: free
+cert_objectives:
+  - dse-found
+  - ccdak:2
+from_your_world: "SOX: no duplicate and no reordered financial events, even on retry"

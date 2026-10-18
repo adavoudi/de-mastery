@@ -1,0 +1,9 @@
+id: FND-06
+title: Storage formats
+track: FND
+hours: 3
+requires: [FND-01]
+labs: []
+cost: free
+cert_objectives: []
+from_your_world: "Why Athena charges by scanned bytes; row-group pruning is why a WHERE on a sorted column is cheap"

@@ -1,0 +1,103 @@
+- id: FLK-05-q1
+  type: single
+  prompt: "An order placed on 2026-01-08 must be converted to USD. The business requires the FX rate that was in effect on 2026-01-08, even when the pipeline reprocesses the order weeks later. Which join is correct?"
+  options:
+    A: "A lookup join to a JDBC fx_rates table"
+    B: "A temporal join: fx FOR SYSTEM_TIME AS OF o.order_ts"
+    C: "A regular join on currency only"
+    D: "An interval join within 1 hour of the order"
+  answer: [B]
+  explanation: "A temporal (versioned) join picks the dimension version effective at the fact's event time, which is exactly the as-of/SCD2 rule. A JDBC lookup reads the rate as it is now (wrong for reprocessing); a regular join on currency alone matches every version; an interval join restricts to time-local matches, not as-of versions."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/concepts/versioned_tables/"
+  objectives: [dse-flink:joins]
+
+- id: FLK-05-q2
+  type: single
+  prompt: "What bounds the state of an interval join?"
+  options:
+    A: "The number of distinct keys"
+    B: "The time interval in the join condition (rows outside it are evicted)"
+    C: "Nothing; interval joins keep all rows"
+    D: "The parallelism of the operator"
+  answer: [B]
+  explanation: "An interval join only matches rows whose timestamps are within the declared interval, so state older than the interval (relative to the watermark) can be evicted. That bounded state is the main reason to prefer it over a regular join for two unbounded streams."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/joins/"
+  objectives: [dse-flink:joins]
+
+- id: FLK-05-q3
+  type: single
+  prompt: "A regular (standard) join between two unbounded streams has which risk?"
+  options:
+    A: "It cannot emit any results"
+    B: "Its state can grow without bound because both sides are retained to match future rows"
+    C: "It silently drops late data"
+    D: "It only works in batch mode"
+  answer: [B]
+  explanation: "A regular join retains both inputs so a future row on either side can still find a match, and it emits retractions when a match changes. Without a state TTL that state grows unbounded — the reason it is unsafe for two large fact streams."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/joins/"
+  objectives: [dse-flink:joins]
+
+- id: FLK-05-q4
+  type: single
+  prompt: "In a Flink SQL temporal join, what must the versioned (right) table have?"
+  options:
+    A: "A PRIMARY KEY and an event-time attribute (so each key has versions ordered in time)"
+    B: "A processing-time attribute only"
+    C: "No key at all"
+    D: "Exactly one row per key"
+  answer: [A]
+  explanation: "A versioned table needs a PRIMARY KEY (the version identity) and an event-time attribute/watermark so the planner can order versions and answer FOR SYSTEM_TIME AS OF. Without a primary key the planner rejects the temporal join."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/concepts/versioned_tables/"
+  objectives: [dse-flink:joins]
+
+- id: FLK-05-q5
+  type: single
+  prompt: "When you build an as-of enrichment by hand with a KeyedCoProcessFunction, why register an event-time timer at the fact's timestamp before emitting?"
+  options:
+    A: "To rate-limit the output"
+    B: "To wait until the watermark passes the fact's time so every dimension version effective at or before that instant has arrived"
+    C: "Because timers are required for any ProcessFunction"
+    D: "To convert processing time to event time"
+  answer: [B]
+  explanation: "The as-of answer is only final once no earlier-or-equal dimension version can still arrive. Firing on an event-time timer at the fact's timestamp means the watermark has reached it, so the correct version is already in state. Emitting immediately risks picking a stale version."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/operators/process_function/"
+  objectives: [dse-flink:joins]
+
+- id: FLK-05-q6
+  type: single
+  prompt: "A lookup join (e.g. JDBC) is used to enrich orders with the customer's address. The pipeline is replayed to reprocess last quarter. What goes wrong?"
+  options:
+    A: "Nothing; lookup joins are always correct"
+    B: "Each order is enriched with the address as it is NOW, not the address effective at the order's date"
+    C: "The join produces duplicates"
+    D: "The watermark stalls"
+  answer: [B]
+  explanation: "A lookup join reads the external row at processing time, i.e. the current value. Reprocessing old orders then stamps them with today's address — a point-in-time error. Historical restatement needs a temporal join over the address change history."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/joins/"
+  objectives: [dse-flink:joins]
+
+- id: FLK-05-q7
+  type: multi
+  prompt: "Which statements about the as-of (point-in-time) rule are correct? (choose all)"
+  options:
+    A: "Pick the dimension version with the greatest effective_from that is <= the fact's event time"
+    B: "A version with effective_from strictly greater than the fact time must not be chosen"
+    C: "If no version is effective at or before the fact time, a LEFT temporal join yields NULLs for the dimension columns"
+    D: "You should always pick the newest version regardless of the fact's time"
+  answer: [A, B, C]
+  explanation: "As-of means the latest version effective at or before the event time; a future version is ineligible; a LEFT join yields NULLs when no version qualifies. Always picking the newest version is exactly the bug (converting at today's rate)."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/concepts/versioned_tables/"
+  objectives: [dse-flink:joins]
+
+- id: FLK-05-q8
+  type: single
+  prompt: "Why can unbounded keyed state in a regular or temporal join be a problem over months of data, and what control limits it?"
+  options:
+    A: "It cannot be limited; you must restart the job"
+    B: "A state TTL (time-to-live) evicts entries not accessed within a configured duration"
+    C: "Increasing parallelism removes state"
+    D: "Checkpoints delete state"
+  answer: [B]
+  explanation: "State TTL expires entries that have not been read/written within the TTL, bounding memory for joins whose keys or versions accumulate. Parallelism and checkpoints do not shrink logical state; a restart loses it (and correctness)."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/fault-tolerance/state/"
+  objectives: [dse-flink:joins]

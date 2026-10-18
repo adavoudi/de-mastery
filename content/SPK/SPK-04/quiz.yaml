@@ -1,0 +1,126 @@
+- id: SPK-04-q1
+  type: single
+  prompt: "What does df.createOrReplaceTempView('stg_orders') do?"
+  options:
+    A: "Writes the DataFrame to disk as a managed table."
+    B: "Registers a session-scoped name bound to the lazy plan; no data is written."
+    C: "Caches the DataFrame in memory."
+    D: "Creates a global table visible to other applications."
+  answer: [B]
+  explanation: >-
+    A temporary view is just a name on a lazy plan, scoped to the session, storing no bytes. It is
+    the closest Spark analogue of a dbt ref(). It does not cache or persist anything.
+  source: "https://spark.apache.org/docs/4.2.0/sql-getting-started.html"
+  objectives: [spark-assoc:2.4]
+
+- id: SPK-04-q2
+  type: single
+  prompt: >-
+    A nightly job must REPLACE yesterday's output at a path. Which save mode is correct, and what
+    bug does the wrong one cause?
+  options:
+    A: "append — it de-duplicates automatically."
+    B: "overwrite — using append instead would stack a second copy and double every metric."
+    C: "ignore — it replaces safely."
+    D: "errorifexists — it overwrites in place."
+  answer: [B]
+  explanation: >-
+    overwrite replaces the existing data. append would add a second full copy on top of the
+    existing data, doubling counts and sums — the classic refresh-vs-append bug.
+  source: "https://spark.apache.org/docs/4.2.0/sql-data-sources-load-save-functions.html#save-modes"
+  objectives: [spark-assoc:2.1]
+
+- id: SPK-04-q3
+  type: single
+  prompt: "How do you query a Parquet file directly with SQL, without registering it first?"
+  options:
+    A: "SELECT * FROM 'orders.parquet'"
+    B: "SELECT * FROM parquet.`/path/orders.parquet`"
+    C: "SELECT * FROM read('orders.parquet')"
+    D: "SELECT * FROM OPENROWSET('orders.parquet')"
+  answer: [B]
+  explanation: >-
+    The format.`path` syntax (parquet/orc/json/csv/text) lets SQL read a file path directly, like
+    pointing Athena at an S3 prefix. For reuse, register a temp view so the name is stable.
+  source: "https://spark.apache.org/docs/4.2.0/sql-data-sources-load-save-functions.html#run-sql-on-files-directly"
+  objectives: [spark-assoc:2.2]
+
+- id: SPK-04-q4
+  type: single
+  prompt: "Why supply an explicit schema when reading a production CSV instead of inferSchema=true?"
+  options:
+    A: "Inference is impossible on CSV."
+    B: "Inference costs an extra scan and can guess wrong types (e.g. dropping leading zeros from an id)."
+    C: "Explicit schemas make reads slower."
+    D: "CSV cannot store types, so a schema is illegal."
+  answer: [B]
+  explanation: >-
+    inferSchema requires an extra pass and may mis-type columns — reading a zero-padded id as an
+    integer, or an empty column as the wrong type. An explicit StructType is deterministic and
+    cheaper, the same discipline as typing a dbt source.
+  source: "https://spark.apache.org/docs/4.2.0/sql-data-sources-csv.html"
+  objectives: [spark-assoc:3.6]
+
+- id: SPK-04-q5
+  type: single
+  prompt: "What is the main read-time benefit of df.write.partitionBy('company_id')?"
+  options:
+    A: "It compresses the data more."
+    B: "A later filter on company_id prunes whole directories without opening their files (partition pruning)."
+    C: "It sorts rows within each file."
+    D: "It guarantees exactly one file per company."
+  answer: [B]
+  explanation: >-
+    partitionBy writes one directory per value; a query filtering that column skips entire
+    directories (partition pruning) — the analogue of Hive/Glue partitions or a Redshift zone map.
+  source: "https://spark.apache.org/docs/4.2.0/sql-data-sources-load-save-functions.html"
+  objectives: [spark-assoc:2.3]
+
+- id: SPK-04-q6
+  type: single
+  prompt: "Which column is a POOR choice to partitionBy, and why?"
+  options:
+    A: "order_date, because dates are low cardinality."
+    B: "company_id, because there are only a few companies."
+    C: "order_id, because its high cardinality creates millions of tiny files."
+    D: "country, because it is a string."
+  answer: [C]
+  explanation: >-
+    Partitioning by a high-cardinality key like order_id creates a directory per id and a flood of
+    tiny files (the small-file problem). Partition by low-cardinality columns queries filter on
+    (date, company) and sort within.
+  source: "https://spark.apache.org/docs/4.2.0/sql-data-sources-load-save-functions.html"
+  objectives: [spark-assoc:2.3]
+
+- id: SPK-04-q7
+  type: single
+  prompt: >-
+    You create a table with saveAsTable (managed) and later DROP TABLE it. What happens to the
+    underlying data files?
+  options:
+    A: "They are left in place; only metadata is removed."
+    B: "They are deleted, because Spark manages both metadata and data for a managed table."
+    C: "They are moved to a trash directory for 30 days."
+    D: "Nothing can drop a managed table."
+  answer: [B]
+  explanation: >-
+    For a managed table Spark owns the data lifecycle, so DROP TABLE deletes the files. An external
+    table (created with an explicit LOCATION/path) keeps its files on DROP — the same
+    managed-vs-external distinction as Iceberg/Glue.
+  source: "https://spark.apache.org/docs/4.2.0/sql-data-sources-hive-tables.html"
+  objectives: [spark-assoc:2.3]
+
+- id: SPK-04-q8
+  type: single
+  prompt: "A DataFrame transformation and the equivalent Spark SQL query differ how?"
+  options:
+    A: "SQL uses a different, slower engine."
+    B: "They compile to the same logical plan and Catalyst optimizes both identically; SQL is a front end."
+    C: "DataFrame code cannot be optimized."
+    D: "SQL cannot read Parquet."
+  answer: [B]
+  explanation: >-
+    Spark SQL and the DataFrame API are two front ends over the same Catalyst-optimized engine; the
+    same query compiles to the same plan either way. Choose whichever reads more clearly.
+  source: "https://spark.apache.org/docs/4.2.0/sql-programming-guide.html"
+  objectives: [spark-assoc:2.4]

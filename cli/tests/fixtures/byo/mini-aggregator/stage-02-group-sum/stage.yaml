@@ -1,0 +1,7 @@
+title: Group and sum
+entry: engine.py
+timeout_s: 60
+hints:
+  - "Accumulate totals in a dict keyed by the group key."
+  - "Iterate rows, add row[val] into totals[row[key]], then emit one dict per group."
+  - "Return [{key: k, val: t} for k, t in totals.items()]"

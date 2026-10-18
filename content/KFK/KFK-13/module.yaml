@@ -1,0 +1,9 @@
+id: KFK-13
+title: Deployment architecture — multi-region DR
+track: KFK
+hours: 3
+requires: [KFK-11]
+labs: []
+cost: free
+cert_objectives: [ccaak:3]
+from_your_world: "a DR runbook with RPO/RTO targets, like you'd write for a warehouse or data mart"

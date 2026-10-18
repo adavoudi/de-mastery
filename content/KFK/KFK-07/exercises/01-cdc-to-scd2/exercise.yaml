@@ -1,0 +1,10 @@
+id: KFK-07/01-cdc-to-scd2
+title: Derive SCD2 from a Debezium change stream
+entry: solution.py
+lab: streaming
+timeout_s: 120
+hints:
+  - "Sort events per key by (source.ts_ms, source.lsn) so changes apply in commit order. Skip tombstones (value is None / no envelope)."
+  - "Treat op 'r' and 'c' as opening a new current version; op 'u' closes the current row (valid_to = ts) and opens a new one from `after`; op 'd' closes the current row and opens nothing."
+  - "Keep exactly one open row (valid_to is None, is_current True) per key at any time. On a change, close the open one before opening the next."
+cert_objectives: [ccdak:2, ccaak:4, dse-found]

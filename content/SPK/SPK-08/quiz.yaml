@@ -1,0 +1,133 @@
+- id: SPK-08-q1
+  type: single
+  prompt: >-
+    A job dies with `java.lang.OutOfMemoryError: Java heap space` and the stack trace points at a
+    collect()/toPandas() call. Where did it OOM and what is the fix?
+  options:
+    A: "An executor OOMed; add more executors."
+    B: "The driver OOMed pulling the whole dataset to it; don't collect the full data — reduce/aggregate first or write to storage."
+    C: "The shuffle spilled; raise shuffle.partitions."
+    D: "Storage memory was full; unpersist."
+  answer: [B]
+  explanation: >-
+    collect()/toPandas() moves all rows to the driver; on a large dataset that OOMs the DRIVER, not
+    an executor. The fix is to not collect the full result — aggregate/limit first, or write to
+    disk.
+  source: "https://spark.apache.org/docs/4.0.0/tuning.html"
+  objectives: [spark-assoc:4.3]
+
+- id: SPK-08-q2
+  type: single
+  prompt: >-
+    Execution memory and storage memory in Spark's unified model relate how?
+  options:
+    A: "They are fixed, separate pools that never interact."
+    B: "They share a unified region and can borrow from each other; cached blocks may be evicted to make room for execution, and vice versa."
+    C: "Storage memory is only on disk."
+    D: "Execution memory is only for the driver."
+  answer: [B]
+  explanation: >-
+    Spark's unified memory lets execution and storage borrow from a shared region. Under pressure,
+    cached (storage) blocks can be evicted for execution needs, and execution can use free storage
+    space.
+  source: "https://spark.apache.org/docs/4.0.0/tuning.html"
+  objectives: [spark-assoc:1.3]
+
+- id: SPK-08-q3
+  type: single
+  prompt: "What does df.cache() do, and when is it worth it?"
+  options:
+    A: "Immediately writes the DataFrame to disk; always worth it."
+    B: "Marks the DataFrame to be persisted (MEMORY_AND_DISK) on the next action; worth it only when the DataFrame is reused across multiple actions."
+    C: "Caches only the schema."
+    D: "Forces a broadcast join."
+  answer: [B]
+  explanation: >-
+    cache() is lazy and equals persist(MEMORY_AND_DISK): the data is stored on the first action.
+    Caching pays off only when you reuse the DataFrame across 2+ actions; caching a single-use frame
+    just wastes storage memory.
+  source: "https://spark.apache.org/docs/4.0.0/rdd-programming-guide.html#rdd-persistence"
+  objectives: [spark-assoc:1.3]
+
+- id: SPK-08-q4
+  type: multi
+  prompt: "Which are genuine Adaptive Query Execution (AQE) optimizations visible in the final plan? (select all)"
+  options:
+    A: "Coalescing many small post-shuffle partitions into fewer right-sized ones."
+    B: "Runtime skew-join handling that splits an oversized shuffle partition."
+    C: "Dynamically switching a sort-merge join to a broadcast join when a side turns out small."
+    D: "Pushing filters into the Parquet scan."
+  answer: [A, B, C]
+  explanation: >-
+    AQE coalesces shuffle partitions, handles skew joins, and can switch join strategies at runtime
+    using real statistics. Predicate pushdown is a static Catalyst rewrite (SPK-05), not AQE.
+  source: "https://spark.apache.org/docs/4.0.0/sql-performance-tuning.html#adaptive-query-execution"
+  objectives: [spark-assoc:4.2]
+
+- id: SPK-08-q5
+  type: single
+  prompt: >-
+    Why must you look at the FINAL executed plan (after an action) to see AQE's effects, not the
+    plan from explain() before running?
+  options:
+    A: "explain() is broken with AQE."
+    B: "AQE re-optimizes at runtime using actual shuffle statistics, so its changes (coalesced partitions, skew handling, join switch) only appear in the final plan after the first stage runs."
+    C: "AQE only affects reads."
+    D: "The initial plan already shows AQE results."
+  answer: [B]
+  explanation: >-
+    AQE adapts the plan after observing real shuffle sizes. The pre-run plan shows an
+    AdaptiveSparkPlan placeholder; the coalescing/skew/join-switch effects appear only in the final
+    plan (isFinalPlan=true) after execution.
+  source: "https://spark.apache.org/docs/4.0.0/sql-performance-tuning.html#adaptive-query-execution"
+  objectives: [spark-assoc:4.2]
+
+- id: SPK-08-q6
+  type: single
+  prompt: >-
+    Repeated log lines `Spilling in-memory map ... to disk` during an aggregation indicate what?
+  options:
+    A: "A driver OOM."
+    B: "Execution-memory pressure: the aggregation does not fit in memory and spills to disk (correct but slow). Fix with more partitions/memory or a narrower aggregation."
+    C: "Caching succeeded."
+    D: "The job failed."
+  answer: [B]
+  explanation: >-
+    Spill messages mean execution memory was exceeded and Spark wrote intermediate data to disk —
+    correct but slow. Relieve it with more shuffle partitions, more memory, or by reducing the
+    aggregation's footprint; it is not itself a failure.
+  source: "https://spark.apache.org/docs/4.0.0/tuning.html"
+  objectives: [spark-assoc:4.3]
+
+- id: SPK-08-q7
+  type: single
+  prompt: "You cache a DataFrame but see no speedup and higher memory use. What likely happened?"
+  options:
+    A: "Caching always speeds things up; the measurement is wrong."
+    B: "The DataFrame is used only once (no reuse), so caching just consumes storage memory with no benefit — and may force eviction/spill elsewhere."
+    C: "cache() requires DISK_ONLY to work."
+    D: "You must call collect() twice for cache to apply."
+  answer: [B]
+  explanation: >-
+    Caching helps only when the DataFrame is reused across multiple actions. A single-use cache adds
+    storage-memory pressure (possibly causing eviction/spill) for no reuse benefit.
+  source: "https://spark.apache.org/docs/4.0.0/api/python/reference/pyspark.sql/api/pyspark.sql.DataFrame.persist.html"
+  objectives: [spark-assoc:1.3]
+
+- id: SPK-08-q8
+  type: single
+  prompt: >-
+    An executor OOMs during a shuffle; one task processed 50x more data than the others. Which fix
+    targets the actual cause?
+  options:
+    A: "Collect less data to the driver."
+    B: "This is skew; salt the hot key (SPK-06), add partitions, or enable AQE skew-join handling so the oversized partition is split."
+    C: "Cache the DataFrame."
+    D: "Switch to DISK_ONLY storage."
+  answer: [B]
+  explanation: >-
+    One task dwarfing the rest is data skew. The fixes are salting the hot key, increasing
+    partitions, or AQE skew-join handling (runtime partition split). Caching or changing storage
+    level does not address skew.
+  source: "https://spark.apache.org/docs/4.0.0/sql-performance-tuning.html#adaptive-query-execution"
+  objectives: [spark-assoc:4.3, spark-assoc:4.2]

@@ -1,0 +1,10 @@
+id: STH-08/01-cost-model
+title: Cost model for three freshness tiers on one mart
+entry: solution.py
+lab: none
+timeout_s: 120
+hints:
+  - "Four buckets: compute, storage, operations, total. The TIER only changes three multipliers (always_on_fraction, file_overhead, ops_hours_month) given in TIERS; the workload and prices are the same across tiers."
+  - "compute = always_on_fraction * 24 * 30 * compute_hour_usd. retained_gb = events_per_day * retention_days * bytes_per_event / 1e9. storage = retained_gb * (1 + file_overhead) * storage_gb_month_usd. operations = ops_hours_month * ops_hour_usd. total = compute + storage + operations."
+  - "The ordering MUST come out seconds > minutes > hours for total (always-on compute + on-call dominate). If hours is the most expensive, your tier multipliers are inverted. Results are checked within +-20% of a reference model, so plain arithmetic is enough — no rounding tricks."
+cert_objectives: [sth:cost]

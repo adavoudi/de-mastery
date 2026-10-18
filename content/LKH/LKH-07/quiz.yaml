@@ -1,0 +1,117 @@
+- id: LKH-07-q1
+  type: single
+  prompt: >-
+    Which capability is Apache Hudi's defining strength, making it a natural fit for mutable,
+    upsert-heavy, near-real-time ingestion?
+  options:
+    A: "Hidden partitioning with partition evolution"
+    B: "Record-level indexing (mapping record keys to file groups) plus a timeline for incremental queries"
+    C: "Unity Catalog governance"
+    D: "The widest set of query engines"
+  answer: [B]
+  explanation: >-
+    Hudi maps each record key to a file group via an index (bloom / Record Level Index), so an upsert
+    touches only the needed files instead of scanning/joining the whole table, and its timeline powers
+    incremental "what changed since T" queries. Hidden partitioning is Iceberg; Unity is Databricks/Delta.
+  source: "https://hudi.apache.org/docs/indexes/"
+  objectives: [databricks-de-pro:6]
+
+- id: LKH-07-q2
+  type: single
+  prompt: >-
+    You are building a vendor-neutral lake queried by Trino, Athena, Spark and DuckDB, and you expect
+    to change the partition layout later without rewriting history. Which format fits best?
+  options:
+    A: "Delta, for Unity Catalog"
+    B: "Iceberg, for broad engine neutrality plus hidden partitioning and partition evolution"
+    C: "Hudi, for record-level indexing"
+    D: "Any; they are identical"
+  answer: [B]
+  explanation: >-
+    Iceberg's hidden partitioning + partition evolution let you change layout as metadata (no data
+    rewrite), and it is read by the widest set of engines. Delta leans Databricks; Hudi's upsert/index
+    machinery is overhead for an engine-neutral, mostly-analytic lake.
+  source: "https://iceberg.apache.org/docs/1.10.0/partitioning/"
+  objectives: [databricks-de-pro:6]
+
+- id: LKH-07-q3
+  type: single
+  prompt: >-
+    Your platform is Databricks-centric with Unity Catalog governance and you want incrementally
+    maintained data skipping via CLUSTER BY. Which format is the native best fit?
+  options:
+    A: "Hudi"
+    B: "Iceberg"
+    C: "Delta (liquid clustering, Unity Catalog, Lakeflow)"
+    D: "Paimon"
+  answer: [C]
+  explanation: >-
+    Delta is the native, best-supported format on Databricks: Unity Catalog governance, liquid
+    clustering (CLUSTER BY), and Lakeflow pipelines. Iceberg and Hudi are supported but Delta is the
+    first-class citizen there.
+  source: "https://docs.delta.io/latest/delta-clustering.html"
+  objectives: [databricks-de-pro:6]
+
+- id: LKH-07-q4
+  type: single
+  prompt: >-
+    You already run Iceberg but a new BI tool only reads Delta. What is usually the right move?
+  options:
+    A: "Migrate all data from Iceberg to Delta"
+    B: "Use cross-format interop (Delta UniForm or Apache XTable) so one copy of the data is readable as both"
+    C: "Maintain two full copies forever"
+    D: "Rewrite every query"
+  answer: [B]
+  explanation: >-
+    UniForm (Delta) and XTable translate metadata between formats so a single data copy can be read as
+    Iceberg, Delta or Hudi. Interop solves the "another engine must read it" need without a costly
+    migration or duplicated storage.
+  source: "https://xtable.apache.org/"
+  objectives: [databricks-de-pro:6]
+
+- id: LKH-07-q5
+  type: single
+  prompt: "For a pure append-only analytics table (no updates), why is Hudi usually NOT the simplest choice?"
+  options:
+    A: "Hudi cannot store append-only data"
+    B: "Its upsert and record-indexing machinery is overhead you won't use; Iceberg or Delta is simpler for append-only analytics"
+    C: "Hudi is proprietary"
+    D: "Hudi has no Spark support"
+  answer: [B]
+  explanation: >-
+    Hudi's strengths (indexes, upserts, incremental pulls) target mutable/CDC workloads. For
+    append-only analytics you pay for machinery you don't need; Iceberg/Delta give a simpler path.
+    Choose the format whose strength matches your write/read pattern.
+  source: "https://hudi.apache.org/docs/concepts/"
+  objectives: [databricks-de-pro:6]
+
+- id: LKH-07-q6
+  type: single
+  prompt: "Both Hudi and Iceberg offer Copy-on-Write and Merge-on-Read table types. What does Merge-on-Read trade off?"
+  options:
+    A: "It makes writes slower but reads faster"
+    B: "It makes writes cheaper (append delta/log files) at the cost of more read-time merge work"
+    C: "It disables time travel"
+    D: "It requires Databricks"
+  answer: [B]
+  explanation: >-
+    Merge-on-Read writes change/delete files and merges them at read time, so writes are cheap and
+    fast but reads do extra work (until compaction). Copy-on-Write rewrites data files on update:
+    pricier writes, cheaper reads. Same trade-off concept across formats.
+  source: "https://hudi.apache.org/docs/concepts/"
+  objectives: [databricks-de-pro:6]
+
+- id: LKH-07-q7
+  type: single
+  prompt: "What is Apache XTable?"
+  options:
+    A: "A new fourth table format competing with Iceberg/Delta/Hudi"
+    B: "A metadata translator that lets one copy of data be read as Iceberg, Delta or Hudi"
+    C: "A query engine like Trino"
+    D: "A catalog like Unity or Polaris"
+  answer: [B]
+  explanation: >-
+    XTable (formerly OneTable) writes the metadata of one format from another, so the same underlying
+    data files can be exposed as Iceberg, Delta or Hudi. It is interop, not a competing format.
+  source: "https://xtable.apache.org/"
+  objectives: [databricks-de-pro:6]

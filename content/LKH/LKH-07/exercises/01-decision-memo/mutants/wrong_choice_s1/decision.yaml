@@ -1,0 +1,10 @@
+# Mutant: picks Iceberg for the Databricks-native scenario (plausible but wrong).
+scenario_1:
+  format: iceberg
+  factors: [databricks_native, unity_catalog]
+scenario_2:
+  format: iceberg
+  factors: [engine_neutral, partition_evolution]
+scenario_3:
+  format: hudi
+  factors: [record_level_index, incremental_pulls]

@@ -1,0 +1,10 @@
+id: ZZZ-01/01-dedup-orders
+title: Deduplicate and clean order items
+entry: solution.py
+lab: none
+timeout_s: 120
+hints:
+  - "A duplicate is a row whose full payload already appeared. Track what you've seen."
+  - "Use a set of tuples (the sorted items of each dict) to detect exact duplicates."
+  - "Drop a row when its currency is not one of the known-good codes before dedup, then keep the first occurrence of each remaining unique row."
+cert_objectives: []

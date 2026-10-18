@@ -1,0 +1,24 @@
+- id: ZZZ-01-q1
+  type: single
+  prompt: "What makes a dedup operation idempotent?"
+  options:
+    A: "Running it twice gives the same result as running it once"
+    B: "It uses a random seed"
+    C: "It sorts the output"
+    D: "It requires a database"
+  answer: [A]
+  explanation: "Idempotence: f(f(x)) == f(x). Re-running dedup changes nothing."
+  source: "https://en.wikipedia.org/wiki/Idempotence"
+  objectives: []
+- id: ZZZ-01-q2
+  type: multi
+  prompt: "Which rows should clean_orders drop? (select all)"
+  options:
+    A: "Exact duplicate rows (keep first)"
+    B: "Rows with currency 'XXX'"
+    C: "Rows with currency 'USD'"
+    D: "Rows with lowercase 'usd'"
+  answer: [A, B, D]
+  explanation: "Invalid currency codes and exact duplicates are dropped; USD is valid."
+  source: "ZZZ-01/README.md"
+  objectives: []

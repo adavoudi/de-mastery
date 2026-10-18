@@ -1,0 +1,10 @@
+id: SPK-04/01-sql-on-files
+title: Build a revenue mart with SQL on files and a temp view
+entry: solution.py
+lab: none
+timeout_s: 240
+hints:
+  - "Read the parquet file into a DataFrame, dedup the duplicate order-item rows on the full business key, then createOrReplaceTempView('items')."
+  - "Query the view with spark.sql(...): GROUP BY company_id, SUM(line_amount) AS revenue, SUM(qty) AS units."
+  - "You can also read the file directly in SQL: SELECT ... FROM parquet.`<path>`. Either way, dedup BEFORE aggregating or the duplicate line inflates revenue. Return company_id, revenue, units."
+cert_objectives: [spark-assoc:2.2, spark-assoc:2.4]

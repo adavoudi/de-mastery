@@ -1,0 +1,5 @@
+Columnar storage lets us read only the product_code and line_amount column chunks, so the
+bytes read are far below the full CSV. The row-oriented CSV scan must read every byte. No
+shuffle happens in this single-stage local aggregation, but a distributed group-by would
+pay one. Amdahl's serial fraction here is the CSV parse plus the final combine, which caps
+how much the pool can speed up. Reading fewer bytes beats adding workers.

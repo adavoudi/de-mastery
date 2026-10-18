@@ -1,0 +1,7 @@
+title: Scan rows
+entry: engine.py
+timeout_s: 60
+hints:
+  - "Return the rows unchanged as a list."
+  - "A table scan here is the identity over the input list of dicts."
+  - "return list(rows)"

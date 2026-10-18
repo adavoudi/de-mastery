@@ -1,0 +1,1 @@
+The quarantine routes nothing (WHERE 1=0), so every failing order is silently dropped: count(good)+count(quarantine) < count(input) and the quarantine set is empty, breaking the completeness invariant.

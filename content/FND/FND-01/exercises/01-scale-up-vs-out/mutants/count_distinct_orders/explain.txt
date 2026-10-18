@@ -1,0 +1,3 @@
+Columnar Parquet reads fewer bytes than the row-oriented CSV because projection prunes
+columns; no shuffle in this local stage though a distributed group-by would need one.
+Amdahl's serial parse-and-combine fraction caps the pool. Bytes read beat worker count.

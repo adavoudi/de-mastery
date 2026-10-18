@@ -1,0 +1,7 @@
+title: "A segmented log with an offset index"
+entry: broker.py
+timeout_s: 90
+hints:
+  - "Give each (topic, partition) its own directory and store records in '<baseOffset>.log' files (20-digit zero-padded). Keep a parallel '<baseOffset>.index' of 8-byte entries: (relative_offset int32, byte_position int32)."
+  - "Write a sparse index: add an entry for the first batch (offset 0 -> position 0) and then roughly every few KB. The byte position must be where that batch STARTS in the .log file."
+  - "Roll to a new segment file (named by the next base offset) once the active one passes a size threshold. On startup, scan existing segments to recompute the log-end offset."

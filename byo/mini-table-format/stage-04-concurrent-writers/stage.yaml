@@ -1,0 +1,7 @@
+title: Concurrent writers — conflict detection + retry
+entry: tableformat.py
+timeout_s: 60
+hints:
+  - "Wrap the commit in a bounded for-loop. Each iteration RE-READS the latest version from the store; never cache the base across retries."
+  - "On put_if_absent failure, do NOT reuse the old base manifest. Re-read latest metadata, append your file entry to THAT manifest, bump to its version+1, and retry."
+  - "The lost-update bug is retrying with the stale base: you'd overwrite the winner's rows. Re-reading the latest snapshot each attempt makes concurrent appends serializable."

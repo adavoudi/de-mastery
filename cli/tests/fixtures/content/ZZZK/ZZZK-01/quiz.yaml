@@ -1,0 +1,8 @@
+- id: ZZZK-01-q1
+  type: single
+  prompt: "Why call producer.flush() before reading back?"
+  options: {A: "it commits offsets", B: "it blocks until buffered records are sent", C: "it creates the topic", D: "it closes the consumer"}
+  answer: [B]
+  explanation: "flush() waits for outstanding produce requests to complete."
+  source: "https://kafka.apache.org/documentation/"
+  objectives: [ccdak:2]

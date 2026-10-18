@@ -1,0 +1,7 @@
+title: "Replication & the high watermark"
+entry: broker.py
+timeout_s: 120
+hints:
+  - "Track a high watermark (HW) per partition: the offset up to which records are committed and visible. On a single node, advance HW to the log-end offset once each record is durably written (flush + fsync)."
+  - "Serve Fetch and ListOffsets(latest) using the HW, not the raw log-end offset, and never return records at or beyond the HW. A consumer's get_watermark_offsets high value is your HW."
+  - "On startup, restore the HW from what is durably on disk (equal to the recomputed log-end offset), so offsets and the HW survive a restart from the same data dir."

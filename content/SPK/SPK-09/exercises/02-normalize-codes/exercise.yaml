@@ -1,0 +1,10 @@
+id: SPK-09/02-normalize-codes
+title: Vectorize a currency-code cleaner
+entry: solution.py
+lab: none
+timeout_s: 240
+hints:
+  - "The starter normalizes currency with a per-row Python UDF (BatchEvalPython). Everything it does — upper-case, trim, map empty to NULL, flag non-ISO codes — has a native equivalent in pyspark.sql.functions."
+  - "Use F.upper(F.trim(col)) to canonicalize; F.when(code == '' , None) (or nullif) to turn blanks into NULL; and F.col('code').isin(valid_set) to decide is_valid."
+  - "Return currency_clean (canonical upper/trim, NULL for blank) and is_valid (boolean: canonical code is one of USD/EUR/GBP/JPY). A pandas_udf over a Series is an acceptable alternative; a plain Python udf is not."
+cert_objectives: [spark-assoc:3.8]

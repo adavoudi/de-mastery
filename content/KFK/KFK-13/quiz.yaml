@@ -1,0 +1,123 @@
+- id: KFK-13-q1
+  type: single
+  prompt: "What does RPO (Recovery Point Objective) measure?"
+  options:
+    A: "How long the service may be down after a disaster."
+    B: "The maximum amount of data (expressed as a time window) you can afford to lose."
+    C: "The number of regions in the deployment."
+    D: "The replication factor of each topic."
+  answer: [B]
+  explanation: >-
+    RPO is the maximum tolerable data loss, measured in time: an RPO of 5 minutes means you may lose
+    up to the last 5 minutes of events. RTO, by contrast, is the tolerable downtime.
+  source: "https://kafka.apache.org/documentation/#georeplication"
+  objectives: [ccaak:3]
+
+- id: KFK-13-q2
+  type: single
+  prompt: "Why can asynchronous replication (MirrorMaker 2 / Cluster Linking) never guarantee RPO = 0?"
+  options:
+    A: "Because it uses TLS."
+    B: "Because the target always lags the source by some replication delay, so the un-replicated tail is lost on a disaster."
+    C: "Because topics are renamed."
+    D: "Because consumers commit offsets."
+  answer: [B]
+  explanation: >-
+    Async replication copies data after it is written to the source, so there is always some lag.
+    Whatever has not yet replicated when the source dies is lost — that lag is the RPO. RPO ≈ 0
+    needs a synchronous (stretched) design.
+  source: "https://kafka.apache.org/documentation/#georeplication"
+  objectives: [ccaak:3]
+
+- id: KFK-13-q3
+  type: single
+  prompt: "In an active/passive MirrorMaker 2 setup, what dominates the RTO (recovery time)?"
+  options:
+    A: "The replication factor."
+    B: "How automated the failover cutover is (repointing clients, translating offsets, resuming)."
+    C: "The number of partitions."
+    D: "The compression codec."
+  answer: [B]
+  explanation: >-
+    The passive region is kept warm, so recovery time is mostly the cutover: redirect producers and
+    consumers to the target, translate consumer offsets, and resume. More automation ⇒ lower RTO.
+  source: "https://kafka.apache.org/documentation/#georeplication-mirrormaker"
+  objectives: [ccaak:3]
+
+- id: KFK-13-q4
+  type: single
+  prompt: "Under MirrorMaker 2's default replication policy, how does a mirrored topic appear in the target cluster?"
+  options:
+    A: "With the same name, overwriting the local topic."
+    B: "Prefixed with the source cluster alias (e.g. us-east.orders) to avoid replication loops."
+    C: "As a compacted copy only."
+    D: "It is not visible until failover."
+  answer: [B]
+  explanation: >-
+    The DefaultReplicationPolicy prefixes mirrored topics with the source alias (us-east.orders) so
+    that, especially in active/active, data does not loop back and forth between clusters.
+  source: "https://kafka.apache.org/documentation/#georeplication-mirrormaker"
+  objectives: [ccaak:3]
+
+- id: KFK-13-q5
+  type: single
+  prompt: "Which topology gives the LOWEST RPO (closest to zero) and at what cost?"
+  options:
+    A: "Active/passive with MirrorMaker 2 — low cost, RPO near zero."
+    B: "A stretched cluster across regions with acks=all — RPO near zero, at the cost of cross-region write latency and needing >=3 failure domains for quorum."
+    C: "A single-region cluster — RPO zero, no cost."
+    D: "Active/active — always RPO zero."
+  answer: [B]
+  explanation: >-
+    A stretched cluster replicates synchronously across regions (acks=all), so a committed write is
+    already in both — RPO ≈ 0. The price is higher write latency and the need for an odd number
+    (>=3) of failure domains to keep quorum.
+  source: "https://kafka.apache.org/documentation/#basic_ops_racks"
+  objectives: [ccaak:3]
+
+- id: KFK-13-q6
+  type: single
+  prompt: "Why must a DR plan include consumer offset translation?"
+  options:
+    A: "To rename topics."
+    B: "So consumers that fail over resume at the correct position instead of reprocessing everything or skipping data."
+    C: "To increase replication factor."
+    D: "Offsets are irrelevant across regions."
+  answer: [B]
+  explanation: >-
+    Offsets differ between clusters. MM2's offset-sync/checkpoint topics (or Cluster Linking's
+    preserved offsets) let a failed-over consumer resume where it left off; without translation it
+    would re-read or skip records.
+  source: "https://kafka.apache.org/documentation/#georeplication-mirrormaker"
+  objectives: [ccaak:3]
+
+- id: KFK-13-q7
+  type: single
+  prompt: "A team proposes a stretched cluster spanning exactly 2 regions for DR. What is the flaw?"
+  options:
+    A: "Stretched clusters are not allowed."
+    B: "Quorum needs an odd number of failure domains (>=3); with only 2 regions, losing one can lose the controller quorum."
+    C: "You cannot set acks=all across regions."
+    D: "Two regions double the RPO."
+  answer: [B]
+  explanation: >-
+    KRaft (and replication) quorum needs a majority. With two regions, losing one leaves half the
+    nodes — no majority — so the cluster can't elect a controller. Use >=3 failure domains.
+  source: "https://kafka.apache.org/documentation/#basic_ops_racks"
+  objectives: [ccaak:3]
+
+- id: KFK-13-q8
+  type: single
+  prompt: "What is the main OPERATIONAL difference between MirrorMaker 2 and Confluent Cluster Linking?"
+  options:
+    A: "Cluster Linking is synchronous; MM2 is synchronous too."
+    B: "MM2 runs on Kafka Connect and re-produces records (new offsets, needs offset sync); Cluster Linking replicates byte-for-byte preserving offsets without a Connect cluster."
+    C: "They are identical."
+    D: "MM2 only works within one region."
+  answer: [B]
+  explanation: >-
+    MM2 is a Connect-based consume-then-produce mirror, so target offsets differ and need
+    translation. Cluster Linking preserves offsets byte-for-byte and needs no separate Connect
+    cluster. Both are asynchronous.
+  source: "https://kafka.apache.org/documentation/#georeplication"
+  objectives: [ccaak:3]

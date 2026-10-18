@@ -1,0 +1,125 @@
+- id: LKH-04-q1
+  type: single
+  prompt: "Why can't Iceberg update a row by editing the Parquet file in place?"
+  options:
+    A: "Parquet supports in-place edits; Iceberg just chooses not to."
+    B: "Data files are immutable, so a change must either rewrite the file (CoW) or record a delete file (MoR)."
+    C: "Because the catalog locks the file."
+    D: "Because Parquet has no schema."
+  answer: [B]
+  explanation: >-
+    Iceberg data files are immutable. Row-level change is implemented either by rewriting affected
+    files (copy-on-write) or by writing a separate delete file that logically removes rows merged in
+    at read time (merge-on-read).
+  source: "https://iceberg.apache.org/spec/#row-level-deletes"
+  objectives: []
+
+- id: LKH-04-q2
+  type: single
+  prompt: "What is the core trade-off between copy-on-write and merge-on-read?"
+  options:
+    A: "CoW is cheaper to write; MoR is cheaper to write."
+    B: "CoW makes writes expensive (rewrite files) but reads fast; MoR makes writes cheap (delete files) but reads pay to merge."
+    C: "They are identical in cost."
+    D: "MoR is always better."
+  answer: [B]
+  explanation: >-
+    CoW rewrites whole files on change (write amplification) so reads see only clean data files.
+    MoR writes a small delete file instead, so writes are cheap but every read merges deletes
+    against data until compaction folds them in.
+  source: "https://iceberg.apache.org/docs/latest/spark-writes/"
+  objectives: []
+
+- id: LKH-04-q3
+  type: single
+  prompt: >-
+    After DELETE FROM t WHERE id=2 on a merge-on-read v2 table, what do you expect in
+    SELECT content, count(*) FROM t.files GROUP BY content?
+  options:
+    A: "Only content=0 rows."
+    B: "content=0 (data) AND content=1 (position deletes): a delete file was added, no data rewrite."
+    C: "Only content=2 rows."
+    D: "The files table is empty."
+  answer: [B]
+  explanation: >-
+    MoR records the delete as a position-delete file (content=1) and leaves the data files
+    (content=0) untouched. CoW, by contrast, would rewrite the data file and show only content=0.
+  source: "https://iceberg.apache.org/spec/#row-level-deletes"
+  objectives: []
+
+- id: LKH-04-q4
+  type: single
+  prompt: "After the same DELETE on a copy-on-write table, how do you detect that the data file was rewritten?"
+  options:
+    A: "The files table shows a content=1 delete file."
+    B: "No delete files appear (only content=0), and the data file set changes (old file replaced by a new one without the deleted row)."
+    C: "The snapshot count stays the same."
+    D: "You can't tell from metadata."
+  answer: [B]
+  explanation: >-
+    CoW produces no delete files; it rewrites the affected data file, so the data-file set changes
+    (a new file replaces the old) while content stays 0 throughout. That is the measurable property
+    the tests assert — not timing.
+  source: "https://iceberg.apache.org/docs/latest/spark-writes/"
+  objectives: []
+
+- id: LKH-04-q5
+  type: single
+  prompt: "In SCD2, what happens to the previously-current row when a tracked attribute changes?"
+  options:
+    A: "It is deleted."
+    B: "Its valid_to is set to the batch date and is_current set to false; a NEW row with the new value is inserted as current."
+    C: "Its attribute is overwritten in place."
+    D: "Nothing; only new keys are inserted."
+  answer: [B]
+  explanation: >-
+    SCD2 versions history: the old row is closed (valid_to set, is_current=false) and a new open row
+    (valid_to NULL, is_current=true) is inserted. Overwriting the row in place destroys history —
+    the whole purpose of Type 2.
+  source: "https://iceberg.apache.org/docs/latest/spark-writes/"
+  objectives: []
+
+- id: LKH-04-q6
+  type: multi
+  prompt: "Which of these are classic SCD2 bugs the tests must catch? (select all)"
+  options:
+    A: "Overwriting the attribute in place instead of versioning (history lost)."
+    B: "Leaving valid_to open (NULL) on the superseded row (two current rows for one key)."
+    C: "Off-by-one effective dates so a key's validity ranges overlap or leave a gap."
+    D: "Inserting a new version for a key whose attribute genuinely changed."
+  answer: [A, B, C]
+  explanation: >-
+    A, B and C are real SCD2 defects. D is the correct behavior, not a bug: a changed attribute
+    should produce a new current version.
+  source: "https://iceberg.apache.org/docs/latest/spark-writes/"
+  objectives: []
+
+- id: LKH-04-q7
+  type: single
+  prompt: "Why check SCD2 output against a DuckDB oracle instead of a hand-written expected table?"
+  options:
+    A: "DuckDB is faster."
+    B: "Two independent engines computing the same close/insert logic agreeing makes a wrong expected result very unlikely (gate G6)."
+    C: "Because Spark can't compute SCD2."
+    D: "To avoid writing any assertions."
+  answer: [B]
+  explanation: >-
+    The oracle recomputes the SCD2 result independently in DuckDB over the same batches. Agreement
+    between two engines guards against a wrong hand-authored expectation — the G6 validity gate.
+  source: "https://iceberg.apache.org/docs/latest/spark-writes/"
+  objectives: []
+
+- id: LKH-04-q8
+  type: single
+  prompt: "When is merge-on-read the wrong choice?"
+  options:
+    A: "For high-frequency CDC/upserts into large files."
+    B: "For a read-heavy, rarely-written dimension, where the read-time merge tax and delete-file build-up aren't worth it."
+    C: "When writes are the bottleneck."
+    D: "When you have many tiny updates."
+  answer: [B]
+  explanation: >-
+    MoR optimizes write cost at the expense of read cost. A dimension read constantly but written
+    rarely is better served by copy-on-write, which keeps every read against clean data files.
+  source: "https://iceberg.apache.org/docs/latest/configuration/"
+  objectives: []

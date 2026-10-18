@@ -1,0 +1,7 @@
+title: Parquet files + a JSON manifest
+entry: tableformat.py
+timeout_s: 60
+hints:
+  - "Metadata is just JSON you write with store.put_if_absent('<name>/metadata/v1.json', ...). Data is a Parquet file you write with store.put('<name>/data/<uuid>.parquet', pq-bytes)."
+  - "append: write one new Parquet file (pyarrow.parquet.write_table into a BytesIO), then write a NEW metadata object whose manifest = old manifest + {path, num_rows}. The current version is the highest v<N>.json present."
+  - "scan: read the current metadata, pq.read_table(store.path(key)) for every manifest entry, and pyarrow.concat_tables(...) them. For an empty table return an empty table."

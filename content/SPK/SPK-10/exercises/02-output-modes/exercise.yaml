@@ -1,0 +1,10 @@
+id: SPK-10/02-output-modes
+title: Pick the right output mode for a streaming aggregation
+entry: solution.py
+lab: none
+timeout_s: 240
+hints:
+  - "This is an aggregation (groupBy(company_id).count()). append is illegal for a running, unwatermarked aggregation because the counts keep changing — Spark will reject it."
+  - "Write to the in-memory sink: .writeStream.format('memory').queryName(query_name). For an aggregation that reports the whole current result, use outputMode('complete')."
+  - "Use .trigger(availableNow=True), then processAllAvailable() and stop(). Then the caller reads SELECT * FROM <query_name>. Return the (stopped) query. The final per-company counts must match a DuckDB oracle."
+cert_objectives: [spark-assoc:5.2, spark-assoc:5.3]

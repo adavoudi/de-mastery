@@ -1,0 +1,523 @@
+# =============================================================================
+# labs/versions.lock  —  pinned versions for the lab stack.
+#
+# Phase 1 pins ONLY the `core` profile. Every image is pinned to an exact tag
+# (no `latest`) and the digest observed when this lock was written is recorded
+# so a changed upstream tag is detectable. Update this file deliberately, not
+# incidentally.
+#
+# Verified on: 2026-10-03, linux/amd64, Docker 28.3.3, Compose v2.39.1.
+# smoke_core.sh passed end to end (Spark 4.0.0 + Trino 476 on one Iceberg table).
+# =============================================================================
+
+profiles:
+  core:
+    images:
+      object_store:
+        # pgsty/silo: a maintained drop-in fork of MinIO. See `notes.object_store`.
+        image: pgsty/silo
+        tag: RELEASE.2026-09-03T13-18-01Z
+        digest: sha256:b616a0cf8cb281e7e6bb3c9b1fb53875b4016a2878223925541c18f82d6c5ca3
+        role: S3-compatible object storage (S3 API :9000, console :9001)
+
+      object_store_client:
+        # Used only by the one-shot bucket-creation job. Client binary is `mc`
+        # (NOT `mcli`, which exists only in the silo server image).
+        image: pgsty/mc
+        tag: RELEASE.2026-09-16T00-00-00Z
+        digest: sha256:cfc83108c3abb371f8fb84d99c1fdc88f8c237e022409b0081fb7c0a3be634dd
+        role: creates the `warehouse` bucket, then exits
+
+      iceberg_rest_catalog:
+        # Apache-maintained reference REST catalog (preferred over the
+        # unmaintained community tabulario/iceberg-rest).
+        image: apache/iceberg-rest-fixture
+        tag: "1.10.0"
+        digest: sha256:df2e9dd421928b7aab01557678ce8e2bb73064d0e253baebd72adad3439ffc2e
+        role: Iceberg REST catalog, data + metadata in silo/S3 (:8181)
+
+      spark_base:
+        # Base image. The `core` Spark service is BUILT from this with the two
+        # Iceberg jars baked in (images/spark/Dockerfile) -> de-core/spark:...
+        image: apache/spark
+        tag: 4.0.0-python3
+        digest: sha256:a89782d90529a623fc4471cdddb0f9c32d6eed10a81b256a80207b23c3b1df00
+        role: Spark 4.0.0 (Scala 2.13, JDK 17); runs Spark Connect server (:15002), UI (:4040)
+        built_image: de-core/spark:4.0.0-iceberg1.10.0
+
+      jupyter:
+        image: quay.io/jupyter/pyspark-notebook
+        tag: spark-4.0.0
+        digest: sha256:938fdd57901e764b4e6e0adbe7438725e703a782608dc79bd2a7c722a4f8a0bf
+        role: JupyterLab + PySpark 4.0.0 Connect client (:8888, host-mapped 8889)
+
+      trino:
+        image: trinodb/trino
+        tag: "476"
+        digest: sha256:00125e40d063bc4816d165482f6044872b18b56026fb959d3b28ce1f96ffbbee
+        role: SQL engine with Iceberg catalog over the REST catalog (:8080)
+
+# --- Component / framework versions -----------------------------------------
+components:
+  spark: 4.0.0
+  spark_scala: "2.13"
+  spark_jdk_in_container: "17"      # host JDK (24) is NOT used; Spark runs in-container
+  pyspark: 4.0.0                    # Jupyter client; matches the Spark server
+  iceberg: 1.10.0
+  trino: "476"
+  object_store_api: s3              # silo speaks the S3 API; MINIO_* env vars preserved
+
+# --- Iceberg runtime jar coordinates (baked into the Spark image) -----------
+# Two jars, always together: the runtime (engine integration) and the aws-bundle
+# (S3FileIO + bundled AWS SDK, required to talk to silo/S3). Fetched from Maven
+# Central at image build time; see images/spark/Dockerfile.
+iceberg_jars:
+  - group: org.apache.iceberg
+    artifact: iceberg-spark-runtime-4.0_2.13
+    version: 1.10.0
+    coordinate: "org.apache.iceberg:iceberg-spark-runtime-4.0_2.13:1.10.0"
+  - group: org.apache.iceberg
+    artifact: iceberg-aws-bundle
+    version: 1.10.0
+    coordinate: "org.apache.iceberg:iceberg-aws-bundle:1.10.0"
+# spark-connect_2.13:4.0.0 is already bundled in apache/spark:4.0.0-python3
+# (/opt/spark/jars), so it is NOT fetched separately.
+
+# --- Notes / rationale ------------------------------------------------------
+notes:
+  object_store: >
+    Upstream MinIO ended community distribution in 2025-2026: the minio/minio
+    and minio/mc Docker Hub repos were deleted, and the quay.io/minio mirror is
+    now gated behind authentication (anonymous pulls return 401). A plain
+    `minio/minio` pin is therefore no longer usable in CI or a fresh laptop.
+    pgsty/silo is an actively maintained community fork that preserves the S3
+    API, the MINIO_* environment variables, x-minio-* headers and the web
+    console, so it is behaviourally MinIO for a learning lab. If upstream MinIO
+    (or another S3 store) becomes freely pullable again, only this image pin and
+    the healthcheck binary name need to change.
+  spark_topology: >
+    Single Spark container in local[*] mode exposing a Spark Connect server,
+    chosen over a standalone master + 2 workers for reliability and memory on a
+    32 GB laptop. The local scheduler still produces real jobs/stages/tasks/
+    shuffles and a Spark UI, and Spark Connect is itself on the SPK-01 syllabus.
+  memory: >
+    Observed peak during smoke_core.sh (light workload): trino ~1.0 GiB,
+    spark ~0.95 GiB, iceberg-rest ~0.15 GiB, jupyter ~0.1 GiB, silo ~0.08 GiB;
+    simultaneous total ~2.3 GiB. Compose memory LIMITS sum to 9.5 GiB
+    (silo 1.5 + rest 1.0 + spark 3.5 + jupyter 1.5 + trino 2.0), keeping the
+    profile bounded under ~10 GB even under real Spark jobs.
+
+# =============================================================================
+# Phase 2 additions (agent: platform) — host-side runtimes for Iceberg/Delta
+# exercises that run WITHOUT Docker (CI-friendly), plus the deterministic JARs.
+#
+# Decision: align the HOST pyspark down from 4.2.0 to 4.0.0 so a single Spark
+# line is shared by (a) the `core` lab image, (b) the pinned Iceberg Spark
+# runtime (iceberg-spark-runtime-4.0_2.13:1.10.0 — Iceberg publishes runtimes
+# per Spark MINOR; the newest is for 4.0, there is NO 4.2 runtime), and (c) a
+# Delta release (delta-spark 4.0.0, built on Spark 4.0.0). Verified: Phase 1
+# FND+SPK content stays green under pyspark 4.0.0 (`de validate --runs 5`).
+# =============================================================================
+phase2_host:
+  pyspark: 4.0.0                 # was 4.2.0 in Phase 1; aligned to the lab + Iceberg/Delta
+  delta_spark: 4.0.0             # delta-spark PyPI (LKH-06); JVM jars below
+  pyiceberg: 0.9.1               # pure-Python Iceberg (no JVM); [sql-sqlite] extra
+  deltalake: 1.6.6               # delta-rs (optional, no JVM) for read/inspect helpers
+  mutmut: 3.8.0                  # secondary automatic-mutation G4 check
+  java: temurin-21               # vendored by labs/setup_jdk.sh into labs/.jdk (gitignored)
+
+# Deterministic Spark runtime JARs for the no-Docker Iceberg/Delta fixtures.
+# Fetched + sha256-verified by labs/fetch_jars.sh into gitignored labs/.jars/.
+# Tests NEVER resolve --packages at runtime; the fixtures put these on the
+# classpath via spark.jars.
+phase2_jars:
+  - artifact: iceberg-spark-runtime-4.0_2.13
+    version: 1.10.0
+    file: iceberg-spark-runtime-4.0_2.13-1.10.0.jar
+    sha256: 0480f1248e0a8b50ae2a730d7ad3e1a727351c362ca63f4a0c35182087a49323
+  - artifact: iceberg-aws-bundle
+    version: 1.10.0
+    file: iceberg-aws-bundle-1.10.0.jar
+    sha256: 172370cfc32a5f1ae5399b210e86fc04a366dc29a112d97ac8ffc74df7525596
+  - artifact: delta-spark_2.13
+    version: 4.0.0
+    file: delta-spark_2.13-4.0.0.jar
+    sha256: 538511702aae0ef6973a6a70af3d4543c9009f8edbed786a00737e2d3cd7f04e
+  - artifact: delta-storage
+    version: 4.0.0
+    file: delta-storage-4.0.0.jar
+    sha256: 9bdb9fb450f1e119eba53feb427f331b0d09072d26485b8273883ad72c9a2e1d
+
+# =============================================================================
+# Phase 3 additions (agent: platform) — Kafka (KFK track) + Java (JVM track) +
+# the `streaming` lab profile. Verified on 2026-10-04, linux, Docker 29.8.2,
+# Compose v2 (`docker compose version`), vendored Temurin JDK 21.
+# =============================================================================
+
+# --- Native Apache Kafka (no Docker) ----------------------------------------
+# The latest stable 4.x on 2026-10-04 (archive.apache.org/dist/kafka lists up to
+# 4.3.1; dlcdn.apache.org/kafka serves 4.3.1 as the current patch of the newest
+# line). Fetched + sha512-verified + unpacked by labs/fetch_kafka.sh into the
+# gitignored labs/.kafka/. The de_testkit kafka_broker / kafka_cluster fixtures
+# start KRaft brokers straight from this tree on the vendored JDK 21.
+phase3_kafka:
+  version: "4.3.1"
+  scala: "2.13"
+  released: "2026-06-23"
+  tarball: kafka_2.13-4.3.1.tgz
+  sha512: c7d7b2318cb51aa0c61d3246a51c349210073c5c9b754947ef965a439f2f939e8600f204e134a75ac31faf3829c9370960ef7c6a9886c8a1dbf0339a21f4c54c
+  source_primary: https://dlcdn.apache.org/kafka/4.3.1/kafka_2.13-4.3.1.tgz
+  source_archive: https://archive.apache.org/dist/kafka/4.3.1/kafka_2.13-4.3.1.tgz
+
+# --- Python Kafka clients (pyproject.toml) ----------------------------------
+phase3_python:
+  confluent_kafka: "2.12.0"       # [avro,schemaregistry] extras (httpx+avro+fastavro)
+  fastavro: "1.12.0"              # also the no-Docker schema-compatibility fallback
+  librdkafka_bundled: "2.12.0"    # bundled in the confluent-kafka manylinux wheel
+
+# --- Java toolchain jars (no Docker; labs/.jars/java) -----------------------
+# Fetched + sha256-verified by labs/fetch_java_deps.sh. kafka-clients /
+# kafka-streams* are the SAME 4.3.1 line as the native broker tarball.
+phase3_java_jars:
+  - file: junit-platform-console-standalone-1.11.4.jar
+    sha256: b016ef6b1c3454d6d7c2c88ce081dabf289699686af6622d6e4e2e1b54b4a2fc
+  - file: assertj-core-3.27.3.jar
+    sha256: 5b8a26205f6d5ea60ad9ce65ce4a40a2afe4c48abeec61bd0740a088c24e89f5
+  - file: kafka-clients-4.3.1.jar
+    sha256: 52501b7b47510c66f898871adaf6d2968ab7246561d44ced43643a8a587f0b36
+  - file: kafka-streams-4.3.1.jar
+    sha256: bd73f3805e116f711e8456ee89a8a5b43ff5dcf5a5bb865afae29deae89e7c4b
+  - file: kafka-streams-test-utils-4.3.1.jar
+    sha256: e84547c830b86dffdc4f5556d9d58fd1de5020a820b0de34d837b27aa4452d8c
+  - file: avro-1.12.0.jar
+    sha256: 1f5fbfff9b7427d6832cc3031a3c81413d3e21d9e2551847d9231c28493f9492
+  - file: jackson-databind-2.18.2.jar
+    sha256: 4b364e6850dc89172fcf1d4dd26b8ff5488eda44ff4657e22dd265203dd5ab3c
+  - file: jackson-core-2.18.2.jar
+    sha256: d8054ae7c0d1c2d2f55d28e46026ebe5892881f3fab5f439233184381c3b4a1f
+  - file: jackson-annotations-2.18.2.jar
+    sha256: 581bd61000ef7648943f781ca05689e56d03f6052748365a8e2b3a9b5d3fa32f
+  - file: slf4j-api-2.0.16.jar
+    sha256: a12578dde1ba00bd9b816d388a0b879928d00bab3c83c240f7013bf4196c579a
+  - file: slf4j-simple-2.0.16.jar
+    sha256: effc32018658bea09d1e08c7d1060ccad46c086960f583d07dd7ffe9c1172a47
+
+# --- Gradle (JVM-03 only; labs/.gradle-dist) --------------------------------
+phase3_gradle:
+  version: "8.14.3"
+  file: gradle-8.14.3-bin.zip
+  sha256: bd71102213493060956ec229d946beee57158dbd89d0e62b91bca0fa2c5f3531
+  source: https://services.gradle.org/distributions/gradle-8.14.3-bin.zip
+
+# --- Schema Registry decision -----------------------------------------------
+schema_registry:
+  decision: >
+    KFK-06 grades WITHOUT any Schema Registry process: the no-Docker path is a
+    fastavro schema-resolution compatibility checker (de_testkit.check_compatibility
+    / the check_avro_compatibility fixture), which decides BACKWARD/FORWARD/FULL
+    by actually round-tripping records through writer->reader schemas — the same
+    mechanism a consumer hits at runtime. A LIVE registry is an optional extra
+    layer: either the native Confluent Community Schema Registry (vendored by
+    labs/fetch_schema_registry.sh -> labs/.schema-registry, run on the vendored
+    JDK against the native broker; `schema_registry` fixture, SKIPs when absent)
+    or the `streaming` lab's confluentinc/cp-schema-registry (lab_schema_registry
+    fixture). Karapace/Apicurio were considered; the fastavro fallback was chosen
+    as the guaranteed-available graded path so KFK-06 never depends on a running
+    service, and cp-schema-registry (Confluent Community License, fine for local
+    learning) covers the live-registry demonstration in the lab.
+
+# --- `streaming` profile images (pinned tags + digests) ---------------------
+profiles_streaming:
+  images:
+    kafka:
+      image: apache/kafka
+      tag: "4.3.1"
+      digest: sha256:77e3df9054047a88b520d0cc46e16696d3b22022e1d580aeccd2632df6532837
+      role: Kafka 4.3.1 KRaft broker+controller (host 19092)
+    schema_registry:
+      image: confluentinc/cp-schema-registry
+      tag: "8.0.8"
+      digest: sha256:6692ef31137b77716b7a6190efa1803891baa1bb313bb098f5bc874cca80d9ed
+      role: Confluent Schema Registry (host 8081); CP 8.x aligns with Kafka 4.x
+    connect:
+      image: debezium/connect
+      tag: "3.0.0.Final"
+      digest: sha256:039027b9fbe8f18545231806a3d05e292379d38953f0cafce35b90010e97fa8b
+      role: Kafka Connect + Debezium Postgres connector + Avro converters (host 8083)
+    cdc_postgres:
+      image: postgres
+      tag: "16.6"
+      digest: sha256:557fea37a744d5f4c8faab304b0a90858b53ab119735a88c131fd19dab802f36
+      role: dedicated CDC source, wal_level=logical (host 5433 — NEVER 5432)
+    kafka_ui:
+      image: kafbat/kafka-ui
+      tag: "v1.1.0"
+      digest: sha256:050543568675d5f1c34f6bb62c47720f700cf7baa1a4cf7bb7c38babed2fed7f
+      role: optional web UI (host 8085); maintained fork of provectuslabs/kafka-ui
+
+phase3_notes:
+  topology: >
+    Native (fixture) clusters use ONE dedicated controller-only KRaft node + N
+    pure-broker nodes so a test can kill/restart ANY broker (KFK-02/11/14)
+    without disturbing the metadata quorum. The single-node kafka_broker uses the
+    cheaper combined broker+controller role. Heap -Xmx512m per JVM; all listeners
+    bind 127.0.0.1 on OS-assigned free ports (parallel-agent safe; never 5432/8888).
+  ports: >
+    streaming host ports are deliberately non-standard (19092/8081/8083/5433/8085)
+    and bind 127.0.0.1 only, so they never collide with the user's local_pgdb
+    (5432) or pgadmin4_container (8888).
+  verification: >
+    labs/smoke_streaming.sh passed end to end on 2026-10-04 (Docker 29.8.2):
+    topic produce/consume, Avro schema registered (orders-value v1), Debezium
+    Postgres connector reached RUNNING, and a change event appeared on
+    cdc.public.customers. Teardown removed ONLY the streaming containers; the
+    user's local_pgdb/pgadmin4_container were untouched.
+
+# =============================================================================
+# Phase 4 additions (agent: platform) — Apache Flink 2.x (FLK track) + the
+# `flink` lab profile. Verified on 2026-10-04, linux, Docker 29.8.2, vendored
+# Temurin JDK 21. No-Docker graded path uses the native dist below; the `flink`
+# Docker profile is an OPTIONAL extra layer only.
+# =============================================================================
+
+# --- Native Apache Flink (no Docker) ----------------------------------------
+# Flink 2.2.1 is the NEWEST stable 2.x line that has a RELEASED
+# flink-connector-kafka (5.0.0-2.2). Flink 2.3.0 exists but has no Kafka
+# connector yet (connector-kafka tops out at 5.0.0-2.2). Flink 2.x ships only
+# the Scala 2.12 binary (Scala API is deprecated/removed from the runtime).
+# Fetched + sha512-verified + unpacked by labs/fetch_flink.sh into gitignored
+# labs/.flink/. The de_testkit flink_java/flink_sql/flink_cluster fixtures run
+# embedded jobs + a native local cluster straight from this tree on JDK 21.
+phase4_flink:
+  version: "2.2.1"
+  scala: "2.12"
+  released: "2026-05-03"
+  tarball: flink-2.2.1-bin-scala_2.12.tgz
+  sha512: 9beb619520a9b9a94d71e165f51c2c2bf67d180fee2a6f88a85b05f23b513efd12897669b6b8b000a7f16c8c8835c3bdb1e7b83133ef63056dc98a2a67105f60
+  source_primary: https://dlcdn.apache.org/flink/flink-2.2.1/flink-2.2.1-bin-scala_2.12.tgz
+  source_archive: https://archive.apache.org/dist/flink/flink-2.2.1/flink-2.2.1-bin-scala_2.12.tgz
+  jdk: temurin-21                 # vendored by labs/setup_jdk.sh into labs/.jdk
+
+# --- Extra Flink jars (not in the dist; labs/.jars/flink, sha256) -----------
+# The dist lib/ already ships flink-json, flink-csv, flink-connector-files,
+# flink-table-* (api-java-uber, planner-loader, runtime), flink-cep. The SQL
+# 'debezium-json' format is part of flink-json (built in), so the FLK-10
+# no-Docker CDC path (replay a Debezium-JSON changelog) needs no extra jar.
+phase4_flink_jars:
+  - file: flink-sql-connector-kafka-5.0.0-2.2.jar     # DataStream + SQL kafka/upsert-kafka
+    coordinate: org.apache.flink:flink-sql-connector-kafka:5.0.0-2.2
+    sha256: 5605c691d11a501382c383fecba37a7a552467da5ab7ba904ef5d6f3d62c5616
+  - file: iceberg-flink-runtime-2.2-1.12.0.jar        # Iceberg sink/source for FLK-10
+    coordinate: org.apache.iceberg:iceberg-flink-runtime-2.2:1.12.0
+    sha256: c79bbee8792b1115c321e4be99fab3fb36db0bf8fa2bba24b481e6da14416de3
+  - file: hadoop-client-api-3.4.2.jar                 # org.apache.hadoop.conf.* for the
+    coordinate: org.apache.hadoop:hadoop-client-api:3.4.2    # Iceberg hadoop catalog
+    sha256: 607c0299f4df33013bd0a0f37c8cf255c635bbaddd247b8fec68c210cc17d19f
+  - file: hadoop-client-runtime-3.4.2.jar             # (+ LocalFileSystem); the Flink
+    coordinate: org.apache.hadoop:hadoop-client-runtime:3.4.2  # dist does NOT ship Hadoop
+    sha256: 18d071c7f72f8a946677b398a57af9c7afa2dd41a81023c310f99373fec200b3
+
+# --- Iceberg-on-Flink version note (IMPORTANT for FLK-10 authors) -----------
+iceberg_flink_decision:
+  decision: >
+    Iceberg 1.10.0 (the Spark-side pin, phase2_jars) has NO Flink 2.2 runtime —
+    iceberg-flink-runtime-2.2 is published ONLY as 1.12.0 (1.10.0 exists only for
+    Flink 2.0). We pin iceberg-flink-runtime-2.2:1.12.0 for the Flink Iceberg
+    sink/source. The on-disk Iceberg table FORMAT is forward/backward compatible
+    across these engine-runtime patch lines (both write Iceberg v2 tables), so a
+    table written by Flink (Iceberg 1.12.0 runtime) is readable by Spark
+    (Iceberg 1.10.0 runtime) and vice-versa. FLK-10's no-Docker graded path uses
+    a LOCAL hadoop catalog (file:// warehouse) via the hadoop-client jars above.
+
+# --- PyFlink (FLK-08 Python side) -------------------------------------------
+pyflink_decision:
+  version: "2.2.1"
+  python: "3.12"                 # apache_flink-2.2.1-cp312 manylinux wheel exists
+  venv: labs/.flink/.pyflink-venv
+  decision: >
+    apache-flink==2.2.1 requires apache-beam<=2.61.0, which hard-caps
+    pyarrow/numpy/protobuf BELOW the main project's pins (pyarrow 18.1.0,
+    pandas 2.2.3). Adding it to pyproject.toml would force a resolver cascade and
+    break the lock. So PyFlink is NOT in pyproject.toml; labs/fetch_flink.sh
+    builds a DEDICATED, gitignored venv (labs/.flink/.pyflink-venv) with
+    `uv venv --python 3.12` + `uv pip install apache-flink==2.2.1`, and the
+    de_testkit `pyflink_runner` fixture shells out to that interpreter with
+    JAVA_HOME=labs/.jdk. Verified: a PyFlink Table API batch job runs on JDK 21
+    and returns correct GROUP BY SUM results. SKIPs cleanly if the venv is absent.
+
+# --- `flink` profile image (pinned tag + digest) ----------------------------
+profiles_flink:
+  images:
+    flink:
+      image: flink
+      tag: "2.2.1-scala_2.12-java17"
+      digest: sha256:140c3909f06cbea741be78fc630e809fae9dadcbfa492a684acf39efbbf68946
+      role: >
+        Flink 2.2.1 session cluster — one image runs jobmanager, taskmanager and
+        the sql-gateway (host 8086 REST, 8087 SQL Gateway; in-container 8081/8083).
+        OPTIONAL extra layer only (lab_flink fixture); every graded FLK exercise
+        also runs with NO Docker on the native dist above.
+
+phase4_notes:
+  ports: >
+    flink host ports are deliberately non-standard (8086 JobManager REST, 8087
+    SQL Gateway) and bind 127.0.0.1 only, so they never collide with the user's
+    local_pgdb (5432) or pgadmin4_container (8888), nor the core (8080/8181/
+    9000/9001/15002/4040/8889) or streaming (19092/8081/8083/5433/8085) profiles.
+  memory: >
+    Native fixture cluster: JobManager -Xmx~1024m, TaskManager ~1280m (small
+    heaps), on OS-assigned free ports. Docker `flink` profile limits:
+    jobmanager 1500m + taskmanager 2000m + sql-gateway 1024m ~= 4.5 GB. On a
+    32 GB host, run ONE lab profile at a time; the native (no-Docker) path is
+    much lighter and is what the graded tests use.
+  verification: >
+    labs/smoke_flink.sh passed end to end on 2026-10-04 (Docker 29.8.2): JM
+    healthy, 1 TaskManager registered (2 slots), the bundled WordCount example
+    jar submitted via `flink run` and FINISHED, and the SQL Gateway REST returned
+    {"productName":"Apache Flink","version":"2.2.1"}. Teardown removed ONLY the
+    flink containers. `uv run pytest cli/tests -q` -> 68 passed (incl. the Flink
+    self-test gates G1-G5, the embedded SQL changelog/RowKind runner, the native
+    local cluster submit+kill-TM-recovery, and the PyFlink runner).
+
+# =============================================================================
+# Phase 5 additions (agent: platform_fetch) — Apache Paimon + Apache Fluss (STH
+# streamhouse track) + the `streamhouse` lab profile scaffolding. Verified on
+# 2026-10-04, linux, vendored Temurin JDK 21 + the Phase 4 Flink 2.2.1 dist.
+# ALL graded paths run with NO Docker: Paimon/Iceberg Flink jobs on the embedded
+# MiniCluster (batch reads), a native Fluss local cluster (ZK + coordinator +
+# tablet server on free ports), the Fluss->Paimon tiering service on a native
+# Flink local cluster, and pure-Python pypaimon / pyiceberg serving reads.
+# =============================================================================
+
+# --- Apache Paimon (STH-02 lake format; labs/.jars/streamhouse, sha256) -----
+# Paimon 2.0.0 pairs with Flink 2.2.1 on JDK 21. Three jars:
+#   paimon-flink-2.2   = the Flink 2.2 connector + catalog (CREATE CATALOG
+#                        'type'='paimon'); carries FlinkFileIOLoader needed to
+#                        read Fluss `$lake` Paimon tables from a Flink job.
+#   paimon-bundle      = the lake format core (LSM, manifests, merge engines);
+#                        bundled standalone for actions / server plugins.
+#   paimon-flink-action= compact / CDC / rewrite batch actions (STH-02/-04).
+# Paimon's local file:// warehouse needs org.apache.hadoop.conf.Configuration +
+# LocalFileSystem -> reuse hadoop-client-api/runtime 3.4.2 from labs/.jars/flink.
+phase5_paimon:
+  version: "2.0.0"
+  jars:
+    - file: paimon-flink-2.2-2.0.0.jar
+      coordinate: org.apache.paimon:paimon-flink-2.2:2.0.0
+      sha256: bf344b7c619dcce3fcae8b5cfd5130dd3a9592ce232057d6ce7363111a987d76
+    - file: paimon-bundle-2.0.0.jar
+      coordinate: org.apache.paimon:paimon-bundle:2.0.0
+      sha256: 7a755b7b11b500147cd113802565d19d0f84947b6444bc8dabad85005c930561
+    - file: paimon-flink-action-2.0.0.jar
+      coordinate: org.apache.paimon:paimon-flink-action:2.0.0
+      sha256: cd435d1136fbf18b627f895d2f5ac04de14a2a2fa1c7ff3a7bcd662933f7381f
+  needs_hadoop: hadoop-client-api/runtime 3.4.2 (labs/.jars/flink; local file:// FS)
+
+# --- Apache Fluss (STH-03 streaming storage; server + Flink connector) ------
+# Fluss 1.0.0 is the latest stable (GA 2026-09-21; first release after TLP
+# graduation). The server tarball bundles ZooKeeper + the paimon/iceberg/hudi
+# lake plugins (plugins/paimon/ ships paimon-bundle-2.0.0 + fluss-lake-paimon +
+# flink-shaded-hadoop-2-uber). `bin/local-cluster.sh start` runs ZK +
+# coordinator + 1 tablet server on one host (tablet server picks a random port).
+# IMPORTANT: fluss-flink-2.2 IS published for 1.0.0. The search.maven.org index
+# is stale (shows only 0.9.x); the authoritative Maven repo metadata.xml
+# (repo1.maven.org/.../fluss-flink-2.2/maven-metadata.xml) lists 1.0.0. The
+# Flink 2.2 connector pairs with the vendored Flink 2.2.1. (Fluss 1.0 also added
+# a Flink 2.3 connector; we stay on 2.2 to match the pinned dist.)
+phase5_fluss:
+  version: "1.0.0"
+  released: "2026-09-21"
+  server_tarball: fluss-1.0.0-bin.tgz
+  server_sha512: 4cc134d1c5e7b9b07754b4d38903b9c6e4075d66aa7cf04eb3b053fa5095266f1d141e147417d292b3e93b642b24ea06630709de85562c3a829b640ccb7d52ca
+  source_primary: https://downloads.apache.org/fluss/fluss-1.0.0/fluss-1.0.0-bin.tgz
+  source_archive: https://archive.apache.org/dist/fluss/fluss-1.0.0/fluss-1.0.0-bin.tgz
+  jars:
+    - file: fluss-flink-2.2-1.0.0.jar          # Flink 2.2 connector + 'fluss' catalog
+      coordinate: org.apache.fluss:fluss-flink-2.2:1.0.0
+      sha256: 8cad6d1342b7e2deaf3db7fe7fbc1911c05823a538517b58da32cc0e8601ed8e
+    - file: fluss-flink-tiering-1.0.0.jar      # Fluss->lake tiering service job
+      coordinate: org.apache.fluss:fluss-flink-tiering:1.0.0
+      sha256: f0b85db9b6cfdad8658406e31ce3a2aae6ffa0cdff81ce22fffc919e4032160e
+  flink_connector_decision: >
+    fluss-flink-2.2:1.0.0 chosen over fluss-flink-2.3 (would require Flink 2.3,
+    which has no released flink-connector-kafka and is not the pinned dist) and
+    over the 0.9.x line (incubating; older server protocol). The Flink 2.2
+    connector + 1.0.0 server protocol are matched.
+
+# --- Fluss -> Paimon lake tiering (STH-03) ----------------------------------
+# Enabled WITHOUT Minio/S3/Docker by pointing Paimon at a LOCAL filesystem
+# warehouse. Server config: datalake.format=paimon, datalake.paimon.metastore=
+# filesystem, datalake.paimon.warehouse=file://<tmp>. The tiering service runs
+# as a detached Flink job (fluss-flink-tiering jar) submitted to a native Flink
+# local cluster; its classpath needs, in Flink lib/: fluss-flink-2.2 +
+# paimon-flink-2.2 + fluss-lake-paimon-1.0.0 (from the Fluss paimon plugin) +
+# flink-shaded-hadoop-2-uber-2.8.3-10.0 (from the Fluss paimon plugin). A Fluss
+# table created WITH ('table.datalake.enabled'='true','table.datalake.freshness'
+# ='5s') is tiered in ~30-40 s; read it via Flink `t$lake` or pure-Python
+# pypaimon. VERIFIED end-to-end.
+phase5_streamhouse_tiering:
+  server_config:
+    datalake.format: paimon
+    datalake.paimon.metastore: filesystem
+    datalake.paimon.warehouse: "file://<tmp warehouse> (per-test; NO Minio/S3)"
+  flink_job_classpath_extra:
+    - fluss-flink-2.2-1.0.0.jar
+    - paimon-flink-2.2-2.0.0.jar
+    - fluss-lake-paimon-1.0.0.jar            # from Fluss plugins/paimon/
+    - flink-shaded-hadoop-2-uber-2.8.3-10.0.jar  # from Fluss plugins/paimon/
+
+# --- Iceberg as streaming storage (STH-04) ----------------------------------
+# Reuses iceberg-flink-runtime-2.2:1.12.0 (phase4_flink_jars) + the hadoop-client
+# jars. Flink Iceberg sink commits on checkpoint; a BOUNDED source (filesystem/
+# debezium-json/csv) makes the streaming job finish and fire the final commit.
+# (datagen/VALUES streaming sources do NOT reliably trigger the committer — see
+# probes.md "dead ends".) Read back in BATCH mode. Fluss 1.0 can also tier to
+# Iceberg (plugins/iceberg/fluss-lake-iceberg-1.0.0.jar); Paimon tiering is the
+# pinned/verified path.
+phase5_iceberg_streaming:
+  runtime: iceberg-flink-runtime-2.2-1.12.0.jar  # labs/.jars/flink (phase 4)
+  commit: on checkpoint; bounded source => final commit on job finish
+
+# --- Serving layer (STH-07; pure-Python, no Docker) -------------------------
+# DuckDB's native iceberg_scan FAILS on Flink hadoop-catalog tables (metadata
+# stores manifest paths with a 'file:' scheme DuckDB cannot open) -> do NOT use
+# it directly. Instead:
+#   * Paimon  : pypaimon==2.0.0 reads PK/partial-update tables with merge applied
+#               (CatalogFactory.create({'warehouse': wh}) -> get_table ->
+#               new_read_builder). Kept in a DEDICATED venv (apache-beam-free),
+#               built by the de_testkit streamhouse fixture, NOT in pyproject.
+#   * Iceberg : pyiceberg (main venv, 0.9.1) StaticTable.from_metadata(...).scan()
+#               .to_arrow() -> register in DuckDB -> SQL. CAVEAT: pyiceberg 0.9.1
+#               does NOT apply Iceberg v2 equality/positional deletes, so for
+#               MOR/upsert tables read the MERGED state via a Flink batch job (or
+#               collapse in DuckDB SQL); append-only / COW tables read directly.
+# Optional Docker-only serving (StarRocks / Trino) is an EXTRA layer only.
+phase5_serving:
+  paimon_reader: pypaimon==2.0.0 (dedicated venv)
+  iceberg_reader: pyiceberg==0.9.1 (main venv) -> Arrow -> DuckDB 1.1.3
+  duckdb_iceberg_ext: AVOID (file:-scheme manifest paths from Flink hadoop catalog)
+
+# --- `streamhouse` profile image note (optional extra layer) ----------------
+phase5_notes:
+  no_docker: >
+    Every STH graded path runs with NO Docker. Fluss local cluster = 3 JVMs
+    (ZK + coordinator + tablet), ~0.5 GB total RSS, coordinator up in ~2 s. The
+    Fluss->Paimon tiering adds a native Flink local cluster (JM ~1024m +
+    TM ~1536m). At most ONE Fluss cluster + ONE Flink cluster per agent at a
+    time (32 GB host). Isolate parallel runs with per-test tmp dirs AND
+    OS-assigned free ports for: ZK clientPort, Fluss bind.listeners, Flink
+    rest.port. ALWAYS stop both clusters in a trap/finally and `pkill -f <probe
+    dir>`; the tiering service is a long-running job — submit detached, read with
+    a wall-clock deadline, never iterate an unbounded result.
+  ports: >
+    No fixed ports — all OS-assigned free (127.0.0.1). Never bind 5432/8888
+    (user's local_pgdb/pgadmin) nor the core/streaming/flink profile ports.
+  verification: >
+    All five Phase-5 probes passed on 2026-10-04:
+    (1) Paimon partial-update merge [1,Alice,a@x.com,555-1] (6 s, embedded batch);
+    (2) Paimon changelog via acct$audit_log (7 s); (3) Fluss PK write+batch read
+    [1,175]/[2,50] (10 s) AND full Fluss->Paimon tiering, t_user$lake + pypaimon
+    both read {id:[1,2],name:[Alice,Bob]} (~36 s); (4) Iceberg Flink sink from a
+    debezium-json CDC changelog, v2 snapshot committed, batch read count=1 sum=175
+    (6 s); (5) serving: pypaimon + pyiceberg->DuckDB. fetch_streamhouse.sh is
+    idempotent (2nd run 0 downloads) and checksum-verified.

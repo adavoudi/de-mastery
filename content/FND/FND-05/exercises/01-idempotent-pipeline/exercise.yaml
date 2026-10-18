@@ -1,0 +1,10 @@
+id: FND-05/01-idempotent-pipeline
+title: Make a duplicate-producing pipeline idempotent with a dedup key
+entry: solution.py
+lab: none
+timeout_s: 240
+hints:
+  - "dedup: build the dedup key for each row as the tuple of key_fields values. Keep the FIRST row seen for each key (track a set of seen keys), preserving input order. Duplicate events (same key) collapse to one."
+  - "apply_idempotent: treat state as a dict keyed by the dedup key. Applying an event sets state[key] = row only if the key is not already present (first-write-wins), so re-applying the same event is a no-op. Return a NEW state dict; don't mutate the input."
+  - "For order_items the natural grain is (company_id, order_item_id). The generator emits exact duplicate order-item events on purpose; a correct key-based dedup makes the row count match DuckDB's COUNT(DISTINCT ...) and makes a second pass change nothing (idempotent)."
+cert_objectives: []

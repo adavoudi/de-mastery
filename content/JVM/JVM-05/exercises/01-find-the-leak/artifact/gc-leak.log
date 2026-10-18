@@ -1,0 +1,15 @@
+[0.512s][info][gc] GC(0) Pause Young (G1 Evacuation Pause) 120M->45M(1024M) 6.2ms
+[2.004s][info][gc] GC(1) Pause Young (G1 Evacuation Pause) 300M->95M(1024M) 7.1ms
+[3.880s][info][gc] GC(2) Pause Young (G1 Evacuation Pause) 410M->150M(1024M) 7.9ms
+[5.903s][info][gc] GC(3) Pause Young (G1 Evacuation Pause) 520M->210M(1024M) 8.4ms
+[8.110s][info][gc] GC(4) Pause Young (G1 Evacuation Pause) 640M->280M(1024M) 9.0ms
+[10.774s][info][gc] GC(5) Pause Young (G1 Evacuation Pause) 760M->360M(1024M) 10.2ms
+[13.900s][info][gc] GC(6) Pause Young (G1 Evacuation Pause) 840M->450M(1024M) 11.6ms
+[16.550s][info][gc] GC(7) Pause Full (G1 Compaction Pause) 980M->560M(1024M) 95.4ms
+[19.980s][info][gc] GC(8) Pause Young (G1 Evacuation Pause) 900M->650M(1024M) 12.9ms
+[23.110s][info][gc] GC(9) Pause Full (G1 Compaction Pause) 1000M->760M(1024M) 142.7ms
+[26.700s][info][gc] GC(10) Pause Young (G1 Evacuation Pause) 980M->840M(1024M) 15.1ms
+[30.220s][info][gc] GC(11) Pause Full (G1 Compaction Pause) 1012M->910M(1024M) 188.3ms
+[33.410s][info][gc] GC(12) Pause Full (G1 Compaction Pause) 1018M->980M(1024M) 221.6ms
+[35.902s][info][gc] GC(13) Pause Full (G1 Compaction Pause) 1021M->1012M(1024M) 318.9ms
+[36.550s][info][gc] java.lang.OutOfMemoryError: Java heap space

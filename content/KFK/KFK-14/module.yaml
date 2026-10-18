@@ -1,0 +1,9 @@
+id: KFK-14
+title: Operating & troubleshooting a cluster
+track: KFK
+hours: 3
+requires: [KFK-11]
+labs: []
+cost: free
+cert_objectives: [ccaak:6, ccaak:7]
+from_your_world: "an incident runbook: observe the symptom, diagnose the cause, apply the fix, verify health restored"

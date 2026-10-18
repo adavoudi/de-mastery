@@ -1,0 +1,103 @@
+- id: STH-02-q1
+  type: single
+  prompt: "What underlying storage structure does Apache Paimon add on top of the lake to support primary-key (upsertable) tables?"
+  options:
+    A: "A B-tree index per column"
+    B: "An LSM tree (log-structured merge tree) with periodic compaction"
+    C: "A write-ahead log only, with no compaction"
+    D: "A bitmap index"
+  answer: [B]
+  explanation: "Paimon stores PK-table data in an LSM tree: small sorted files that are periodically compacted, like a streaming database's storage engine. That is what makes cheap in-place upserts and a streaming changelog possible on object storage."
+  source: "https://paimon.apache.org/docs/master/concepts/overview/"
+  objectives: [sth:paimon]
+
+- id: STH-02-q2
+  type: single
+  prompt: "Three source systems each write a customer row keyed by customer_id, each filling only its own column (the rest NULL). Which merge engine assembles them into one complete golden record?"
+  options:
+    A: "deduplicate"
+    B: "partial-update"
+    C: "first-row"
+    D: "aggregation"
+  answer: [B]
+  explanation: "partial-update keeps the latest non-null value per column, so partial rows from different writers combine into one complete row — exactly an MDM golden record."
+  source: "https://paimon.apache.org/docs/master/concepts/primary-key-table/merge-engine/"
+  objectives: [sth:paimon, sth:mdm]
+
+- id: STH-02-q3
+  type: single
+  prompt: "What goes wrong if you build the golden record with the DEFAULT merge engine (deduplicate) instead of partial-update?"
+  options:
+    A: "Nothing; deduplicate also merges per column"
+    B: "The last write keeps only its own non-null column and overwrites the other systems' columns with NULLs — data loss"
+    C: "The table cannot be created"
+    D: "Reads become non-deterministic"
+  answer: [B]
+  explanation: "deduplicate keeps the last whole record (last-writer-wins). Since each source sends NULLs for the columns it does not own, the final row loses the other systems' attributes — a classic MDM data-loss bug."
+  source: "https://paimon.apache.org/docs/master/concepts/primary-key-table/merge-engine/"
+  objectives: [sth:paimon, sth:mdm]
+
+- id: STH-02-q4
+  type: single
+  prompt: "Under partial-update, a later writer sends NULL for a column that an earlier writer already filled. What is the result for that column?"
+  options:
+    A: "The column is set back to NULL"
+    B: "The earlier non-null value is kept (NULL does not overwrite)"
+    C: "The whole row is deleted"
+    D: "An error is raised"
+  answer: [B]
+  explanation: "partial-update keeps the latest NON-NULL value per column, so a later NULL is ignored for that column. Erasing a value on a retract needs sequence.field + partial-update.remove-record-on-delete, an opt-in behaviour."
+  source: "https://paimon.apache.org/docs/master/concepts/primary-key-table/merge-engine/"
+  objectives: [sth:paimon]
+
+- id: STH-02-q5
+  type: single
+  prompt: "Why pin 'bucket'='1' on a small primary-key table in a test or reference setting?"
+  options:
+    A: "It makes writes faster at any scale"
+    B: "It fixes the bucket count so the physical layout is deterministic and reproducible"
+    C: "It enables the aggregation merge engine"
+    D: "It is required for every Paimon table"
+  answer: [B]
+  explanation: "A fixed bucket count gives a deterministic, reproducible layout — important for small tables and tests. With dynamic bucketing the layout (and merge timing) is not reproducible run to run."
+  source: "https://paimon.apache.org/docs/master/concepts/primary-key-table/merge-engine/"
+  objectives: [sth:paimon]
+
+- id: STH-02-q6
+  type: single
+  prompt: "Which declaration is REQUIRED for a Paimon primary-key (mergeable) table?"
+  options:
+    A: "PRIMARY KEY(...) NOT ENFORCED"
+    B: "A secondary index on every column"
+    C: "PARTITIONED BY on a timestamp"
+    D: "format-version = 2"
+  answer: [A]
+  explanation: "A PK table is defined by PRIMARY KEY(...) NOT ENFORCED; rows sharing that key are merged by the merge engine. Partitioning and indexes are optional; format-version is an Iceberg concept."
+  source: "https://paimon.apache.org/docs/master/concepts/primary-key-table/merge-engine/"
+  objectives: [sth:paimon]
+
+- id: STH-02-q7
+  type: multi
+  prompt: "Which statements about Paimon merge engines are correct? (choose all)"
+  options:
+    A: "deduplicate keeps the last whole record for a key"
+    B: "partial-update keeps the latest non-null value per column"
+    C: "aggregation combines columns with per-column aggregate functions (e.g. sum)"
+    D: "first-row keeps the LAST record and discards earlier ones"
+  answer: [A, B, C]
+  explanation: "deduplicate = last whole record; partial-update = latest non-null per column; aggregation = per-column aggregates. first-row keeps the FIRST record for a key and ignores later ones, so D is false."
+  source: "https://paimon.apache.org/docs/master/concepts/primary-key-table/merge-engine/"
+  objectives: [sth:paimon]
+
+- id: STH-02-q8
+  type: single
+  prompt: "When is a plain Iceberg/Delta table a BETTER choice than a Paimon partial-update PK table?"
+  options:
+    A: "When assembling a golden record from partial source rows"
+    B: "For immutable, append-only facts that are never updated in place"
+    C: "When you need a streaming changelog of per-key updates"
+    D: "When you need last-writer-wins per column"
+  answer: [B]
+  explanation: "For immutable append-only facts you gain nothing from the LSM, PK merges or compaction; a plain columnar lake table is simpler and cheaper. The merge engines matter only when rows update in place."
+  source: "https://paimon.apache.org/docs/master/concepts/overview/"
+  objectives: [sth:paimon]

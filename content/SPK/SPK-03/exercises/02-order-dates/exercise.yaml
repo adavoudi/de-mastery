@@ -1,0 +1,10 @@
+id: SPK-03/02-order-dates
+title: Parse timestamps and extract date components
+entry: solution.py
+lab: none
+timeout_s: 240
+hints:
+  - "Parse the ISO string with F.to_timestamp('order_ts_raw') first; never slice characters out of a timestamp string by hand."
+  - "Extract with F.year, F.month, F.dayofmonth, F.hour on the parsed timestamp. For the date string use F.date_format(F.to_date(ts), 'yyyy-MM-dd')."
+  - "to_timestamp honours the +02:00 / -05:00 offset and the session runs in UTC, so extracting from the parsed value gives UTC parts. Dropping the offset first is the bug. Return order_id, order_date, order_year, order_month, order_day, order_hour."
+cert_objectives: [spark-assoc:3.4, spark-assoc:3.1]

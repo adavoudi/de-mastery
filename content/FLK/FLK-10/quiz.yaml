@@ -1,0 +1,103 @@
+- id: FLK-10-q1
+  type: single
+  prompt: "How does a table declared with 'format'='debezium-json' map a Debezium update event (op=u) to Flink RowKinds?"
+  options:
+    A: "A single +I"
+    B: "A -U for the before image, then a +U for the after image"
+    C: "A -D then a +I"
+    D: "Nothing — updates are ignored"
+  answer: [B]
+  explanation: "The debezium-json format turns an update into a retract of the old row (-U) and an insert of the new row (+U), so downstream operators and sinks apply it correctly."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/connectors/table/formats/debezium/"
+  objectives: [dse-flink:cdc]
+
+- id: FLK-10-q2
+  type: single
+  prompt: "Why must the target Iceberg table be format-version 2 with a PRIMARY KEY for a CDC upsert sink?"
+  options:
+    A: "v2 is faster for reads"
+    B: "v2 supports row-level deletes (equality/position), and the primary key tells Flink which row an update/delete targets so changes are applied, not appended"
+    C: "v1 cannot store strings"
+    D: "It is only a style preference"
+  answer: [B]
+  explanation: "Applying -U/+U/-D requires row-level deletes (Iceberg v2) keyed by a primary key; v1 is append-only."
+  source: "https://iceberg.apache.org/docs/latest/flink-writes/"
+  objectives: [dse-flink:cdc]
+
+- id: FLK-10-q3
+  type: single
+  prompt: "When does Flink's Iceberg sink make its changes visible in the table?"
+  options:
+    A: "After every record"
+    B: "When a Flink checkpoint completes — it commits one Iceberg snapshot per completed checkpoint"
+    C: "Only when the job is cancelled"
+    D: "On a fixed 10-minute timer"
+  answer: [B]
+  explanation: "The sink buffers writes and commits an Iceberg snapshot on checkpoint completion. This commit-on-checkpoint is what gives exactly-once: snapshots are not double-committed or lost on recovery."
+  source: "https://iceberg.apache.org/docs/latest/flink-writes/"
+  objectives: [dse-flink:cdc, dse-flink:sql]
+
+- id: FLK-10-q4
+  type: single
+  prompt: "The source adds a new column 'region'. You run ALTER TABLE ... ADD (region STRING) on the Iceberg table. What happens to rows that existed before the ALTER?"
+  options:
+    A: "They are rewritten with a default value"
+    B: "They read back NULL for region (schema evolution is metadata-only; no data is rewritten)"
+    C: "They are deleted"
+    D: "The ALTER fails because the table has data"
+  answer: [B]
+  explanation: "Iceberg schema evolution is a metadata operation: existing data files are untouched and old rows read NULL for the new column."
+  source: "https://iceberg.apache.org/docs/latest/evolution/"
+  objectives: [dse-flink:cdc]
+
+- id: FLK-10-q5
+  type: single
+  prompt: "After applying c(id=1), c(id=2), u(id=1), d(id=2) to an upsert Iceberg table, what is the final table state?"
+  options:
+    A: "Both id=1 and id=2 present"
+    B: "Only id=1, with its updated values (id=2 was deleted)"
+    C: "Empty"
+    D: "Only id=2"
+  answer: [B]
+  explanation: "The upsert applies the changelog: id=1 is updated to its latest values, id=2 is deleted. The table reflects current source state."
+  source: "https://iceberg.apache.org/docs/latest/flink-writes/"
+  objectives: [dse-flink:cdc]
+
+- id: FLK-10-q6
+  type: single
+  prompt: "What is the correct no-Docker way to feed a deterministic CDC changelog into Flink for testing?"
+  options:
+    A: "A live Postgres with Debezium running in Docker"
+    B: "A file (or Kafka topic on a native broker) of Debezium-JSON envelopes read via the built-in debezium-json format"
+    C: "A random data generator"
+    D: "There is no way without Docker"
+  answer: [B]
+  explanation: "The debezium-json format reads Debezium envelopes from a file or Kafka topic with no containers, giving a fully deterministic, reconcilable changelog. The live Postgres→Debezium path is an optional lab layer."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/connectors/table/formats/debezium/"
+  objectives: [dse-flink:cdc]
+
+- id: FLK-10-q7
+  type: single
+  prompt: "A Flink Iceberg CDC job crashes and recovers from its last checkpoint. Why are rows not double-committed to the table?"
+  options:
+    A: "The sink de-duplicates by scanning the whole table"
+    B: "The sink commits per checkpoint id idempotently; a snapshot for an already-committed checkpoint is not re-applied on recovery"
+    C: "Iceberg forbids duplicate rows"
+    D: "Flink disables checkpointing after a crash"
+  answer: [B]
+  explanation: "Commit-on-checkpoint plus an idempotent committer keyed on checkpoint id means recovery replays uncommitted work only; already-committed snapshots are not duplicated."
+  source: "https://iceberg.apache.org/docs/latest/flink-writes/"
+  objectives: [dse-flink:cdc]
+
+- id: FLK-10-q8
+  type: multi
+  prompt: "Which are good reasons to prefer a continuous Flink CDC → Iceberg job over a nightly batch MERGE? Select all that apply."
+  options:
+    A: "The target stays continuously current instead of up to a day stale"
+    B: "Exactly-once commit-on-checkpoint gives a clean snapshot history"
+    C: "It is always cheaper to operate than batch for tiny, rarely-changing tables"
+    D: "It handles updates and deletes by primary key, not just appends"
+  answer: [A, B, D]
+  explanation: "Continuous currency, exactly-once snapshots and key-based upserts favour streaming CDC. For tiny, rarely-changing tables a periodic batch MERGE is often cheaper to operate, so C is false."
+  source: "https://iceberg.apache.org/docs/latest/flink-writes/"
+  objectives: [dse-flink:cdc]

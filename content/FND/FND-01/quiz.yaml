@@ -1,0 +1,72 @@
+- id: FND-01-q1
+  type: single
+  prompt: "A job is 95% parallelizable and 5% inherently serial. By Amdahl's law, what is the maximum possible speedup, no matter how many machines you add?"
+  options:
+    A: "20x"
+    B: "95x"
+    C: "Unbounded — more machines always help"
+    D: "5x"
+  answer: [A]
+  explanation: "Max speedup as n→∞ is 1/(1-p) = 1/0.05 = 20x. The serial 5% is the wall."
+  source: "https://dl.acm.org/doi/10.1145/1465482.1465560"
+  objectives: []
+- id: FND-01-q2
+  type: single
+  prompt: "In a Redshift cluster, which component is most analogous to Amdahl's serial fraction (1 - p)?"
+  options:
+    A: "The leader node doing the final merge/sort"
+    B: "A compute node scanning its slice"
+    C: "The S3 spectrum layer"
+    D: "The network switch"
+  answer: [A]
+  explanation: "The leader node's final serial merge cannot be parallelized across compute nodes; it caps scaling, exactly like (1 - p)."
+  source: "https://docs.aws.amazon.com/redshift/latest/dg/c_high_level_system_architecture.html"
+  objectives: []
+- id: FND-01-q3
+  type: single
+  prompt: "For a scan-heavy aggregation over Parquet, which single factor most often dominates runtime and cost?"
+  options:
+    A: "Bytes read (columns and row groups actually scanned)"
+    B: "Number of CPU cores"
+    C: "The programming language of the client"
+    D: "RAM clock speed"
+  answer: [A]
+  explanation: "Columnar pruning cuts bytes read by 10-100x; bytes scanned usually dominates, which is why Athena bills by scanned bytes."
+  source: "https://duckdb.org/why_duckdb"
+  objectives: []
+- id: FND-01-q4
+  type: multi
+  prompt: "When is scaling OUT (more machines) likely the WRONG choice? (select all)"
+  options:
+    A: "The dataset comfortably fits in one machine's RAM"
+    B: "The job is dominated by an inherently serial step"
+    C: "A single small query's latency matters more than throughput"
+    D: "The working set is 50 TB and grows weekly"
+  answer: [A, B, C]
+  explanation: "A, B, C all favor one box. D genuinely exceeds a single machine and justifies scale-out."
+  source: "https://dl.acm.org/doi/10.1145/42411.42415"
+  objectives: []
+- id: FND-01-q5
+  type: single
+  prompt: "What is the fundamental reason a shuffle is expensive in a scaled-out system?"
+  options:
+    A: "Data must cross the network, which is orders of magnitude slower than RAM"
+    B: "Shuffles always re-read the source files from disk"
+    C: "Shuffles require a GPU"
+    D: "Shuffles disable columnar encoding"
+  answer: [A]
+  explanation: "A shuffle moves records between nodes over the network; network latency/bandwidth dwarf in-memory access, so cross-node data movement is the cost."
+  source: "https://research.google/pubs/pub62/"
+  objectives: []
+- id: FND-01-q6
+  type: single
+  prompt: "Gustafson's law differs from Amdahl's law primarily because it assumes:"
+  options:
+    A: "The problem size grows to use the available machines"
+    B: "The serial fraction is always zero"
+    C: "Networks are infinitely fast"
+    D: "All work is CPU-bound"
+  answer: [A]
+  explanation: "Gustafson fixes time and grows the workload with n, so the parallel fraction grows; Amdahl fixes the workload. Different questions, both valid."
+  source: "https://dl.acm.org/doi/10.1145/42411.42415"
+  objectives: []

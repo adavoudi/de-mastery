@@ -1,0 +1,10 @@
+id: ZZZK-01/01-roundtrip
+title: Produce then count by key
+entry: solution.py
+lab: none
+timeout_s: 120
+hints:
+  - "Use confluent_kafka.Producer; call flush() so messages are actually sent."
+  - "Create a Consumer with a fresh group.id and auto.offset.reset=earliest."
+  - "Poll until you have read exactly len(records) messages, then tally by key."
+cert_objectives: [ccdak:2]

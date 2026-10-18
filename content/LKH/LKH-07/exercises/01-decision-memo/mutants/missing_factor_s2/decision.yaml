@@ -1,0 +1,10 @@
+# Mutant: correct formats, but scenario_2 omits the required partition_evolution factor.
+scenario_1:
+  format: delta
+  factors: [databricks_native, unity_catalog]
+scenario_2:
+  format: iceberg
+  factors: [engine_neutral]        # missing partition_evolution
+scenario_3:
+  format: hudi
+  factors: [record_level_index, incremental_pulls]

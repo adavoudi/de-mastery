@@ -1,0 +1,10 @@
+id: LKH-01/02-predict-scan
+title: Predict which data files a filtered query reads
+entry: solution.py
+lab: none
+timeout_s: 180
+hints:
+  - "Build the filter as a pyiceberg expression (pyiceberg.expressions.EqualTo / GreaterThanOrEqual) and pass it to table.scan(row_filter=...)."
+  - "plan_files() returns one FileScanTask per data file that survives pruning. Count them with len(list(...)) and read each task's .file.file_path."
+  - "Pruning uses the manifests' per-file min/max. A file whose [min,max] cannot satisfy the predicate is dropped; return the surviving paths sorted, and the count."
+cert_objectives: []

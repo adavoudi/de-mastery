@@ -1,0 +1,10 @@
+id: KFK-04/01-at-least-once
+title: At-least-once consumer with manual commits — no loss across a crash
+entry: solution.py
+lab: none
+timeout_s: 120
+hints:
+  - "Create a Consumer with the given group.id, enable.auto.commit=False and auto.offset.reset='earliest'. Subscribe to the topic."
+  - "For each polled message: FIRST call sink(key, value) to do the work, and ONLY if it returns normally commit that message's offset (consumer.commit(message=msg, asynchronous=False)). This ordering is what makes it at-least-once: a crash in sink() leaves the offset uncommitted, so the record is redelivered."
+  - "Stop after you have successfully processed-and-committed max_records messages (or a short idle timeout elapses). Return the number you processed. If sink() raises, let it propagate WITHOUT committing that record (the crash)."
+cert_objectives: [ccdak:2, dse-found]

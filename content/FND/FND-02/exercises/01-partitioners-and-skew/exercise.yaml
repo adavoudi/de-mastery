@@ -1,0 +1,10 @@
+id: FND-02/01-partitioners-and-skew
+title: Build hash and range partitioners; detect skew
+entry: solution.py
+lab: none
+timeout_s: 180
+hints:
+  - "hash_partition: use a STABLE hash of the key (Python's built-in hash() is salted per-process and not reproducible across runs — use hashlib or zlib.crc32 on the key's bytes), then take it modulo P. Every row goes to exactly one partition in [0, P)."
+  - "range_partition: sort a SAMPLE of the keys, pick P-1 boundaries at the quantile positions, then assign each key to the first range whose upper bound it does not exceed. bisect.bisect_right over the boundaries gives the partition index directly."
+  - "skew_report: count rows per partition, then report max/mean (1.0 = perfectly balanced). Guard against empty input and partitions with zero rows (mean uses the number of partitions P, not the number of non-empty ones)."
+cert_objectives: []

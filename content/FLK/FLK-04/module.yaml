@@ -1,0 +1,9 @@
+id: FLK-04
+title: Flink SQL & dynamic tables
+track: FLK
+hours: 6
+requires: [FLK-02]
+labs: []
+cost: free
+cert_objectives: [dse-flink:sql, dse-flink:changelog, dse-foundations:flink101]
+from_your_world: "your dbt models — the same SELECTs, but as continuously-updating dynamic tables"

@@ -1,0 +1,103 @@
+- id: KFK-06-q1
+  type: single
+  prompt: "Under the default BACKWARD compatibility mode, which change to an Avro value schema does the registry ACCEPT?"
+  options:
+    A: "Add a new field without a default"
+    B: "Add a new field with a default value"
+    C: "Rename an existing field"
+    D: "Change a field's type from string to int"
+  answer: [B]
+  explanation: "BACKWARD means a reader on the new schema must read old data. A new field with a default is filled from that default for old records, so it is accepted. A required (no-default) field has nothing to fill from old data and is rejected."
+  source: "https://docs.confluent.io/platform/current/schema-registry/fundamentals/schema-evolution.html"
+  objectives: [ccdak:2]
+
+- id: KFK-06-q2
+  type: single
+  prompt: "You must upgrade all consumers BEFORE producers when the subject uses which compatibility mode?"
+  options:
+    A: "FORWARD"
+    B: "BACKWARD"
+    C: "NONE"
+    D: "FULL_TRANSITIVE only"
+  answer: [B]
+  explanation: "BACKWARD lets new-schema consumers read old-schema data, so consumers can be upgraded first and still read what old producers emit. FORWARD is the opposite (producers first)."
+  source: "https://docs.confluent.io/platform/current/schema-registry/fundamentals/schema-evolution.html"
+  objectives: [ccdak:2]
+
+- id: KFK-06-q3
+  type: single
+  prompt: "In the Confluent Avro wire format, what sits between the magic byte and the Avro binary payload of each message?"
+  options:
+    A: "The full JSON schema text"
+    B: "A 4-byte schema id referencing the registry"
+    C: "The subject name as a UTF-8 string"
+    D: "A CRC32 of the payload"
+  answer: [B]
+  explanation: "The format is magic byte (0) + 4-byte schema id + Avro binary. The consumer uses the id to fetch the writer schema from the registry; the schema itself is never embedded per message."
+  source: "https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html"
+  objectives: [ccdak:2]
+
+- id: KFK-06-q4
+  type: single
+  prompt: "With the default TopicNameStrategy, what subject does the value schema for topic 'orders' register under?"
+  options:
+    A: "orders"
+    B: "orders-value"
+    C: "value-orders"
+    D: "com.acme.Order"
+  answer: [B]
+  explanation: "TopicNameStrategy names the subject <topic>-value (and <topic>-key for keys). RecordNameStrategy would use the fully-qualified record name instead, allowing multiple event types per topic."
+  source: "https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html#subject-name-strategy"
+  objectives: [ccdak:2, dse-found]
+
+- id: KFK-06-q5
+  type: multi
+  prompt: "Which changes are safe under FORWARD compatibility (old-schema consumers must read new-schema data)? Select all that apply."
+  options:
+    A: "Add a new field with a default"
+    B: "Add a new required field (no default)"
+    C: "Remove a field that had a default"
+    D: "Remove a required field (no default)"
+  answer: [A, B]
+  explanation: "FORWARD = an old reader reads new data. Adding any field (the old reader ignores it) is fine. Removing a field that the old reader still expects, when it had no default, breaks the old reader. Removing a field that HAD a default is only safe under BACKWARD, not FORWARD, because the old reader never knew about the default."
+  source: "https://avro.apache.org/docs/1.12.0/specification/#schema-resolution"
+  objectives: [ccdak:2]
+
+- id: KFK-06-q6
+  type: single
+  prompt: "A developer sets the subject to NONE compatibility 'to move fast', then deploys a producer that renames amount to total. Old consumers crash. What is the correct lesson?"
+  options:
+    A: "The registry should have caught it; NONE disables the compatibility check"
+    B: "Renames are always safe in Avro"
+    C: "JSON Schema would have prevented this but Avro cannot"
+    D: "The schema id changed, so old consumers should auto-upgrade"
+  answer: [A]
+  explanation: "NONE turns off the compatibility gate entirely, so the registry accepts any schema. A rename is a drop (amount) plus an add (total) with no default link, which breaks old readers. Keep BACKWARD/FULL so the registry rejects it at registration time."
+  source: "https://docs.confluent.io/platform/current/schema-registry/fundamentals/schema-evolution.html"
+  objectives: [ccdak:2]
+
+- id: KFK-06-q7
+  type: single
+  prompt: "What does the *_TRANSITIVE variant of a compatibility mode add?"
+  options:
+    A: "It checks the new schema against ALL previous versions, not just the latest"
+    B: "It allows transitive type promotion like int to long"
+    C: "It replicates schemas across registry clusters"
+    D: "It disables default-value handling"
+  answer: [A]
+  explanation: "Non-transitive modes compare only against the most recent registered version; the transitive variants require compatibility with every prior version, preventing a chain of individually-OK steps from breaking an old consumer still on version 1."
+  source: "https://docs.confluent.io/platform/current/schema-registry/fundamentals/schema-evolution.html"
+  objectives: [ccdak:2]
+
+- id: KFK-06-q8
+  type: single
+  prompt: "During Avro schema resolution, how does a reader handle a field present in the WRITER schema but absent from the READER schema?"
+  options:
+    A: "It raises an incompatibility error"
+    B: "It ignores (skips) the writer-only field"
+    C: "It passes the raw bytes through unparsed"
+    D: "It requires a default on the reader side"
+  answer: [B]
+  explanation: "Avro resolution matches fields by name; a field only in the writer schema is simply skipped by the reader. A field only in the reader schema must have a default to be filled. This asymmetry is exactly what makes 'add field with default' backward-safe."
+  source: "https://avro.apache.org/docs/1.12.0/specification/#schema-resolution"
+  objectives: [ccdak:2]

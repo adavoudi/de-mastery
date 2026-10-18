@@ -1,0 +1,7 @@
+title: Tumbling/sliding windows with triggers
+entry: processor.py
+timeout_s: 60
+hints:
+  - "TumblingWindows(size).assign(ts) returns the single window [start, start+size) where start = ts - (ts % size). SlidingWindows(size, slide).assign(ts) returns EVERY window [s, s+size) that contains ts, where s steps down by slide from the latest aligned start; windows may start before 0 (Flink does this)."
+  - "run_windows drives the chain, bucketing each event's value into panes keyed by (key, window). A window FIRES when the watermark passes its end (window.end <= current_watermark): emit (key, Window, agg_fn(values)) and drop the pane. Fire ready windows in (window.start, key) order for determinism."
+  - "Lateness: an event is late if max(window ends it belongs to) + allowed_lateness <= current_watermark at arrival — route those to the .late side output instead of a pane. The streaming result after all watermarks must equal a batch grouping of in-time events (the oracle)."

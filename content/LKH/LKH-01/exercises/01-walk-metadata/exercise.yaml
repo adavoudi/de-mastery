@@ -1,0 +1,10 @@
+id: LKH-01/01-walk-metadata
+title: Walk the Iceberg metadata tree
+entry: solution.py
+lab: none
+timeout_s: 180
+hints:
+  - "Start at table.current_snapshot(). Its .manifest_list is the snap-*.avro path. Get the manifests with snapshot.manifests(table.io)."
+  - "Each manifest yields entries via manifest.fetch_manifest_entry(table.io); every entry has .data_file with .file_path and .record_count. Sum record_count across all entries for total rows."
+  - "Count data files = number of manifest entries across all manifests (NOT the number of manifests). Count snapshots with list(table.snapshots()). metadata.json path is table.metadata_location."
+cert_objectives: []

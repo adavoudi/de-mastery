@@ -1,0 +1,10 @@
+id: SPK-08/03-cache-storage-level
+title: Persist a reused DataFrame at the right storage level
+entry: solution.py
+lab: none
+timeout_s: 240
+hints:
+  - "Build the shared aggregate once, then persist it with the requested StorageLevel: from pyspark import StorageLevel; agg.persist(getattr(StorageLevel, level))."
+  - "persist is lazy — call an action (e.g. count()) to materialize it before returning, so the block is actually stored. Return the persisted DataFrame."
+  - "level is a StorageLevel name string like 'MEMORY_AND_DISK' or 'DISK_ONLY'. Return the per-company total DataFrame, persisted and materialized at that level."
+cert_objectives: [spark-assoc:1.3]

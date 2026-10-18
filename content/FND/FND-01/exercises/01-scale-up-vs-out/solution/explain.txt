@@ -1,0 +1,7 @@
+The DuckDB path wins because of bytes, not cores. Parquet is columnar, so projecting
+only product_code and line_amount lets the engine read just those two column chunks and
+skip the rest of the file; the CSV pool must read every byte of every row. There is no
+shuffle in either single-stage aggregation here, but at cluster scale the per-key combine
+would require one, and that network movement is the real cost. Amdahl's law also bites the
+pool: the final serial combine of partials and the CSV parse are the serial fraction, so
+adding workers has a hard ceiling. Fewer bytes read beats more parallel workers.

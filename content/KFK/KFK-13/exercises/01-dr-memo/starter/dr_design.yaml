@@ -1,0 +1,19 @@
+# Fill in your DR design for each scenario. See README.md for the scenarios and
+# the controlled vocabulary of factor keys.
+# topology must be one of: active_passive | active_active | stretched
+# rpo_seconds / rto_seconds are numbers (seconds).
+scenario_1:
+  topology: ???        # TODO
+  rpo_seconds: 0       # TODO
+  rto_seconds: 0       # TODO
+  factors: []          # TODO: required factor keys
+scenario_2:
+  topology: ???        # TODO
+  rpo_seconds: 0       # TODO
+  rto_seconds: 0       # TODO
+  factors: []          # TODO
+scenario_3:
+  topology: ???        # TODO
+  rpo_seconds: 0       # TODO
+  rto_seconds: 0       # TODO
+  factors: []          # TODO

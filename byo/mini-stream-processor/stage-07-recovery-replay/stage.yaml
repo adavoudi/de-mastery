@@ -1,0 +1,7 @@
+title: Recovery from a checkpoint with a replayable source
+entry: processor.py
+timeout_s: 90
+hints:
+  - "ReplayableSource.replay_from(offset) returns records[offset:] — like seeking a Kafka partition to a committed offset. The checkpoint's source_offset (stage 6) is exactly that seek point."
+  - "run_with_recovery runs like stage 6 but stops after exactly crash_after data records (a deterministic, seeded fault — no randomness, no sleeps). Track the last COMPLETED checkpoint id as barriers pass. On crash: build a FRESH operator, restore its state from that checkpoint, and replay the source from the checkpoint's source_offset."
+  - "Exactly-once = no double count, no loss: because the restored state already includes everything up to the checkpoint offset, you must replay from THAT offset (not 0, not the crash point). The recovered final {key: sum} must equal a clean fold over all records for EVERY crash point (the batch oracle)."

@@ -1,0 +1,10 @@
+id: ZZZJ-01/01-order-aggregator
+title: Sum order amounts by currency (Java)
+entry: src/main/java/de/selftest/OrderAggregator.java
+lab: none
+timeout_s: 120
+hints:
+  - "Use a Map<String,Double> keyed by currency."
+  - "merge(cur, amt, Double::sum) accumulates per currency."
+  - "Return an empty map for an empty input list."
+cert_objectives: [dse-found]

@@ -1,0 +1,11 @@
+id: FLK-10
+title: CDC & lake sinks — Debezium changelog to Iceberg, commit on checkpoint, schema evolution
+track: FLK
+hours: 6
+requires: [FLK-04, FLK-06]
+labs: []
+cost: free
+cert_objectives:
+  - dse-flink:cdc
+  - dse-flink:sql
+from_your_world: "loading your lakehouse: a CDC feed from an operational database landing as an upserted Iceberg table your dbt models read"

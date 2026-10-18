@@ -1,0 +1,10 @@
+id: KFK-09/01-topic-design
+title: Design topics for multi-company commerce
+entry: solution.py
+lab: none
+timeout_s: 120
+hints:
+  - "Key by the high-cardinality entity id (order_id) so all events for one order share a partition — not by company_id, which hot-spots skewed tenants."
+  - "partition_for must be a pure, deterministic function of message_key(event) and num_partitions, e.g. a stable hash modulo num_partitions. Use hashlib (not Python's salted hash())."
+  - "Fill design() per the README rubric: orders = time-retained event topic keyed by order_id; customers = compacted entity topic keyed by customer_id; carry company_id for tenant filtering."
+cert_objectives: [ccdak:1]

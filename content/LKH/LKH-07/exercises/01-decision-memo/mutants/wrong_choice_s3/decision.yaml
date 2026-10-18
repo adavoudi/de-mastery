@@ -1,0 +1,11 @@
+# Mutant: picks delta for the CDC upsert + incremental-pull scenario (wrong) and
+# includes a factor outside the controlled vocabulary.
+scenario_1:
+  format: delta
+  factors: [databricks_native, unity_catalog]
+scenario_2:
+  format: iceberg
+  factors: [engine_neutral, partition_evolution]
+scenario_3:
+  format: delta
+  factors: [record_level_index, incremental_pulls, cheapest]

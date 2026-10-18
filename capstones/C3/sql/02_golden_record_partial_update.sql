@@ -1,0 +1,12 @@
+-- C3 / M2 — Flink SQL stub: partial-update golden record.
+-- TODO(learner): INSERT the per-source projections into golden_customer so the
+-- partial-update merge engine fills name/email/phone/loyalty_tier from whichever
+-- source provides each non-null field. One INSERT per source projection.
+--
+-- Intentionally incomplete -> acceptance test FAILS (G1).
+
+-- Example of the SHAPE (not the answer): each source contributes some columns.
+-- INSERT INTO golden_customer
+--   SELECT match_key, customer_id, name, CAST(NULL AS STRING), ... FROM source_a;
+-- INSERT INTO golden_customer
+--   SELECT match_key, customer_id, CAST(NULL AS STRING), email, ... FROM source_b;

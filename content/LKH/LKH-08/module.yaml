@@ -1,0 +1,9 @@
+id: LKH-08
+title: Engines on the lake
+track: LKH
+hours: 6
+requires: [LKH-07]
+labs: []
+cost: free
+cert_objectives: [databricks-de-pro:6]
+from_your_world: "Athena on S3; comparing it to Trino, DuckDB and Spark on the same tables"

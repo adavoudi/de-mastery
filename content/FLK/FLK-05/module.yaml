@@ -1,0 +1,9 @@
+id: FLK-05
+title: Joins — regular, interval, temporal (point-in-time) & lookup
+track: FLK
+hours: 5
+requires: [FLK-03]
+labs: []
+cost: free
+cert_objectives: [dse-flink:joins]
+from_your_world: "SCD2 point-in-time (as-of) joins: enrich a fact with the dimension version that was effective at the event's business time"

@@ -1,0 +1,11 @@
+id: FLK-09
+title: Streaming patterns — dedup, top-N, split/merge, MATCH_RECOGNIZE, OVER
+track: FLK
+hours: 5
+requires: [FLK-04]
+labs: []
+cost: free
+cert_objectives:
+  - dse-flink:patterns
+  - dse-flink:sql
+from_your_world: "the recurring SQL shapes you already write (QUALIFY row_number dedup, window functions), now as streaming queries whose output is a changelog"

@@ -1,0 +1,10 @@
+id: SPK-09/03-pandas-api
+title: Port a pandas aggregation to the Pandas API on Spark
+entry: solution.py
+lab: none
+timeout_s: 300
+hints:
+  - "Convert the Spark DataFrame to a Pandas-API-on-Spark frame with df.pandas_api() (or df.to_pandas_on_spark()). Then write the familiar pandas groupby, and convert the result back with .to_spark()."
+  - "Group by company_id; n_lines = size of each group; total_line_amount = sum of line_amount. Reset the index so company_id is a column, then rename to the required names."
+  - "Return a Spark DataFrame (call .to_spark()) with columns company_id, n_lines, total_line_amount. Row/column order are not checked; floats use tolerance."
+cert_objectives: [spark-assoc:7.1]

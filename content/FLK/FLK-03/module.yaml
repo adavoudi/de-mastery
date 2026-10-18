@@ -1,0 +1,9 @@
+id: FLK-03
+title: Time & windows
+track: FLK
+hours: 6
+requires: [FLK-02]
+labs: []
+cost: free
+cert_objectives: [dse-flink:watermarks, dse-flink:windows]
+from_your_world: "late-arriving facts and the as-of grain in your SCD2 / event marts"

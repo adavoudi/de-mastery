@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Connect CLI · DE Mastery{% endblock %}
+{% block body %}
+<h2>Connect the <code>de</code> CLI</h2>
+{% if message %}<p class="msg {{ 'ok' if ok else 'bad' }}">{{ message }}</p>{% endif %}
+{% if not ok %}
+<p>Enter the code shown in your terminal. Only approve a code you just requested yourself.</p>
+<form method="post" action="/device">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <input type="text" name="user_code" value="{{ code }}" maxlength="9" autocomplete="off" autofocus>
+  <button class="btn primary" type="submit">Approve</button>
+</form>
+<p class="muted">This lets that CLI upload your progress as <b>{{ user["login"] }}</b>. It can
+not run anything on this server, and you can revoke it from the dashboard.</p>
+{% endif %}
+{% endblock %}

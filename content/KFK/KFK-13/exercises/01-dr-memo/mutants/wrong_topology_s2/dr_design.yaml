@@ -1,0 +1,16 @@
+# Reference DR design.
+scenario_1:
+  topology: active_passive
+  rpo_seconds: 120          # MM2 async lag under peak (measured, non-zero)
+  rto_seconds: 900          # rehearsed manual cutover
+  factors: [async_replication, offset_translation, warm_standby, mirrormaker2, manual_cutover]
+scenario_2:
+  topology: active_passive   # BUG: zero-data-loss regulated case needs a synchronous stretched design
+  rpo_seconds: 0            # synchronous acks=all across regions
+  rto_seconds: 60           # quorum survives one region loss (3 failure domains)
+  factors: [synchronous_replication, three_failure_domains, cross_region_latency]
+scenario_3:
+  topology: active_active
+  rpo_seconds: 60           # bidirectional MM2 lag
+  rto_seconds: 30           # other region already serving
+  factors: [async_replication, loop_prevention_prefix, local_low_latency, offset_translation]

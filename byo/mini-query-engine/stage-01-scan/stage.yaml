@@ -1,0 +1,7 @@
+title: Scan Parquet in row-group batches
+entry: engine.py
+timeout_s: 60
+hints:
+  - "A Parquet file is a list of row groups. Open it with pyarrow.parquet.ParquetFile and loop over range(pf.num_row_groups), reading each with read_row_group(rg, columns=...)."
+  - "execute() should drive a Volcano-style generator that yields pyarrow.RecordBatches, then assemble them with pa.Table.from_batches(...). Honour new_scan(columns=...) by passing columns to the reader."
+  - "For explain(), return a one-line string per node; the Scan line must contain the word 'Scan'. Build the empty-table case from the Parquet schema so an empty file still returns 0 rows with the right columns."

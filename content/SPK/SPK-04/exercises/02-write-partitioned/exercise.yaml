@@ -1,0 +1,10 @@
+id: SPK-04/02-write-partitioned
+title: Write partitioned output with the right save mode
+entry: solution.py
+lab: none
+timeout_s: 240
+hints:
+  - "df.write.mode('overwrite').partitionBy('company_id').parquet(out_path) writes one directory per company and replaces any previous output."
+  - "Use overwrite, NOT append: a refresh job that appends stacks a second copy and doubles every metric. The test runs your writer twice and checks the row count is stable."
+  - "partitionBy writes the partition column as a directory name (company_id=...), so the written files no longer contain that column physically — but reading the path back restores it as a normal column."
+cert_objectives: [spark-assoc:2.1, spark-assoc:2.3]

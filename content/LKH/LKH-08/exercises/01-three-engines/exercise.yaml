@@ -1,0 +1,10 @@
+id: LKH-08/01-three-engines
+title: Same query on Spark, DuckDB (and optionally Trino)
+entry: [solution.py, plan_facts.yaml]
+lab: none
+timeout_s: 300
+hints:
+  - "run_spark: spark.sql(\"SELECT cat, SUM(amt) AS total FROM <table> WHERE region='r1' AND amt > 50 GROUP BY cat\"). run_duckdb: the SAME logical query over read_parquet(path, hive_partitioning=true). Both must return columns cat, total."
+  - "Inspect the real plan with explain(\"formatted\"): the Iceberg BatchScan line lists filters=...; both region = 'r1' (partition pruning) and amt > 50 (predicate pushdown) appear there when pushdown works."
+  - "Fill plan_facts.yaml with what the plan ACTUALLY shows: data_filter_pushed and partition_filter_pushed are both true for this query/table. The test extracts the truth from the plan and compares."
+cert_objectives: [databricks-de-pro:6]

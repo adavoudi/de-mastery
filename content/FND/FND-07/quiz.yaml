@@ -1,0 +1,84 @@
+- id: FND-07-q1
+  type: single
+  prompt: "A feed runs at 1 event/sec sustained. Roughly how many events per year?"
+  options:
+    A: "~31.5 million"
+    B: "~86 thousand"
+    C: "~3.15 billion"
+    D: "~1 million"
+  answer: [A]
+  explanation: "1/sec x ~3.15e7 s/year ~ 31.5M/year (and ~86k/day). These constants are worth memorizing."
+  source: "https://static.googleusercontent.com/media/research.google.com/en//people/jeff/stanford-295-talk.pdf"
+  objectives: []
+- id: FND-07-q2
+  type: single
+  prompt: "2,000,000 events/sec at 100 bytes/event is what raw throughput?"
+  options:
+    A: "~200 MB/s"
+    B: "~2 MB/s"
+    C: "~20 GB/s"
+    D: "~2 GB/s"
+  answer: [A]
+  explanation: "2e6 x 100 = 2e8 B/s = 200 MB/s."
+  source: "https://static.googleusercontent.com/media/research.google.com/en//people/jeff/stanford-295-talk.pdf"
+  objectives: []
+- id: FND-07-q3
+  type: single
+  prompt: "Which assumptions MOST change a 'bytes stored per year' estimate and therefore must be stated?"
+  options:
+    A: "Compression ratio and replication factor"
+    B: "The programming language"
+    C: "The color of the dashboard"
+    D: "The number of engineers on the team"
+  answer: [A]
+  explanation: "Stored bytes = raw x (1/compression) x replication. Those two factors move the number by 3-10x each, so they must be explicit."
+  source: "https://parquet.apache.org/docs/file-format/"
+  objectives: []
+- id: FND-07-q4
+  type: single
+  prompt: "Athena-style query cost is driven by:"
+  options:
+    A: "TB scanned, which column and partition pruning reduce"
+    B: "Number of columns in the table"
+    C: "Rows returned to the client"
+    D: "Query length in characters"
+  answer: [A]
+  explanation: "Serverless engines bill per TB scanned; pruning (columns, partitions, row groups) directly lowers the bill. Rows returned is not the metric."
+  source: "https://aws.amazon.com/athena/pricing/"
+  objectives: []
+- id: FND-07-q5
+  type: single
+  prompt: "For a 7-year SOX retention estimate of a feed storing Y bytes/year, the storage cost is approximately:"
+  options:
+    A: "Y x 7 x ($/GB-month) x 12 (converting bytes to GB)"
+    B: "Y x 7 x ($/TB-scanned)"
+    C: "Y / 7"
+    D: "Y x 7 (bytes equal dollars)"
+  answer: [A]
+  explanation: "Storage cost = GB stored x $/GB-month x months. Over 7 years that is x7x12 months. Scanned-TB pricing is for queries, not storage."
+  source: "https://aws.amazon.com/s3/pricing/"
+  objectives: []
+- id: FND-07-q6
+  type: single
+  prompt: "What is the goal of a back-of-envelope estimate?"
+  options:
+    A: "The right order of magnitude with stated assumptions, fast"
+    B: "A number accurate to within 1%"
+    C: "To replace load testing permanently"
+    D: "To avoid writing down any assumptions"
+  answer: [A]
+  explanation: "Estimates aim for the correct order of magnitude (~2x) with explicit, challengeable assumptions; precision beyond that is wasted because inputs are rough."
+  source: "https://static.googleusercontent.com/media/research.google.com/en//people/jeff/stanford-295-talk.pdf"
+  objectives: []
+- id: FND-07-q7
+  type: multi
+  prompt: "Why can using RAW event bytes mislead a STORAGE estimate? (select all)"
+  options:
+    A: "Columnar compression typically shrinks stored size 3-10x"
+    B: "Replication multiplies stored bytes (e.g. 3x)"
+    C: "Raw bytes already include indexes and small-file overhead"
+    D: "Raw bytes ignore the compression and replication factors"
+  answer: [A, B, D]
+  explanation: "Stored size differs from raw by compression (down) and replication/overhead (up). Raw bytes do NOT include indexes/overhead (C is false)."
+  source: "https://parquet.apache.org/docs/file-format/"
+  objectives: []

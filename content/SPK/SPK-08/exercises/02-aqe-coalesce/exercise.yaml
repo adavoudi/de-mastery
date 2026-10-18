@@ -1,0 +1,10 @@
+id: SPK-08/02-aqe-coalesce
+title: Make AQE coalescing visible in the plan
+entry: solution.py
+lab: none
+timeout_s: 300
+hints:
+  - "Enable AQE for this query: spark.conf.set('spark.sql.adaptive.enabled','true') and 'spark.sql.adaptive.coalescePartitions.enabled','true'. Set a high initial 'spark.sql.shuffle.partitions' (e.g. 64) so there are small post-shuffle partitions for AQE to coalesce."
+  - "Return the per-company sum of line_amount. The test runs an action and reads the FINAL plan: it must contain AdaptiveSparkPlan (isFinalPlan=true) and a coalesced AQEShuffleRead."
+  - "Also set 'spark.sql.adaptive.coalescePartitions.minPartitionNum','1' so coalescing can reduce to few partitions at tiny scale. Return columns company_id, total."
+cert_objectives: [spark-assoc:4.2]

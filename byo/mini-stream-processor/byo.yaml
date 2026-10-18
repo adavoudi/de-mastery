@@ -1,0 +1,14 @@
+id: FLK-BYO
+title: Build your own mini stream processor
+track: FLK
+hours: 10
+# Stage order (slugs; dirs are stage-NN-<slug> matching this list 1:1).
+stages:
+  - operator-graph
+  - keyed-partitioning
+  - event-time-watermarks
+  - windows-triggers
+  - keyed-state-timers
+  - checkpoint-barriers
+  - recovery-replay
+  - transactional-sink

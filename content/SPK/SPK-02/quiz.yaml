@@ -1,0 +1,113 @@
+- id: SPK-02-q1
+  type: single
+  prompt: >-
+    You run df2 = df.filter("x > 0").select("x", "y"). No action follows. How much data has
+    Spark read from storage at this point?
+  options:
+    A: "All of df."
+    B: "Only the x and y columns of the rows where x > 0."
+    C: "None — filter and select are lazy transformations; nothing runs until an action."
+    D: "A sample for statistics."
+  answer: [C]
+  explanation: >-
+    filter and select return DataFrames, so they are transformations: they only record steps
+    in the logical plan. No data is read until an action (count, show, write, collect) forces
+    execution.
+  source: "https://spark.apache.org/docs/4.2.0/rdd-programming-guide.html#transformations"
+  objectives: [spark-assoc:1.6]
+
+- id: SPK-02-q2
+  type: multi
+  prompt: "Which of the following are ACTIONS (they trigger a job)? (select all)"
+  options:
+    A: "count()"
+    B: "withColumn(...)"
+    C: "write.parquet(...)"
+    D: "collect()"
+  answer: [A, C, D]
+  explanation: >-
+    count, write, and collect return a value / rows or perform I/O, so they are actions that
+    launch jobs. withColumn returns a DataFrame, so it is a lazy transformation.
+  source: "https://spark.apache.org/docs/4.2.0/rdd-programming-guide.html#actions"
+  objectives: [spark-assoc:1.6]
+
+- id: SPK-02-q3
+  type: single
+  prompt: "Which transformation causes a WIDE dependency (a shuffle)?"
+  options:
+    A: "filter"
+    B: "withColumn"
+    C: "groupBy(...).agg(...)"
+    D: "select"
+  answer: [C]
+  explanation: >-
+    groupBy/agg must bring together all rows sharing a key, which generally live in different
+    partitions, so it shuffles (wide). filter, withColumn, and select each compute an output
+    partition from a single input partition (narrow).
+  source: "https://spark.apache.org/docs/4.2.0/rdd-programming-guide.html#shuffle-operations"
+  objectives: [spark-assoc:1.5]
+
+- id: SPK-02-q4
+  type: single
+  prompt: >-
+    A linear job reads a file, filters it, groups by a key and counts, then sorts the result.
+    How many stages does it have?
+  options:
+    A: "1"
+    B: "2"
+    C: "3"
+    D: "4"
+  answer: [C]
+  explanation: >-
+    Two wide transformations (the groupBy aggregation and the orderBy) create two shuffle
+    boundaries. Stages = shuffles + 1 = 3. The read+filter pipeline into stage 1.
+  source: "https://spark.apache.org/docs/4.2.0/sql-performance-tuning.html"
+  objectives: [spark-assoc:1.4, spark-assoc:1.5]
+
+- id: SPK-02-q5
+  type: single
+  prompt: "In a linear physical plan, how do you read the number of stages from df.explain('formatted')?"
+  options:
+    A: "Count the number of Project nodes."
+    B: "Count the Exchange nodes and add 1."
+    C: "Count the Filter nodes."
+    D: "Divide the number of columns by the number of partitions."
+  answer: [B]
+  explanation: >-
+    Each Exchange node is a shuffle, i.e. a stage boundary. For a linear plan the stage count is
+    (number of Exchanges) + 1. Project/Filter are narrow and pipeline within a stage.
+  source: "https://spark.apache.org/docs/4.2.0/web-ui.html"
+  objectives: [spark-assoc:1.4]
+
+- id: SPK-02-q6
+  type: single
+  prompt: >-
+    You call df.count() and later df.collect() on the same uncached DataFrame built from a long
+    chain of transformations. What happens?
+  options:
+    A: "The second action reuses the first action's results automatically."
+    B: "The whole lineage is recomputed for each action, because transformations are lazy and not memoized."
+    C: "Spark raises an error for acting twice."
+    D: "Only the last transformation re-runs."
+  answer: [B]
+  explanation: >-
+    Transformations are lazy and not cached by default, so each action recomputes the entire
+    lineage. Call cache()/persist() (then an action) if you will reuse the DataFrame.
+  source: "https://spark.apache.org/docs/4.2.0/rdd-programming-guide.html#rdd-persistence"
+  objectives: [spark-assoc:1.6]
+
+- id: SPK-02-q7
+  type: single
+  prompt: >-
+    Which is the closest Redshift analogue of a Spark Exchange node in a query plan?
+  options:
+    A: "A sequential scan of a single table."
+    B: "A data redistribution step (e.g. DS_DIST_BOTH / DS_BCAST_INNER) that moves rows between slices."
+    C: "A commit."
+    D: "A vacuum."
+  answer: [B]
+  explanation: >-
+    An Exchange is a shuffle: rows move across partitions/machines, exactly like Redshift
+    redistributing rows across slices when the join/group key does not match the DISTKEY.
+  source: "https://spark.apache.org/docs/4.2.0/rdd-programming-guide.html#shuffle-operations"
+  objectives: [spark-assoc:1.5]

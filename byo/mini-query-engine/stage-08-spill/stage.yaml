@@ -1,0 +1,7 @@
+title: Spill to disk under a memory budget (optional)
+entry: engine.py
+timeout_s: 60
+hints:
+  - "Bound memory by the number of in-memory groups. While folding rows, when the hash table reaches max_groups_in_memory and a NEW key arrives, flush (spill) the current partial state to a file and start a fresh, empty table."
+  - "Spilling must not change the answer. At the end, reload every spilled partial and merge_partials() them with the in-memory state, then finalize. This reuses your stage-4 merge logic — spill is just more partials."
+  - "After spilling, CLEAR the in-memory state (don't both spill and keep it, or groups get double-counted). Give each spill a unique filename so earlier spills aren't overwritten, and clean up the files when done."

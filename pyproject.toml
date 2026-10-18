@@ -1,0 +1,83 @@
+[project]
+name = "de-platform"
+version = "0.1.0"
+description = "Tooling (de CLI, testkit, data generator) for the DE Mastery learning platform"
+readme = "README.md"
+requires-python = "==3.12.*"
+dependencies = [
+    "typer==0.27.2",
+    "rich==13.9.4",
+    "pyyaml==6.0.2",
+    "pyarrow==18.1.0",
+    "duckdb==1.1.3",
+    "pandas==2.2.3",
+    # Spark pinned to 4.0.0 (Phase 2): the only Spark line that BOTH the pinned
+    # Iceberg Spark runtime (iceberg-spark-runtime-4.0_2.13:1.10.0) and a Delta
+    # release (delta-spark 4.0.0) target, and the version the `core` lab runs.
+    "pyspark==4.0.0",
+    # Delta Lake (LKH-06): delta-spark 4.0.0 is built on Spark 4.0.0.
+    "delta-spark==4.0.0",
+    # pyiceberg: pure-Python Iceberg (no JVM); sqlite catalog extra for the
+    # pyiceberg_catalog fixture.
+    "pyiceberg[sql-sqlite]==0.9.1",
+    # delta-rs (optional, no JVM) — read/inspect Delta tables in helpers/tests.
+    "deltalake==1.6.6",
+    "pytest==8.3.4",
+    "pytest-randomly==3.16.0",
+    "pytest-timeout==2.3.1",
+    "hypothesis==6.122.3",
+    # Secondary G4 check (TESTING.md): automatic mutation on reference solutions.
+    "mutmut==3.8.0",
+    # Phase 3 (Kafka): the official librdkafka-based Python client. The [avro,
+    # schemaregistry] extras pull httpx + avro + fastavro so KFK-06 can register
+    # schemas and (de)serialize Avro against a Schema Registry. librdkafka is
+    # bundled in the wheel (manylinux); the client talks to the native broker
+    # from labs/.kafka or the `streaming` lab.
+    "confluent-kafka[avro,schemaregistry]==2.12.0",
+    # Pure-Python Avro read/write + schema resolution. Used both by the Avro
+    # (de)serializers above and for the no-Docker schema-compatibility fallback
+    # (KFK-06) when no Schema Registry process is running.
+    "fastavro==1.12.0",
+]
+
+[project.optional-dependencies]
+# Progress server (server/de_server). Not needed to do the course; only to host the dashboard.
+server = [
+    "fastapi==0.115.6",
+    "uvicorn==0.34.0",
+    "httpx==0.28.1",
+    "itsdangerous==2.2.0",
+    "jinja2==3.1.5",
+    "python-multipart==0.0.20",
+]
+
+[project.scripts]
+de = "de_cli.main:app"
+
+[project.entry-points.pytest11]
+de_testkit = "de_testkit.plugin"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = [
+    "cli/src/de_cli",
+    "cli/src/de_testkit",
+    "cli/src/de_data",
+    "server/de_server",
+]
+
+[tool.uv]
+package = true
+
+[tool.pytest.ini_options]
+# Root pytest only collects the tool's own tests. Exercise tests are run by
+# `de test` / `de validate`, never by plain root collection.
+testpaths = ["cli/tests", "server/tests"]
+addopts = "-p no:cacheprovider"
+timeout = 300
+# Exercise fixture tests live under cli/tests/fixtures and are run only via
+# `de validate` / subprocess, never by root collection.
+norecursedirs = ["fixtures"]

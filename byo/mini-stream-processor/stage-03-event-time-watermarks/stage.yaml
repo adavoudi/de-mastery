@@ -1,0 +1,7 @@
+title: Event time + watermarks (min across inputs)
+entry: processor.py
+timeout_s: 60
+hints:
+  - "A watermark of t means 'no more events with ts <= t are expected'. BoundedOutOfOrderness tracks the max event ts seen and emits watermark = max_ts - delay. It must be MONOTONE: never emit a watermark lower than a previous one (keep last_wm = max(last_wm, candidate))."
+  - "assign_watermarks walks the events in order; after each event it updates the generator and, only if the watermark ADVANCED, appends a Watermark(wm) after that event. So out-of-order (older) events do not emit a regressing watermark."
+  - "watermark_min(inputs) = min(inputs). merge_watermarks reads N input streams round-robin, remembers each input's latest watermark, and emits a combined Watermark = min across ALL inputs (only once ALL inputs have a watermark, and only when the min advances). This is why one silent/slow input pins the combined watermark."

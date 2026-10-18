@@ -1,0 +1,35 @@
+.de_cache/
+derby.log
+.env
+.hypothesis/
+labs/data/out/
+labs/.env
+labs/.jdk/
+metastore_db/
+*.pyc
+__pycache__/
+.pytest_cache/
+spark-warehouse/
+.venv/
+workspace/.de_tmp/
+labs/.jars/
+labs/.kafka/
+labs/.flink/
+labs/.fluss/
+labs/.streamhouse/
+labs/.schema-registry/
+labs/.gradle-dist/
+labs/.gradle-home/
+# Gradle/Java build output inside exercises (rebuilt by the tests)
+.gradle/
+.kotlin/
+content/**/build/
+workspace/**/build/
+byo/**/build/
+
+# Learner state: local only, never committed to the course repo.
+# Progress is synced to the server with `de sync`.
+/progress.json
+/learner.yaml
+/workspace/*
+!/workspace/.gitkeep

@@ -1,0 +1,10 @@
+id: FLK-03/01-hourly-gmv
+title: Hourly GMV per company with event time and a late side output
+entry: src/main/java/de/flk/HourlyGmv.java
+lab: none
+timeout_s: 300
+hints:
+  - "keyBy the companyId, assign a TumblingEventTimeWindows.of(Duration.ofMillis(windowMs)), and aggregate the amount per window. Build windows with java.time.Duration (the old Time class is gone in Flink 2.x)."
+  - "Call sideOutputLateData(lateTag) on the windowed stream so events arriving after the window closes go to the side output instead of being silently dropped."
+  - "Emit one result per (company, window) as companyId|windowStart|sumCents. Use a ProcessWindowFunction and ctx.window().getStart() for the window start."
+cert_objectives: [dse-flink:windows, dse-flink:watermarks]

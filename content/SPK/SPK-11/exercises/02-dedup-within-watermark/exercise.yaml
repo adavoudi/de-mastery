@@ -1,0 +1,10 @@
+id: SPK-11/02-dedup-within-watermark
+title: Bounded streaming deduplication with a watermark
+entry: solution.py
+lab: none
+timeout_s: 300
+hints:
+  - "Read the JSON stream (schema 'event_id INT, company_id STRING, amount DOUBLE, event_ts TIMESTAMP'). Add an event-time watermark: .withWatermark('event_ts', '30 minutes')."
+  - "Deduplicate on the business id with the BOUNDED operator: .dropDuplicatesWithinWatermark(['event_id']). This keeps the first occurrence and forgets the key once it falls behind the watermark, so state stays bounded (unlike dropDuplicates which remembers every id forever)."
+  - "Append the deduplicated rows to the Iceberg table: .writeStream.outputMode('append').option('checkpointLocation', checkpoint).trigger(availableNow=True).toTable(table); processAllAvailable(); stop(). Reuse the same checkpoint across runs so dedup state carries over."
+cert_objectives: [spark-assoc:5.4]

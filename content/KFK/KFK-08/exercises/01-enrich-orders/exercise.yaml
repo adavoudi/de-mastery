@@ -1,0 +1,10 @@
+id: KFK-08/01-enrich-orders
+title: Enrich orders with customers (KStream-KTable join)
+entry: src/main/java/de/commerce/Enricher.java
+lab: none
+timeout_s: 180
+hints:
+  - "Build a StreamsBuilder: stream('orders') for the facts, table('customers') for the dimension. Both use Serdes.String()."
+  - "orders.join(customers, (amount, name) -> name + \"|\" + amount) does the KStream-KTable lookup; the ValueJoiner receives (streamValue, tableValue)."
+  - "Write the joined stream to('enriched') and return builder.build(). An order whose customer isn't in the table yet produces no output — that is correct join semantics."
+cert_objectives: [ccdak:3, dse-found]

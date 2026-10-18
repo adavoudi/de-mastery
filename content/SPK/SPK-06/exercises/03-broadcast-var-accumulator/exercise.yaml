@@ -1,0 +1,10 @@
+id: SPK-06/03-broadcast-var-accumulator
+title: Broadcast variable and accumulator
+entry: solution.py
+lab: none
+timeout_s: 300
+hints:
+  - "Use spark.sparkContext.broadcast(valid_currencies) to ship the allowlist to executors, and spark.sparkContext.accumulator(0) to count bad-currency rows from inside the RDD map."
+  - "Work on orders.rdd: for each row, read the broadcast value (.value) to decide valid vs invalid; add 1 to the accumulator for invalid rows. Return (valid_df, invalid_count)."
+  - "Return a tuple: a DataFrame of the valid rows (same columns as orders) and the integer accumulator value. Trigger an action (e.g. build the valid DF via collect/count path) so the accumulator is populated before you read it."
+cert_objectives: [spark-assoc:3.9]

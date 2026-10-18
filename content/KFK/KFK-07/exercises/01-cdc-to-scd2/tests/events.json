@@ -1,0 +1,11 @@
+[
+  {"op": "u", "before": {"id": 1, "name": "Acme Corp", "tier": "silver"}, "after": {"id": 1, "name": "Acme Corp", "tier": "gold"}, "source": {"ts_ms": 1696000500000, "lsn": 24010, "table": "customers"}},
+  {"op": "r", "before": null, "after": {"id": 2, "name": "Globex", "tier": "bronze"}, "source": {"ts_ms": 1696000000000, "lsn": 24001, "table": "customers"}},
+  {"op": "r", "before": null, "after": {"id": 1, "name": "Acme Corp", "tier": "silver"}, "source": {"ts_ms": 1696000000000, "lsn": 24000, "table": "customers"}},
+  {"op": "c", "before": null, "after": {"id": 3, "name": "Initech", "tier": "bronze"}, "source": {"ts_ms": 1696000300000, "lsn": 24005, "table": "customers"}},
+  {"key": {"id": 2}, "value": null},
+  {"op": "d", "before": {"id": 2, "name": "Globex", "tier": "bronze"}, "after": null, "source": {"ts_ms": 1696000700000, "lsn": 24020, "table": "customers"}},
+  {"op": "u", "before": {"id": 3, "name": "Initech", "tier": "bronze"}, "after": {"id": 3, "name": "Initech", "tier": "silver"}, "source": {"ts_ms": 1696000900000, "lsn": 24030, "table": "customers"}},
+  {"key": {"id": 1}, "value": null},
+  {"op": "u", "before": {"id": 1, "name": "Acme Corp", "tier": "gold"}, "after": {"id": 1, "name": "Acme Corporation", "tier": "gold"}, "source": {"ts_ms": 1696001100000, "lsn": 24040, "table": "customers"}}
+]

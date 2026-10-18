@@ -1,0 +1,11 @@
+id: JVM-03
+title: Build and dependencies
+track: JVM
+hours: 3
+requires: [JVM-01]
+labs: []
+cost: free
+cert_objectives:
+  - dse-found
+  - ccdak:2
+from_your_world: "packaging a dbt project / Python wheel so it runs on a cluster, but for the JVM"

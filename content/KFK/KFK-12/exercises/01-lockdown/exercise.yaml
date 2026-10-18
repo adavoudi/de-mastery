@@ -1,0 +1,10 @@
+id: KFK-12/01-lockdown
+title: Lock down a cluster with SASL/SCRAM + ACLs
+entry: secure.py
+lab: none
+timeout_s: 120
+hints:
+  - "scram_add_config(password) returns the string kafka-configs.sh wants after --add-config: 'SCRAM-SHA-256=[password=<password>]'. create_scram_user runs kafka-configs.sh --alter --add-config <that> --entity-type users --entity-name <user> via cluster.run_tool."
+  - "grant_topic_write runs kafka-acls.sh --add --allow-principal User:<principal> --operation Write --operation Describe --topic <topic>. Use the PLAINTEXT bootstrap (the trusted internal listener whose principal is a super user) to manage ACLs."
+  - "client_config(sasl_bootstrap, user, password) returns the producer config dict: bootstrap.servers + security.protocol='SASL_PLAINTEXT' + sasl.mechanism='SCRAM-SHA-256' + sasl.username + sasl.password. The allowed principal must have the ACL; a principal with no ACL gets TOPIC_AUTHORIZATION_FAILED."
+cert_objectives: [ccaak:2]

@@ -1,0 +1,111 @@
+- id: LKH-02-q1
+  type: single
+  prompt: "What does Iceberg's optimistic concurrency control assume, and how does a commit detect a conflict?"
+  options:
+    A: "It locks the table for the whole write; no conflict is possible."
+    B: "It assumes the base version won't change, then commits via a compare-and-swap that fails if the table moved off the base version."
+    C: "It merges all concurrent writes automatically with no possibility of failure."
+    D: "It serializes writers with a queue in the catalog."
+  answer: [B]
+  explanation: >-
+    OCC does the work optimistically against the read snapshot, then performs an atomic
+    compare-and-swap of the catalog pointer that only succeeds if the table is still at the base
+    version. If another writer committed first, the swap fails with a conflict.
+  source: "https://iceberg.apache.org/spec/#optimistic-concurrency"
+  objectives: []
+
+- id: LKH-02-q2
+  type: single
+  prompt: >-
+    Two writers both read balance=100 and each computes a new balance by reading-then-overwriting
+    that row. The first commits 110. The second (still based on 100) commits 105. What happened?
+  options:
+    A: "Final balance is 115, the correct serial result."
+    B: "A lost update: the first writer's +10 is erased; final is 105."
+    C: "The catalog rejects both writes."
+    D: "The balances are summed to 215."
+  answer: [B]
+  explanation: >-
+    The second writer based its change on a stale read (100) and overwrote the row, erasing the
+    first writer's +10. This lost update is exactly what refresh-and-reapply prevents: the correct
+    serial result is 100+10+5 = 115.
+  source: "https://iceberg.apache.org/spec/#commit-conflict-resolution-and-retry"
+  objectives: []
+
+- id: LKH-02-q3
+  type: single
+  prompt: "After a commit raises a conflict (CommitFailedException), what is the correct recovery?"
+  options:
+    A: "Catch the exception and ignore it."
+    B: "Immediately resubmit the exact same precomputed metadata without reloading."
+    C: "Refresh the table to the winner's state, recompute the change on that fresh base, and retry the commit (bounded retries)."
+    D: "Delete the table and start over."
+  answer: [C]
+  explanation: >-
+    The failed operation must be re-applied on the NEW current version. Refresh picks up the
+    winner's state; recomputing on it and retrying yields a result equivalent to serial execution.
+    Ignoring the error or blind-retrying stale metadata loses updates.
+  source: "https://iceberg.apache.org/spec/#commit-conflict-resolution-and-retry"
+  objectives: []
+
+- id: LKH-02-q4
+  type: single
+  prompt: "Which kind of operation can Iceberg most often re-apply automatically after a conflict, without you recomputing?"
+  options:
+    A: "A read-modify-write overwrite of a row based on a value you read."
+    B: "A pure append of new files (it has no requirement on existing files)."
+    C: "A delete of specific files that another writer already removed."
+    D: "A schema change racing another schema change."
+  answer: [B]
+  explanation: >-
+    Append operations have no requirement on existing files, so they can be re-applied onto the new
+    base. Replace/delete/overwrite operations must validate that the files/rows they depend on are
+    still present, which is why read-modify-write conflicts need refresh-and-reapply.
+  source: "https://iceberg.apache.org/spec/#commit-conflict-resolution-and-retry"
+  objectives: []
+
+- id: LKH-02-q5
+  type: single
+  prompt: "Why is blindly catching CommitFailedException and continuing a dangerous anti-pattern?"
+  options:
+    A: "It makes the code slower."
+    B: "It turns a loud, recoverable conflict into a silent lost write; the writer's change is never applied but no one is told."
+    C: "It always crashes the JVM."
+    D: "It corrupts the Parquet files."
+  answer: [B]
+  explanation: >-
+    Swallowing the conflict means the commit never happened, yet the program proceeds as if it did.
+    The change is silently lost. The exception must trigger refresh-and-reapply, not be ignored.
+  source: "https://iceberg.apache.org/spec/#commit-conflict-resolution-and-retry"
+  objectives: []
+
+- id: LKH-02-q6
+  type: single
+  prompt: "How does refresh-and-reapply guarantee no lost update across two conflicting read-modify-write operations?"
+  options:
+    A: "It doesn't; one update is always lost."
+    B: "Because the retried operation recomputes its change on the committed (fresh) state, the final result equals running the two operations serially."
+    C: "Because it locks the table during retry."
+    D: "Because it sums both results."
+  answer: [B]
+  explanation: >-
+    Recomputing on the fresh base means the second operation sees the first operation's effect, so
+    composing them is equivalent to serial execution (serializability). That is the invariant the
+    test asserts: concurrent-with-retry == serial oracle.
+  source: "https://iceberg.apache.org/docs/latest/reliability/#concurrent-write-operations"
+  objectives: []
+
+- id: LKH-02-q7
+  type: single
+  prompt: "When is Iceberg OCC a poor fit?"
+  options:
+    A: "Low-contention batch writes from a few pipelines."
+    B: "High-contention, tiny, hot point-updates many times per second (an OLTP/KV workload)."
+    C: "Appending hourly files."
+    D: "A nightly compaction job."
+  answer: [B]
+  explanation: >-
+    Optimism degrades into a retry storm when many writers constantly contend on the same rows.
+    That is an OLTP/KV-store workload, not a lakehouse table (the track's 'when not to use it').
+  source: "https://iceberg.apache.org/docs/latest/reliability/#concurrent-write-operations"
+  objectives: []

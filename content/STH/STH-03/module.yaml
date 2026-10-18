@@ -1,0 +1,9 @@
+id: STH-03
+title: Apache Fluss — PK tables, lake tiering, streaming vs batch consistency
+track: STH
+hours: 5
+requires: [STH-02]
+labs: []
+cost: free
+cert_objectives: [sth:fluss, sth:tiering]
+from_your_world: "One copy that serves both a sub-second lookup and a historical batch scan"

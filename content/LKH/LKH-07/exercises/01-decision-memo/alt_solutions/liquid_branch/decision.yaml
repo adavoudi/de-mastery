@@ -1,0 +1,11 @@
+# Alt: satisfies scenario_1 via the liquid_clustering branch (not unity_catalog)
+# and uses a minimal, different factor set per scenario.
+scenario_1:
+  format: delta
+  factors: [databricks_native, liquid_clustering]
+scenario_2:
+  format: iceberg
+  factors: [engine_neutral, partition_evolution]
+scenario_3:
+  format: hudi
+  factors: [record_level_index, incremental_pulls]

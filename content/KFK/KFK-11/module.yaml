@@ -1,0 +1,9 @@
+id: KFK-11
+title: Cluster configuration & partition reassignment
+track: KFK
+hours: 5
+requires: [KFK-02]
+labs: []
+cost: free
+cert_objectives: [ccaak:3, ccaak:5]
+from_your_world: "Redshift WLM queues / slot rebalancing: moving work to even out load without a full reload"

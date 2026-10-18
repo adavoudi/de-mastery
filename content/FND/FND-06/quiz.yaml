@@ -1,0 +1,84 @@
+- id: FND-06-q1
+  type: single
+  prompt: "Why can a columnar format read far fewer bytes for an analytical query than a row format?"
+  options:
+    A: "It stores each column contiguously, so a query reads only the columns it references"
+    B: "It compresses the whole file into one block"
+    C: "It stores rows in sorted order always"
+    D: "It avoids storing a schema"
+  answer: [A]
+  explanation: "Columnar layout lets the engine read only the referenced columns' bytes (and prune row groups), instead of every field of every row."
+  source: "https://parquet.apache.org/docs/file-format/"
+  objectives: []
+- id: FND-06-q2
+  type: single
+  prompt: "For WHERE x > 900, which row groups can Parquet skip without reading data pages?"
+  options:
+    A: "Any row group whose stored max(x) <= 900"
+    B: "Any row group whose min(x) > 900"
+    C: "Only the first row group"
+    D: "None — Parquet always reads all pages"
+  answer: [A]
+  explanation: "If a row group's max(x) <= 900, no row in it can satisfy x > 900, so the engine prunes it using the footer stats alone."
+  source: "https://arrow.apache.org/docs/python/parquet.html"
+  objectives: []
+- id: FND-06-q3
+  type: single
+  prompt: "Row-group pruning is most effective when the filtered column is:"
+  options:
+    A: "Sorted or clustered, so each group has a tight, non-overlapping [min,max]"
+    B: "Randomly ordered"
+    C: "A complex nested type with no stats"
+    D: "The highest-cardinality column, unsorted"
+  answer: [A]
+  explanation: "Sorting/clustering makes per-group ranges tight and disjoint, so a predicate overlaps few groups. Random order makes every group's range span the domain, pruning nothing."
+  source: "https://iceberg.apache.org/spec/"
+  objectives: []
+- id: FND-06-q4
+  type: single
+  prompt: "Athena charges by bytes scanned. The biggest single cost lever is usually:"
+  options:
+    A: "Store Parquet and SELECT only needed columns (column pruning)"
+    B: "Increase the Athena workgroup memory"
+    C: "Use SELECT * on JSON"
+    D: "Disable compression"
+  answer: [A]
+  explanation: "Columnar storage plus projecting only needed columns cuts scanned bytes the most; partitioning and sort order add row-group/file pruning on top."
+  source: "https://docs.aws.amazon.com/athena/latest/ug/columnar-storage.html"
+  objectives: []
+- id: FND-06-q5
+  type: single
+  prompt: "Which format is the better fit for record-at-a-time streaming writes (e.g. Kafka)?"
+  options:
+    A: "Avro (a compact row format)"
+    B: "Parquet"
+    C: "ORC"
+    D: "CSV with no schema"
+  answer: [A]
+  explanation: "Avro is a row format well suited to writing one record at a time with a schema; columnar formats (Parquet/ORC) are for batched analytical scans."
+  source: "https://parquet.apache.org/docs/file-format/"
+  objectives: []
+- id: FND-06-q6
+  type: multi
+  prompt: "What does a Parquet column chunk's footer statistics typically include? (select all)"
+  options:
+    A: "min"
+    B: "max"
+    C: "null_count"
+    D: "The full list of row ids"
+  answer: [A, B, C]
+  explanation: "Per-column-chunk stats include min, max, and null_count (and often distinct_count). It does not store a full row-id list."
+  source: "https://parquet.apache.org/docs/file-format/"
+  objectives: []
+- id: FND-06-q7
+  type: single
+  prompt: "How does Iceberg prune whole files before opening them?"
+  options:
+    A: "It keeps per-file min/max column metrics in manifests and skips files whose range can't match the predicate"
+    B: "It scans every file's footer at query time"
+    C: "It stores all data in a single file"
+    D: "It relies on the OS page cache"
+  answer: [A]
+  explanation: "Iceberg manifests carry column metrics (min/max/null counts) per data file, so the planner prunes non-matching files before reading them; sort order tightens those ranges."
+  source: "https://iceberg.apache.org/spec/"
+  objectives: []

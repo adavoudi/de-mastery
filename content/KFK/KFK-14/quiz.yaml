@@ -1,0 +1,124 @@
+- id: KFK-14-q1
+  type: single
+  prompt: "A broker crashes. Several partitions now show ISR shorter than their replica list. What is this condition called and the usual fix?"
+  options:
+    A: "Over-replication; delete a replica."
+    B: "Under-replicated partitions (URP); bring the broker back (it re-syncs) or reassign the replica to a live broker."
+    C: "A rebalance; restart all consumers."
+    D: "Normal; nothing to do."
+  answer: [B]
+  explanation: >-
+    When a replica goes offline the partition is under-replicated (ISR < replicas). Restoring the
+    broker lets the replica catch up and rejoin the ISR, driving URP back to 0; alternatively reassign
+    the replica to a healthy broker.
+  source: "https://kafka.apache.org/documentation/#monitoring"
+  objectives: [ccaak:7]
+
+- id: KFK-14-q2
+  type: single
+  prompt: "A topic has min.insync.replicas=3. Two of three brokers are down. A producer with acks=all gets what, and why?"
+  options:
+    A: "The write succeeds from the single leader."
+    B: "NOT_ENOUGH_REPLICAS — the ISR (1) is below min.insync.replicas (3), so the write is rejected to protect durability."
+    C: "The producer silently drops the record."
+    D: "The broker auto-lowers min.insync.replicas."
+  answer: [B]
+  explanation: >-
+    acks=all requires the write to reach all in-sync replicas, and min.insync.replicas sets the floor.
+    With the ISR below that floor the broker refuses the write (NOT_ENOUGH_REPLICAS) rather than risk
+    an under-durable commit.
+  source: "https://kafka.apache.org/documentation/#configuration"
+  objectives: [ccaak:7]
+
+- id: KFK-14-q3
+  type: single
+  prompt: "A consumer group's lag rises and never drains. Which is the LEAST risky first fix if the group is simply positioned wrong?"
+  options:
+    A: "Delete the topic."
+    B: "Reset the group's offsets to the smallest point that unblocks it (not blindly to earliest)."
+    C: "Set min.insync.replicas to 1."
+    D: "Increase the replication factor."
+  answer: [B]
+  explanation: >-
+    If the group is stuck at a bad position, reset its offsets to a sane point so it can make
+    progress. Resetting blindly to earliest can reprocess huge volumes; pick the smallest point that
+    unblocks it.
+  source: "https://kafka.apache.org/documentation/#basic_ops_consumer_group"
+  objectives: [ccaak:7]
+
+- id: KFK-14-q4
+  type: single
+  prompt: "Consumers that fall behind suddenly find records missing. The topic's retention.ms is 1000 (1 second). What happened and the fix?"
+  options:
+    A: "A broker is down; restart it."
+    B: "Retention is far too low, so segments are deleted almost immediately; raise retention.ms to a sane value with kafka-configs.sh --alter."
+    C: "The producer is too fast; slow it down."
+    D: "min.insync.replicas is wrong."
+  answer: [B]
+  explanation: >-
+    retention.ms=1000 deletes data after one second, so any consumer not perfectly caught up loses
+    records. The fix is to set retention.ms to a correct (much larger) value.
+  source: "https://kafka.apache.org/documentation/#configuration"
+  objectives: [ccaak:7]
+
+- id: KFK-14-q5
+  type: single
+  prompt: "Clients can fetch metadata from a broker but then time out connecting to the returned endpoint. Which misconfiguration fits?"
+  options:
+    A: "replication.factor too high."
+    B: "advertised.listeners set to an address clients cannot reach (e.g. an internal hostname or 0.0.0.0)."
+    C: "num.partitions too low."
+    D: "compression.type unsupported."
+  answer: [B]
+  explanation: >-
+    The broker returns advertised.listeners to clients; if that address isn't client-reachable, the
+    client gets metadata but cannot connect. Fix advertised.listeners to a reachable host:port.
+  source: "https://kafka.apache.org/documentation/#configuration"
+  objectives: [ccaak:7]
+
+- id: KFK-14-q6
+  type: single
+  prompt: "A partition reassignment has been 'in progress' for hours. The replication throttle rate is set very low. What is going on?"
+  options:
+    A: "The reassignment is complete; ignore it."
+    B: "The move is bandwidth-starved by the low throttle; raise or remove the throttle so it can finish."
+    C: "The topic was deleted."
+    D: "The controller is down."
+  answer: [B]
+  explanation: >-
+    A throttle set too low caps the replication bandwidth the move can use, so it never catches up.
+    Raise the throttle (or remove it); --verify also clears the throttle when the move completes.
+  source: "https://kafka.apache.org/documentation/#rep-throttle"
+  objectives: [ccaak:7]
+
+- id: KFK-14-q7
+  type: single
+  prompt: "Why is lowering min.insync.replicas a last-resort fix for a min.insync violation rather than the first move?"
+  options:
+    A: "It is irreversible."
+    B: "It trades durability for availability — accepting under-durable writes; restoring the missing replicas is the safer fix."
+    C: "It deletes data."
+    D: "It only works on compacted topics."
+  answer: [B]
+  explanation: >-
+    Lowering the floor lets writes through with fewer in-sync replicas, weakening durability. Prefer
+    restoring replicas; lower min.insync.replicas only as a conscious, usually temporary, availability
+    decision.
+  source: "https://kafka.apache.org/documentation/#configuration"
+  objectives: [ccaak:7]
+
+- id: KFK-14-q8
+  type: single
+  prompt: "What is the operator's definition of a 'fix' in an incident?"
+  options:
+    A: "Any change that makes the error message disappear from the console."
+    B: "A change after which the relevant health metric (URP, ISR, lag, retention, reachability, reassignment status) is verified back to healthy."
+    C: "Restarting every broker."
+    D: "Filing a ticket."
+  answer: [B]
+  explanation: >-
+    A fix is only a fix if health is measurably restored: you verify the specific metric (URP=0, ISR
+    >= min.insync, lag draining, retention >= floor, endpoint reachable, reassignment complete) after
+    the change.
+  source: "https://kafka.apache.org/documentation/#monitoring"
+  objectives: [ccaak:6]

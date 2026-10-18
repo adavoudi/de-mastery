@@ -1,0 +1,7 @@
+title: Checkpoint barriers (Chandy-Lamport / ABS)
+entry: processor.py
+timeout_s: 60
+hints:
+  - "inject_barriers(records, every) returns a new list with a Barrier(id) inserted after every `every` data Events (ids 1, 2, 3, ...). Markers already present are copied through; only Events advance the counter."
+  - "StatefulSumOperator keeps a per-key running sum. On a data Event: update state and emit (key, running_sum). On a Barrier: snapshot a COPY of the current state into self.checkpoints[barrier.id] AT the barrier, then forward the Barrier downstream. On a Watermark: just forward it."
+  - "run_with_checkpoints injects barriers, runs the operator, and for each barrier records a Checkpoint(id, operator_states={'sum': <snapshot>}, source_offset=<events consumed so far>). The snapshot is a CONSISTENT cut: it equals a fold over exactly the first source_offset records (the G6 oracle)."

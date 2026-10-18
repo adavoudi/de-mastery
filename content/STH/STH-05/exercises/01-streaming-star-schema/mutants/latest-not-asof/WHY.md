@@ -1,0 +1,1 @@
+The fact join uses d.is_current = TRUE instead of the as-of validity interval, so every order (including historical/boundary ones) is valued at the customer's latest tier — the 'latest, not as-of' bug that restates history.

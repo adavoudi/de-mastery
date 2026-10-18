@@ -1,0 +1,7 @@
+title: "ApiVersions over TCP"
+entry: broker.py
+timeout_s: 90
+hints:
+  - "A request starts with a 4-byte length, then the header: api_key int16, api_version int16, correlation_id int32, client_id (nullable string, 2-byte length). ApiVersions is api_key 18."
+  - "The ApiVersions RESPONSE header is just the correlation_id (int32) with NO tagged-field section, even for v3 — this is a well-known quirk. The body is: error_code int16, then a COMPACT array of {api_key int16, min int16, max int16, tagged_fields} for v3, then throttle_time_ms int32 and tagged_fields."
+  - "Advertise at least ApiVersions(18), Metadata(3), Produce(0) and Fetch(1) with version ranges your later stages will implement. kafka-broker-api-versions.sh prints the table it parses, so start there."

@@ -1,0 +1,10 @@
+# Reference decision.
+scenario_1:
+  format: delta
+  factors: [databricks_native, unity_catalog, liquid_clustering, single_vendor]
+scenario_2:
+  format: iceberg
+  factors: [engine_neutral, partition_evolution, hidden_partitioning, multi_engine]
+scenario_3:
+  format: hudi
+  factors: [record_level_index, incremental_pulls, upsert_heavy]

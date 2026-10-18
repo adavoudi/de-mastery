@@ -1,0 +1,16 @@
+# Alt: different (still defensible) numbers and extra factors.
+scenario_1:
+  topology: active_passive
+  rpo_seconds: 300
+  rto_seconds: 1800
+  factors: [async_replication, offset_translation, warm_standby, cluster_linking]
+scenario_2:
+  topology: stretched
+  rpo_seconds: 0
+  rto_seconds: 120
+  factors: [synchronous_replication, three_failure_domains, cross_region_latency, automated_cutover]
+scenario_3:
+  topology: active_active
+  rpo_seconds: 30
+  rto_seconds: 10
+  factors: [async_replication, loop_prevention_prefix, local_low_latency, mirrormaker2]

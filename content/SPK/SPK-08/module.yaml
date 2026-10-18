@@ -1,0 +1,12 @@
+id: SPK-08
+title: Memory, caching, and Adaptive Query Execution
+track: SPK
+hours: 6
+requires: [SPK-07]
+labs: []
+cost: free
+cert_objectives:
+  - spark-assoc:1.3
+  - spark-assoc:4.2
+  - spark-assoc:4.3
+from_your_world: "Redshift WLM memory/spill-to-disk and query queues; diagnosing OOM"

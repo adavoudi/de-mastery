@@ -1,0 +1,103 @@
+- id: STH-04-q1
+  type: single
+  prompt: "In a Flink → Iceberg streaming pipeline, when does the sink commit a new Iceberg snapshot?"
+  options:
+    A: "On every input record"
+    B: "On every successful checkpoint"
+    C: "Only when the job stops"
+    D: "Once per hour, fixed"
+  answer: [B]
+  explanation: "The Flink Iceberg committer commits one snapshot per successful checkpoint. That makes the checkpoint interval the freshness SLA and, at the same time, the rate at which new (small) data files and snapshots are produced."
+  source: "https://iceberg.apache.org/docs/latest/flink-writes/"
+  objectives: [streamhouse:iceberg-streaming]
+
+- id: STH-04-q2
+  type: single
+  prompt: "A team sets a 1-second checkpoint interval to make an Iceberg table 'as fresh as possible'. A day later, Trino queries are slow. What is the most likely cause?"
+  options:
+    A: "Iceberg cannot handle streaming writes"
+    B: "Frequent commits produced a huge number of small data files and snapshots, so query planning and reads got expensive"
+    C: "The watermark stalled"
+    D: "Trino does not support Iceberg v2"
+  answer: [B]
+  explanation: "One snapshot per checkpoint at 1 s is ~86,400 snapshots/day, each with ≥1 small data file per writer per partition. Readers then open thousands of tiny files. Freshness and small-files are the same dial; compaction is required to decouple them."
+  source: "https://iceberg.apache.org/docs/latest/maintenance/"
+  objectives: [streamhouse:commit-tuning]
+
+- id: STH-04-q3
+  type: single
+  prompt: "A streaming job writing to an Iceberg sink runs forever and never commits a snapshot. The source is a `datagen` (unbounded) table with no checkpointing. What fixes it for a one-shot backfill?"
+  options:
+    A: "Add more TaskManagers"
+    B: "Use a bounded source (e.g. a filesystem / debezium-json file) so the job finishes and fires its final commit"
+    C: "Switch to batch SELECT COUNT(*)"
+    D: "Disable the primary key"
+  answer: [B]
+  explanation: "The Iceberg committer commits on checkpoint; with an unbounded source and no checkpoints, nothing ever commits. A bounded source lets the job reach end-of-input, checkpoint, and commit — the proven no-Docker CDC pattern. (In production you enable periodic checkpointing instead.)"
+  source: "https://iceberg.apache.org/docs/latest/flink-writes/"
+  objectives: [streamhouse:iceberg-streaming]
+
+- id: STH-04-q4
+  type: single
+  prompt: "To make a Flink Iceberg sink apply a CDC changelog's updates and deletes by key (not just append), the target table must be declared with…"
+  options:
+    A: "No primary key and format-version 1"
+    B: "A PRIMARY KEY (…) NOT ENFORCED and 'format-version' = '2'"
+    C: "A processing-time attribute"
+    D: "A bucket count of 1"
+  answer: [B]
+  explanation: "Row-level updates/deletes need Iceberg v2 (delete files) and a primary key so Flink can route +I/-U/+U/-D by key. Without the PK the sink can only append and the table never reflects deletes/updates."
+  source: "https://iceberg.apache.org/docs/latest/flink-writes/"
+  objectives: [streamhouse:iceberg-streaming]
+
+- id: STH-04-q5
+  type: single
+  prompt: "Which maintenance operation directly addresses the small-files problem created by frequent streaming commits?"
+  options:
+    A: "expire_snapshots only"
+    B: "rewrite_data_files (compaction), which merges many small files into fewer large ones"
+    C: "Increasing parallelism"
+    D: "Adding more partitions"
+  answer: [B]
+  explanation: "Compaction (rewrite_data_files) rewrites many small data files into fewer large ones, restoring read performance. expire_snapshots then reclaims the storage of the now-unreferenced old files. Compaction is the tax that decouples freshness from file size."
+  source: "https://iceberg.apache.org/docs/latest/maintenance/"
+  objectives: [streamhouse:commit-tuning]
+
+- id: STH-04-q6
+  type: single
+  prompt: "You mirror a high-churn OLTP table (mostly updates to the same keys) onto the lake. Why might Apache Paimon be a better fit than Iceberg v2 for this feed?"
+  options:
+    A: "Paimon does not support primary keys"
+    B: "Paimon is an LSM primary-key store with built-in compaction designed for high-rate upserts, keeping read amplification bounded; Iceberg v2's delete files and read-side merge grow with churn"
+    C: "Iceberg cannot store updates at all"
+    D: "Paimon avoids writing any files"
+  answer: [B]
+  explanation: "Paimon's LSM tree absorbs upserts as new sorted runs and merges them by key via background compaction — purpose-built for high churn. Iceberg v2 applies updates as merge-on-read delete files, whose overhead grows with update rate. For a mostly-append log, Iceberg is the simpler choice."
+  source: "https://paimon.apache.org/docs/master/primary-key-table/overview/"
+  objectives: [streamhouse:commit-tuning]
+
+- id: STH-04-q7
+  type: multi
+  prompt: "Which statements about commit cadence on a Flink → Iceberg table are correct? (choose all)"
+  options:
+    A: "A shorter checkpoint interval improves freshness but increases the number of snapshots and small files"
+    B: "Running the same total ingest as one job over a batched input produces fewer snapshots than running it as many small per-micro-batch jobs"
+    C: "A longer checkpoint interval produces larger, fewer files but a more stale table"
+    D: "Compaction removes the need to ever checkpoint"
+  answer: [A, B, C]
+  explanation: "Freshness and file count move together with the commit cadence: short interval ⇒ fresh but many small files; long interval ⇒ stale but fat files; batching ingest into one commit yields one snapshot/one file. Compaction fixes small files after the fact but does not replace checkpointing (which is how the sink commits at all)."
+  source: "https://iceberg.apache.org/docs/latest/flink-writes/"
+  objectives: [streamhouse:commit-tuning, streamhouse:iceberg-streaming]
+
+- id: STH-04-q8
+  type: single
+  prompt: "Both Iceberg and Paimon land on object storage and commit per checkpoint. What is the key architectural difference in how they handle updates?"
+  options:
+    A: "There is none; they are identical"
+    B: "Iceberg v2 uses merge-on-read with delete files; Paimon uses an LSM tree with primary-key buckets and background compaction"
+    C: "Paimon only supports batch writes"
+    D: "Iceberg stores data in a database, not files"
+  answer: [B]
+  explanation: "The merge model differs: Iceberg v2 records row-level deletes and merges them at read time (merge-on-read), while Paimon organises primary-key data as an LSM tree and compacts sorted runs in the background. That is why update rate drives the choice between them."
+  source: "https://paimon.apache.org/docs/master/primary-key-table/overview/"
+  objectives: [streamhouse:commit-tuning]

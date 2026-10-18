@@ -1,0 +1,7 @@
+title: Manifest column stats + file pruning
+entry: tableformat.py
+timeout_s: 60
+hints:
+  - "At write time, compute min/max per column (pyarrow.compute.min/max) and store them in the manifest entry's stats dict."
+  - "scan(filter=(col, lo, hi)): for each file, skip it when stats[col].max < lo OR stats[col].min > hi. Only read (and record in files_opened) the survivors."
+  - "Bounds are inclusive: a file whose max == lo still overlaps. Use <= / >=, not < / >, or you'll drop boundary rows."

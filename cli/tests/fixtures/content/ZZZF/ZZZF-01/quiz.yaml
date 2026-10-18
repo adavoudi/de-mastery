@@ -1,0 +1,8 @@
+- id: ZZZF-01-q1
+  type: single
+  prompt: "In Flink, what does keyBy do before an aggregation?"
+  options: {A: "Sorts the whole stream", B: "Partitions the stream by key so each key's records go to one subtask", C: "Buffers to disk", D: "Nothing"}
+  answer: [B]
+  explanation: "keyBy hash-partitions the stream so all records for a key are processed together."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/operators/overview/"
+  objectives: [dse-flink:selftest]

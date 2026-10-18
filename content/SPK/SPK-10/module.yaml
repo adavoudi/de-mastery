@@ -1,0 +1,12 @@
+id: SPK-10
+title: Structured Streaming I — the micro-batch engine and exactly-once
+track: SPK
+hours: 6
+requires: [SPK-04]
+labs: []
+cost: free
+cert_objectives:
+  - spark-assoc:5.1
+  - spark-assoc:5.2
+  - spark-assoc:5.3
+from_your_world: "dbt incremental models and their state"

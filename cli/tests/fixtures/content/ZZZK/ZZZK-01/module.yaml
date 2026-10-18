@@ -1,0 +1,9 @@
+id: ZZZK-01
+title: (self-test) Kafka round-trip
+track: ZZZK
+hours: 1
+requires: []
+labs: []
+cost: free
+cert_objectives: [ccdak:2]
+from_your_world: "self-test fixture, not learner content"

@@ -1,0 +1,10 @@
+id: SPK-01/02-tasks-and-executors
+title: Count the tasks a scan stage runs, and place them on executors
+entry: solution.py
+lab: none
+timeout_s: 180
+hints:
+  - "A DataFrame's underlying RDD has one partition per task in its first stage: df.rdd.getNumPartitions()."
+  - "repartition(n) sets the partition count to n; that becomes the task count of the next stage. coalesce only reduces it."
+  - "To place t tasks on e executors as evenly as possible, each executor gets either floor(t/e) or ceil(t/e); exactly (t mod e) executors get the ceil."
+cert_objectives: [spark-assoc:1.2, spark-assoc:1.7]

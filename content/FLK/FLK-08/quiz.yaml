@@ -1,0 +1,103 @@
+- id: FLK-08-q1
+  type: single
+  prompt: "How does a Table API pipeline relate to the equivalent Flink SQL query?"
+  options:
+    A: "It is a different engine with different semantics"
+    B: "It plans through the same optimizer and has the same changelog semantics, so results are identical"
+    C: "It only runs in batch mode"
+    D: "It cannot be mixed with SQL"
+  answer: [B]
+  explanation: "The Table API is a programmatic form of the same relational model; it shares the optimizer and changelog semantics with SQL and can be freely mixed with it, so equivalent queries give identical results."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/tableapi/"
+  objectives: [dse-flink:tableapi]
+
+- id: FLK-08-q2
+  type: single
+  prompt: "A pipeline is written once in Java Table API and once in PyFlink Table API over the same data. What must be true?"
+  options:
+    A: "They may differ because Python rounds differently"
+    B: "They produce the same result — PyFlink builds the same logical plan and runs on the same JVM engine"
+    C: "Only the Java one is correct"
+    D: "PyFlink runs a separate Python engine with different results"
+  answer: [B]
+  explanation: "PyFlink is a Python surface over the same Table API; it builds the same plan and executes on the same runtime, so the two are effectively the same job and must agree over the same input."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/python/table/intro_to_table_api/"
+  objectives: [dse-flink:tableapi]
+
+- id: FLK-08-q3
+  type: single
+  prompt: "Which best maps to a dbt Python model in this platform's analogy?"
+  options:
+    A: "A DataStream process function"
+    B: "A PyFlink Table API pipeline — a relational model expressed in Python"
+    C: "A broadcast state pattern"
+    D: "A savepoint"
+  answer: [B]
+  explanation: "A dbt Python model is a relational transformation written in Python; PyFlink's Table API is the streaming analogue — the same declarative model, Python surface, JVM execution."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/python/table/intro_to_table_api/"
+  objectives: [dse-flink:tableapi]
+
+- id: FLK-08-q4
+  type: single
+  prompt: "A test grades the GMV pipeline. Which does it assert?"
+  options:
+    A: "That you used the Table API and not SQL"
+    B: "That the aggregated result equals an independent (DuckDB/Python) oracle, regardless of which API produced it"
+    C: "That the Java and Python code look the same"
+    D: "The wall-clock runtime"
+  answer: [B]
+  explanation: "Per docs/TESTING.md, tests assert behavior/data against an independent oracle, not which API was called, not code shape, and not timing. Any surface (SQL, Table API, DataStream) that yields the correct result passes."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/tableapi/"
+  objectives: [dse-flink:tableapi]
+
+- id: FLK-08-q5
+  type: single
+  prompt: "A scalar UDF versus a table UDF differ how?"
+  options:
+    A: "A scalar UDF returns one value per row; a table UDF can return many rows per input row (like explode/lateral)"
+    B: "They are the same"
+    C: "A table UDF returns one value; a scalar UDF returns many"
+    D: "Only aggregate UDFs exist"
+  answer: [A]
+  explanation: "Scalar UDF: one row in → one value out. Table UDF: one row in → zero or more rows out (used with a lateral join). Aggregate UDF: many rows in → one value out."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/functions/udfs/"
+  objectives: [dse-flink:tableapi]
+
+- id: FLK-08-q6
+  type: single
+  prompt: "Why can a UDF-heavy PyFlink job be slower than the Java equivalent?"
+  options:
+    A: "Python is always slower for everything"
+    B: "Crossing the Python/JVM boundary per record is costly; keeping work in SQL/Table API (JVM) or using vectorized UDFs avoids per-row round-trips"
+    C: "PyFlink does not use checkpoints"
+    D: "PyFlink cannot aggregate"
+  answer: [B]
+  explanation: "Row-at-a-time Python UDFs serialize across the Python/JVM boundary. Staying in relational Table API/SQL keeps the work in the JVM; vectorized (pandas) UDFs batch the crossing. The relational parts run at JVM speed regardless of language."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/python/table/intro_to_table_api/"
+  objectives: [dse-flink:tableapi]
+
+- id: FLK-08-q7
+  type: single
+  prompt: "You need per-record custom timers and keyed state. Is the Table API the right tool?"
+  options:
+    A: "Yes, the Table API exposes timers directly"
+    B: "No — the Table API is relational; drop to the DataStream process functions for per-record timer/state control"
+    C: "Yes, via GROUP BY"
+    D: "Only in PyFlink"
+  answer: [B]
+  explanation: "The Table API is declarative/relational and does not give per-record timer/state control. That is what KeyedProcessFunction (DataStream, FLK-07) is for."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/tableapi/"
+  objectives: [dse-flink:tableapi]
+
+- id: FLK-08-q8
+  type: multi
+  prompt: "Which are valid ways to express the same per-currency GMV aggregation in Flink? (choose all)"
+  options:
+    A: "Flink SQL: SELECT ccy, SUM(amt) FROM orders GROUP BY ccy"
+    B: "Java Table API: tbl.groupBy($(\"ccy\")).select($(\"ccy\"), $(\"amt\").sum())"
+    C: "PyFlink Table API: tbl.group_by(col(\"ccy\")).select(col(\"ccy\"), col(\"amt\").sum)"
+    D: "A DataStream keyBy(ccy).sum on the amount field"
+  answer: [A, B, C, D]
+  explanation: "All four express the same relational aggregation and (over the same bounded input) yield the same final per-currency totals. The grader accepts any of them as long as the result matches the oracle."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/tableapi/"
+  objectives: [dse-flink:tableapi]

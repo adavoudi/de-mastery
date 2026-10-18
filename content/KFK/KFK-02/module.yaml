@@ -1,0 +1,11 @@
+id: KFK-02
+title: Topics, partitions, replication — leaders, ISR, acks, durability
+track: KFK
+hours: 5
+requires: [KFK-01]
+labs: []
+cost: free
+cert_objectives:
+  - ccdak:1
+  - ccaak:1
+from_your_world: "SOX completeness: a committed write must survive a broker failure"

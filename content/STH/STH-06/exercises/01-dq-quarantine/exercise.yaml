@@ -1,0 +1,10 @@
+id: STH-06/01-dq-quarantine
+title: In-flight DQ + quarantine/DLQ on the streaming orders pipeline
+entry: dq_routing.py
+lab: none
+timeout_s: 600
+hints:
+  - "Split, don't filter. The good predicate requires ALL rules to pass; the quarantine predicate requires ANY rule to fail. Make them exact complements so every order goes to exactly one table — then count(good)+count(quarantine) == count(input)."
+  - "The referential rule is a LEFT JOIN to customers: a row whose matching customer id is NULL after the join fails the 'unknown_customer' rule. The not-null and positive-amount rules are plain predicates on the order columns."
+  - "Report ONE reason per quarantined row with a CASE (priority order: null_customer, then non_positive_amount, then unknown_customer). The reason label depends on CASE order, but membership (good vs quarantine) must not — a bad row appears exactly once."
+cert_objectives: [streamhouse:dq-contracts, streamhouse:quarantine-dlq]

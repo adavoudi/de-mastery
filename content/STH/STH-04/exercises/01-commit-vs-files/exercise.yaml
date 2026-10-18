@@ -1,0 +1,10 @@
+id: STH-04/01-commit-vs-files
+title: Stream CDC into Iceberg (and Paimon) — tune commit interval vs file count
+entry: sink_tuning.py
+lab: none
+timeout_s: 900
+hints:
+  - "The Iceberg target must be upsert-capable so deletes/updates apply by key: declare PRIMARY KEY (id) NOT ENFORCED and WITH ('format-version'='2'). Without the PK the sink only appends and the final state won't reconcile with the oracle."
+  - "The sink commits one snapshot per job over the bounded debezium-json source. Writing ALL events in one INSERT…SELECT yields one snapshot and one data file; splitting the same events across many inserts yields many snapshots and many small files — that is the commit-interval-vs-file-count trade-off the test measures."
+  - "For the Paimon comparison, declare a primary-key table WITH ('bucket'='1') (fixed bucket for a deterministic small table). The apply SQL is the same INSERT…SELECT; Paimon's LSM merges by key."
+cert_objectives: [streamhouse:iceberg-streaming, streamhouse:commit-tuning]

@@ -1,0 +1,129 @@
+- id: SPK-03-q1
+  type: single
+  prompt: >-
+    orders has a NULL in the currency column for some rows. Which filter keeps ONLY rows whose
+    currency is exactly 'USD', and what happens to the NULL rows?
+  options:
+    A: "filter(\"currency != 'EUR'\") — NULL rows are kept."
+    B: "filter(F.col('currency') == 'USD') — NULL rows are dropped because NULL = 'USD' is unknown/false."
+    C: "filter(F.col('currency').isNull()) — keeps USD rows."
+    D: "where('currency') — keeps USD rows."
+  answer: [B]
+  explanation: >-
+    Equality against a NULL yields NULL (unknown), which is not true, so NULL rows are excluded by
+    an equality filter. This is SQL three-valued logic, identical to Redshift. To include NULLs you
+    must test isNull() explicitly.
+  source: "https://spark.apache.org/docs/4.2.0/api/python/reference/pyspark.sql/functions.html"
+  objectives: [spark-assoc:3.1]
+
+- id: SPK-03-q2
+  type: single
+  prompt: >-
+    You must remove rows that repeat on (company_id, order_item_id, order_id) but keep rows that
+    merely share an order_item_id across companies. Which is correct?
+  options:
+    A: "df.distinct()"
+    B: "df.dropDuplicates(['order_item_id'])"
+    C: "df.dropDuplicates(['company_id', 'order_item_id', 'order_id'])"
+    D: "df.dropDuplicates(['company_id'])"
+  answer: [C]
+  explanation: >-
+    dropDuplicates on the full business key removes true duplicates while preserving rows that
+    differ on any key component. Deduping on order_item_id alone would wrongly collapse the
+    cross-company collisions; distinct() only removes fully identical rows (misses partial dups).
+  source: "https://spark.apache.org/docs/4.2.0/api/python/reference/pyspark.sql/api/pyspark.sql.DataFrame.dropDuplicates.html"
+  objectives: [spark-assoc:3.2]
+
+- id: SPK-03-q3
+  type: single
+  prompt: "payments.amount contains NULLs. What does F.sum('amount') return over a group where every amount is NULL?"
+  options:
+    A: "0"
+    B: "NULL"
+    C: "An error"
+    D: "The row count"
+  answer: [B]
+  explanation: >-
+    SUM over all-NULL input is NULL, not 0 (same as SQL). If you need 0, wrap with coalesce(sum,
+    lit(0)). count('amount') would also ignore the NULLs, unlike count('*').
+  source: "https://spark.apache.org/docs/4.2.0/api/python/reference/pyspark.sql/functions.html"
+  objectives: [spark-assoc:3.3]
+
+- id: SPK-03-q4
+  type: single
+  prompt: >-
+    order_ts_raw is '2026-03-10T23:30:00-05:00'. The session timezone is UTC. Which approach yields
+    the CORRECT calendar date for this instant?
+  options:
+    A: "substring(order_ts_raw, 1, 10) -> '2026-03-10'"
+    B: "to_date(to_timestamp(order_ts_raw)) which normalizes the offset to UTC first"
+    C: "left(order_ts_raw, 10) always"
+    D: "year/month/day of the raw string characters"
+  answer: [B]
+  explanation: >-
+    -05:00 at 23:30 is 04:30 UTC the NEXT day, so the correct UTC date is 2026-03-11. Parsing to a
+    timestamp honors the offset; slicing the first 10 characters ignores it and returns the wrong
+    day. This is the timezone-naive date-extraction bug.
+  source: "https://spark.apache.org/docs/4.2.0/sql-ref-datetime-pattern.html"
+  objectives: [spark-assoc:3.4]
+
+- id: SPK-03-q5
+  type: multi
+  prompt: "Which operations turn one input row containing an array column into multiple output rows? (select all)"
+  options:
+    A: "F.explode(array_col)"
+    B: "F.split(string_col, ',') with no explode"
+    C: "explode_outer(array_col)"
+    D: "F.size(array_col)"
+  answer: [A, C]
+  explanation: >-
+    explode and explode_outer fan an array into one row per element (explode_outer also emits a row
+    for null/empty arrays). split only produces an array column (still one row); size returns the
+    array length (one row).
+  source: "https://spark.apache.org/docs/4.2.0/api/python/reference/pyspark.sql/functions.html"
+  objectives: [spark-assoc:3.1]
+
+- id: SPK-03-q6
+  type: single
+  prompt: "What is the difference between F.count('amount') and F.count(F.lit(1)) on a column with NULLs?"
+  options:
+    A: "No difference."
+    B: "count('amount') ignores NULLs; count(lit(1)) counts every row including NULL-amount rows."
+    C: "count('amount') counts every row; count(lit(1)) ignores NULLs."
+    D: "Both ignore NULLs."
+  answer: [B]
+  explanation: >-
+    count of a specific column skips NULLs in that column, while count(*) / count(lit(1)) counts
+    rows regardless. Same semantics as SQL COUNT(col) vs COUNT(*).
+  source: "https://spark.apache.org/docs/4.2.0/api/python/reference/pyspark.sql/functions.html"
+  objectives: [spark-assoc:3.3]
+
+- id: SPK-03-q7
+  type: single
+  prompt: "You need the list of distinct currencies as a Python list on the driver. Which is appropriate for a SMALL result?"
+  options:
+    A: "df.select('currency').distinct() then [r['currency'] for r in that.collect()]"
+    B: "df.collect() on the full multi-million-row table, then dedup in Python"
+    C: "A Python UDF that appends to a global list"
+    D: "df.printSchema()"
+  answer: [A]
+  explanation: >-
+    Reduce to the small distinct set with DataFrame ops first, then collect() that tiny result.
+    Collecting the whole table or using a side-effecting UDF defeats Spark and risks the driver OOM.
+  source: "https://spark.apache.org/docs/4.2.0/api/python/reference/pyspark.sql/api/pyspark.sql.DataFrame.collect.html"
+  objectives: [spark-assoc:3.7]
+
+- id: SPK-03-q8
+  type: single
+  prompt: "Which statement about withColumn is TRUE?"
+  options:
+    A: "It mutates the DataFrame in place."
+    B: "It returns a new DataFrame with the column added or replaced; the original is unchanged."
+    C: "It triggers a job immediately."
+    D: "It can only add, never replace, a column."
+  answer: [B]
+  explanation: >-
+    withColumn is a lazy transformation returning a new DataFrame; using an existing name replaces
+    that column. Nothing mutates in place and nothing runs until an action.
+  source: "https://spark.apache.org/docs/4.2.0/api/python/reference/pyspark.sql/api/pyspark.sql.DataFrame.withColumn.html"
+  objectives: [spark-assoc:3.1]

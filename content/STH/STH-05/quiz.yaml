@@ -1,0 +1,103 @@
+- id: STH-05-q1
+  type: single
+  prompt: "You build an SCD2 dim_customer from a CDC changelog. How is each version's `valid_to` derived?"
+  options:
+    A: "It is always NULL"
+    B: "valid_to = LEAD(effective_from) over the key's versions ordered by effective time; the newest version's valid_to stays open"
+    C: "valid_to = the processing time the row arrived"
+    D: "valid_to = effective_from + 1 day, fixed"
+  answer: [B]
+  explanation: "A version is closed by the next version's effective time: valid_to = LEAD(effective_from) PARTITION BY key ORDER BY effective_from. The last version per key has no successor, so its valid_to is left open (a sentinel) and is_current = true."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/over-agg/"
+  objectives: [streamhouse:scd2-streaming]
+
+- id: STH-05-q2
+  type: single
+  prompt: "An order placed at t=30 belongs to customer Alice, who was 'std' until t=100 and 'gold' after. If the pipeline reprocesses the order next week, what tier should fct_orders record?"
+  options:
+    A: "gold — her current tier"
+    B: "std — the tier effective at the order's event time (t=30)"
+    C: "Whatever tier is current when reprocessed"
+    D: "Both, as two rows"
+  answer: [B]
+  explanation: "The as-of rule values a fact with the dimension version effective at the fact's event time. The order at t=30 falls in Alice's std interval [0,100), so it must be stamped std regardless of when it is reprocessed. Recording gold would silently restate history."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/concepts/versioned_tables/"
+  objectives: [streamhouse:temporal-join]
+
+- id: STH-05-q3
+  type: single
+  prompt: "Which join condition expresses a point-in-time (as-of) match between an order and an SCD2 dimension version?"
+  options:
+    A: "o.cid = d.cid AND d.is_current = true"
+    B: "o.cid = d.cid AND o.order_ts >= d.valid_from AND o.order_ts < d.valid_to"
+    C: "o.cid = d.cid (any version)"
+    D: "o.order_ts = d.valid_from"
+  answer: [B]
+  explanation: "The as-of match selects the single version whose validity interval [valid_from, valid_to) contains the fact's event time. Joining on is_current gives the latest version (wrong for history); joining on the key alone matches every version (fan-out)."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/joins/"
+  objectives: [streamhouse:temporal-join]
+
+- id: STH-05-q4
+  type: single
+  prompt: "When ordering CDC change events to build SCD2 validity intervals, which timestamp should you order by?"
+  options:
+    A: "The processing time the event arrived"
+    B: "The business effective time of the change"
+    C: "A random tiebreaker"
+    D: "The commit time of the Flink checkpoint"
+  answer: [B]
+  explanation: "Validity intervals are a function of business/event time, so a late-arriving change still slots into the correct interval. Ordering by processing/arrival time would place a late change after events that are actually later in business time, corrupting the intervals."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/concepts/versioned_tables/"
+  objectives: [streamhouse:scd2-streaming]
+
+- id: STH-05-q5
+  type: single
+  prompt: "What makes a streaming dimensional model trustworthy (TESTING.md G6)?"
+  options:
+    A: "It runs without errors"
+    B: "Its result equals an independent batch rebuild (e.g. a DuckDB AS-OF join) over the same events"
+    C: "It uses the newest Flink version"
+    D: "It has more than one TaskManager"
+  answer: [B]
+  explanation: "The streaming invariant is that once all input has arrived, the streaming result equals the batch answer over the same events. Reconciling the dim/fct against an independent engine's as-of join is the acceptance gate — the streaming analogue of a dbt reconciliation test."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/joins/"
+  objectives: [streamhouse:scd2-streaming, streamhouse:temporal-join]
+
+- id: STH-05-q6
+  type: single
+  prompt: "Why is joining a fact to the dimension row where is_current = true (instead of the as-of version) unsafe?"
+  options:
+    A: "It is always safe"
+    B: "It stamps every fact — including historical/reprocessed ones — with the latest attributes, restating history"
+    C: "It produces duplicate rows"
+    D: "It drops NULL keys"
+  answer: [B]
+  explanation: "is_current = true selects the latest version, so a reprocessed historical order gets today's attributes rather than the version effective then. That is the 'latest, not as-of' bug — a point-in-time accuracy defect."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/concepts/versioned_tables/"
+  objectives: [streamhouse:temporal-join]
+
+- id: STH-05-q7
+  type: multi
+  prompt: "Which statements about an SCD2 dimension built from CDC are correct? (choose all)"
+  options:
+    A: "Each change event becomes a new version row"
+    B: "The newest version per key has an open valid_to and is_current = true"
+    C: "A fact matches exactly one version via its validity interval"
+    D: "Every version must have is_current = true"
+  answer: [A, B, C]
+  explanation: "A changelog event = a version; the latest version per key is open and current; a fact's event time falls in exactly one [valid_from, valid_to) interval. Only one version per key can be current, so D is false."
+  source: "https://paimon.apache.org/docs/master/primary-key-table/overview/"
+  objectives: [streamhouse:scd2-streaming]
+
+- id: STH-05-q8
+  type: single
+  prompt: "In Flink SQL, a temporal join `FOR SYSTEM_TIME AS OF o.order_ts` requires the versioned (dimension) table to have…"
+  options:
+    A: "No key"
+    B: "A PRIMARY KEY and an event-time attribute, so versions are ordered per key"
+    C: "Exactly one row per key"
+    D: "A processing-time attribute only"
+  answer: [B]
+  explanation: "A versioned table needs a primary key (version identity) and an event-time attribute/watermark so the planner can order versions per key and answer FOR SYSTEM_TIME AS OF. This is the engine form of the explicit SCD2 validity-interval join."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/concepts/versioned_tables/"
+  objectives: [streamhouse:temporal-join]

@@ -1,0 +1,10 @@
+id: SPK-12/02-project-config
+title: Config precedence and a testable transform
+entry: solution.py
+lab: none
+timeout_s: 180
+hints:
+  - "build_config(env, overrides) merges three layers with increasing precedence: BASE defaults < per-env profile (dev/prod) < explicit overrides. Never put secrets in the defaults; read them from the provided overrides/env only."
+  - "prod must set spark.sql.adaptive.enabled = 'true' and a larger spark.sql.shuffle.partitions than dev; both inherit the BASE keys they don't override. Return a flat dict of string values."
+  - "revenue_report(orders_df) is a pure DataFrame->DataFrame transform: per company_id, revenue = sum(line_amount). Keep it free of I/O and hard-coded paths so it is unit-testable; the test compares it to a DuckDB oracle."
+cert_objectives: [spark-assoc:4.3]

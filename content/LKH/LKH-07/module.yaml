@@ -1,0 +1,9 @@
+id: LKH-07
+title: Hudi & the format landscape
+track: LKH
+hours: 3
+requires: [LKH-06]
+labs: []
+cost: free
+cert_objectives: [databricks-de-pro:6]
+from_your_world: "choosing a table format for a new platform, like choosing a warehouse"

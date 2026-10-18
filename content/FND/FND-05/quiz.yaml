@@ -1,0 +1,84 @@
+- id: FND-05-q1
+  type: single
+  prompt: "'Exactly-once' in practice is usually achieved by:"
+  options:
+    A: "At-least-once delivery plus idempotent or transactional processing at the sink"
+    B: "A network that never duplicates or drops messages"
+    C: "Sending every message exactly one time and hoping"
+    D: "At-most-once delivery with retries disabled"
+  answer: [A]
+  explanation: "You rarely get exactly-once on the wire; you get effectively-once by delivering at-least-once and making the sink's effect idempotent/transactional."
+  source: "https://kafka.apache.org/documentation/#semantics"
+  objectives: []
+- id: FND-05-q2
+  type: single
+  prompt: "What is the defining property of an idempotent write?"
+  options:
+    A: "Applying the same event twice has the same effect as applying it once"
+    B: "It is always faster than a transaction"
+    C: "It never requires a key"
+    D: "It guarantees messages arrive in order"
+  answer: [A]
+  explanation: "Idempotence: f(f(x)) = f(x). Re-applying the same keyed event does not change the result."
+  source: "https://kafka.apache.org/documentation/#semantics"
+  objectives: []
+- id: FND-05-q3
+  type: single
+  prompt: "Why is a UUID generated at send time a BAD dedup key?"
+  options:
+    A: "It changes on each retry, so duplicates get different keys and aren't recognized as duplicates"
+    B: "UUIDs are too long to index"
+    C: "It is always identical across events"
+    D: "It sorts incorrectly"
+  answer: [A]
+  explanation: "A dedup key must be STABLE across retries. A fresh UUID per send makes the same logical event look new every time, defeating dedup."
+  source: "https://www.confluent.io/blog/exactly-once-semantics-are-possible-heres-how-apache-kafka-does-it/"
+  objectives: []
+- id: FND-05-q4
+  type: single
+  prompt: "Which maps to the SOX 'completeness' control (no acknowledged transaction lost)?"
+  options:
+    A: "Use at-least-once (never at-most-once) at ingestion"
+    B: "Use at-most-once to avoid duplicates"
+    C: "Disable retries"
+    D: "Dedup on wall-clock time"
+  answer: [A]
+  explanation: "Completeness forbids loss, so you must never drop an acknowledged event — at-least-once. Accuracy (no double counting) is then handled by idempotent keyed application."
+  source: "https://research.google/pubs/pub43864/"
+  objectives: []
+- id: FND-05-q5
+  type: single
+  prompt: "The two generals problem implies that over an unreliable channel:"
+  options:
+    A: "No finite exchange of acks can make both sides certain, so a sender must choose between resending (duplicates) or giving up (loss)"
+    B: "Messages can always be delivered exactly once with enough acks"
+    C: "Acknowledgements are unnecessary"
+    D: "Ordering is always preserved"
+  answer: [A]
+  explanation: "The impossibility result is exactly why we pick a delivery guarantee and resolve duplicates/loss with idempotency or transactions."
+  source: "https://en.wikipedia.org/wiki/Two_Generals%27_Problem"
+  objectives: []
+- id: FND-05-q6
+  type: multi
+  prompt: "A good dedup key must be: (select all)"
+  options:
+    A: "Stable across retries of the same logical event"
+    B: "Unique per distinct logical event"
+    C: "Randomly regenerated on each send"
+    D: "Matched to the event's true grain (not too coarse)"
+  answer: [A, B, D]
+  explanation: "Stable, unique, and at the right grain. Regenerating it per send (C) breaks stability and defeats dedup."
+  source: "https://kafka.apache.org/documentation/#semantics"
+  objectives: []
+- id: FND-05-q7
+  type: single
+  prompt: "An incremental dbt model with a unique_key and MERGE strategy, re-run on overlapping data, is:"
+  options:
+    A: "Idempotent — the target ends up identical (f(f(x)) = f(x))"
+    B: "At-most-once — it may lose rows"
+    C: "Guaranteed to double-count"
+    D: "Non-deterministic"
+  answer: [A]
+  explanation: "MERGE on a unique_key upserts, so reprocessing overlapping data yields the same target — the batch form of idempotent exactly-once."
+  source: "https://kafka.apache.org/documentation/#semantics"
+  objectives: []

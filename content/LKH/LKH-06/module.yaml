@@ -1,0 +1,9 @@
+id: LKH-06
+title: Delta Lake
+track: LKH
+hours: 4
+requires: [LKH-05]
+labs: []
+cost: free
+cert_objectives: [databricks-de-pro:6, databricks-de-pro:1]
+from_your_world: "SCD2 snapshots; the Delta-vs-Iceberg choice in a job posting"

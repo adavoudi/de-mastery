@@ -1,0 +1,1 @@
+Every version keeps an open valid_to (SENTINEL) and is_current=TRUE, so intervals overlap; the as-of join fans out an order to multiple versions and dim_customer fails reconciliation (old versions left open).

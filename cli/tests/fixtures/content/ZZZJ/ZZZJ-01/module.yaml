@@ -1,0 +1,9 @@
+id: ZZZJ-01
+title: (self-test) Java order aggregator
+track: ZZZJ
+hours: 1
+requires: []
+labs: []
+cost: free
+cert_objectives: [dse-found]
+from_your_world: "self-test fixture, not learner content"

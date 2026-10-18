@@ -1,0 +1,8 @@
+id: ZZZ-BYO
+title: Mini aggregator (self-test fixture)
+track: ZZZ
+hours: 2
+# Stage order (slugs; dirs are stage-01-<slug>, stage-02-<slug>).
+stages:
+  - scan
+  - group-sum

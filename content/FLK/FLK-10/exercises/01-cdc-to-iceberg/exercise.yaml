@@ -1,0 +1,10 @@
+id: FLK-10/01-cdc-to-iceberg
+title: Apply a Debezium changelog into an upserted Iceberg table
+entry: cdc_to_iceberg.py
+lab: none
+timeout_s: 600
+hints:
+  - "The target table must be upsert-capable: declare a PRIMARY KEY (id) NOT ENFORCED and WITH ('format-version'='2'). Without the PK/v2 the sink can only append."
+  - "The upsert is just INSERT INTO <tgt> SELECT <cols> FROM <src>; the debezium-json source already carries the +I/-U/+U/-D RowKinds, so Flink applies updates/deletes by the primary key."
+  - "Schema evolution: ALTER TABLE <tgt> ADD (region STRING). Old rows read NULL for region; the follow-up upsert selects the new column too."
+cert_objectives: [dse-flink:cdc, dse-flink:sql]

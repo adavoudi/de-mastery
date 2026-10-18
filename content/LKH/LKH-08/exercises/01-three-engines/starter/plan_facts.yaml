@@ -1,0 +1,3 @@
+# TODO: set each to true/false based on what Spark's physical plan actually shows.
+data_filter_pushed: null
+partition_filter_pushed: null

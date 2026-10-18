@@ -1,0 +1,1 @@
+Tier multipliers are inverted, so the batch (hours) tier is priced as always-on with on-call — the ordering comes out hours > seconds, violating the seconds > minutes > hours invariant and the per-tier reference values.

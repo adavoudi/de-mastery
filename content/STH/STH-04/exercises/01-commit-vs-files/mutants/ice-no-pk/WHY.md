@@ -1,0 +1,1 @@
+Iceberg target has no primary key, so Flink appends every change event instead of applying updates/deletes by key; the deleted/superseded rows linger and the table never matches the current-state oracle.

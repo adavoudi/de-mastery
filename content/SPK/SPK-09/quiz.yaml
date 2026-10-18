@@ -1,0 +1,117 @@
+- id: SPK-09-q1
+  type: single
+  prompt: >-
+    You add a scalar Python UDF to a query and run df.explain(). Which plan node reveals that a
+    row-by-row Python round trip will happen?
+  options:
+    A: "BroadcastHashJoin"
+    B: "BatchEvalPython"
+    C: "HashAggregate"
+    D: "Exchange"
+  answer: [B]
+  explanation: >-
+    A plain Python UDF is executed by a BatchEvalPython node, which serializes each row to a Python
+    worker and back. ArrowEvalPython is the vectorized (pandas/Arrow UDF) counterpart; the other
+    nodes are unrelated to Python evaluation.
+  source: "https://spark.apache.org/docs/4.0.0/api/python/user_guide/sql/python_udf.html"
+  objectives: [spark-assoc:3.8]
+
+- id: SPK-09-q2
+  type: single
+  prompt: "Why is a scalar Python UDF usually slower than the equivalent built-in function?"
+  options:
+    A: "It runs on the driver instead of the executors."
+    B: "It serializes every row to a Python worker and back, and is an optimizer fence (no pushdown/codegen through it)."
+    C: "It forces the whole DataFrame to be cached."
+    D: "It always triggers a shuffle."
+  answer: [B]
+  explanation: >-
+    The cost is per-row (de)serialization across the JVM/Python boundary plus the loss of
+    pushdown and whole-stage codegen through the opaque UDF. It still runs distributed on
+    executors and does not force caching or a shuffle by itself.
+  source: "https://spark.apache.org/docs/4.0.0/api/python/user_guide/sql/python_udf.html"
+  objectives: [spark-assoc:3.8]
+
+- id: SPK-09-q3
+  type: single
+  prompt: >-
+    You genuinely need custom Python logic over a numeric column, but want to avoid BatchEvalPython.
+    Which option transfers data as Arrow batches and shows as ArrowEvalPython?
+  options:
+    A: "functions.udf(fn, 'double') with the default (non-Arrow) path"
+    B: "A pandas UDF (Series -> Series), e.g. @pandas_udf('double')"
+    C: "Collecting to the driver and using a Python for-loop"
+    D: "A SQL string in spark.sql()"
+  answer: [B]
+  explanation: >-
+    A pandas/Arrow UDF receives a whole pandas.Series per Arrow batch and appears as
+    ArrowEvalPython, crossing the boundary once per batch instead of once per row. The default
+    scalar udf path is BatchEvalPython.
+  source: "https://spark.apache.org/docs/4.0.0/api/python/user_guide/sql/arrow_pandas.html"
+  objectives: [spark-assoc:7.2]
+
+- id: SPK-09-q4
+  type: single
+  prompt: >-
+    You want per-group logic (each group arrives as a whole pandas.DataFrame, you return a
+    pandas.DataFrame). Which API is that?
+  options:
+    A: "df.groupBy(k).applyInPandas(fn, schema)"
+    B: "df.select(udf(...))"
+    C: "df.groupBy(k).count()"
+    D: "ps.DataFrame(df).sum()"
+  answer: [A]
+  explanation: >-
+    applyInPandas is the grouped-map function API: each group is delivered as a pandas.DataFrame and
+    you return a pandas.DataFrame. It is the natural shape for a per-group dbt Python model.
+  source: "https://spark.apache.org/docs/4.0.0/api/python/user_guide/sql/arrow_pandas.html"
+  objectives: [spark-assoc:7.2, spark-assoc:3.8]
+
+- id: SPK-09-q5
+  type: single
+  prompt: "What is the main advantage of the Pandas API on Spark (import pyspark.pandas as ps) over real pandas?"
+  options:
+    A: "It is 100% API-compatible with pandas."
+    B: "It runs distributed and lazily on Spark, so you keep pandas ergonomics without pulling all data onto one machine."
+    C: "It never shuffles."
+    D: "It replaces the need for the DataFrame API entirely."
+  answer: [B]
+  explanation: >-
+    The Pandas API on Spark compiles pandas-style code to Spark jobs, so it scales beyond one
+    machine's memory. It is not fully pandas-compatible, some operations shuffle, and it does not
+    replace the DataFrame/SQL API.
+  source: "https://spark.apache.org/docs/4.0.0/api/python/user_guide/pandas_on_spark/index.html"
+  objectives: [spark-assoc:7.1]
+
+- id: SPK-09-q6
+  type: single
+  prompt: >-
+    A teammate converts order amounts to USD by joining a daily fx_rates table and multiplying.
+    Another writes a Python UDF that looks up the rate per row. Both return the same numbers. Which
+    statement is TRUE?
+  options:
+    A: "They are equivalent in performance."
+    B: "The join+multiply stays in Catalyst (no BatchEvalPython); the per-row UDF adds a Python round trip and blocks pushdown."
+    C: "The UDF is faster because it avoids a join."
+    D: "Only the UDF can be correct."
+  answer: [B]
+  explanation: >-
+    A declarative join plus arithmetic is fully optimizable and vectorized; the per-row UDF is a
+    BatchEvalPython fence. Correctness is the same, but the native plan is the performant one.
+  source: "https://spark.apache.org/docs/4.0.0/api/python/user_guide/sql/python_udf.html"
+  objectives: [spark-assoc:3.8]
+
+- id: SPK-09-q7
+  type: multi
+  prompt: "Which of these are legitimate reasons to prefer a pandas/Arrow UDF over a plain Python UDF? (select all)"
+  options:
+    A: "Data crosses the JVM/Python boundary once per Arrow batch instead of once per row."
+    B: "You can amortize an expensive one-time setup across batches with the iterator form."
+    C: "It guarantees the result is always correct regardless of logic."
+    D: "It operates on vectorized pandas Series rather than scalar Python values."
+  answer: [A, B, D]
+  explanation: >-
+    Arrow batching, iterator-form setup amortization, and vectorized Series operations are all real
+    advantages. Vectorization does not make wrong logic correct.
+  source: "https://spark.apache.org/docs/4.0.0/api/python/user_guide/sql/arrow_pandas.html"
+  objectives: [spark-assoc:7.2]

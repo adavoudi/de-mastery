@@ -1,0 +1,10 @@
+id: JVM-04/01-avro-roundtrip
+title: Avro round-trip and the Flink Kryo-fallback check
+entry: src/main/java/de/mastery/jvm04/Serialization.java
+lab: none
+timeout_s: 120
+hints:
+  - "Round-trip: GenericDatumWriter + binaryEncoder to a ByteArrayOutputStream, then GenericDatumReader + binaryDecoder with the SAME schema; the decoded record must equal the original."
+  - "Make OrderEvent a valid Flink POJO: public class, a public no-argument constructor, and either public fields or public getters/setters for every field."
+  - "isFlinkPojo via reflection: Modifier.isPublic on the class, a public no-arg constructor exists, and for each non-static field it is public OR both a public getX/isX getter and a public setX setter exist."
+cert_objectives: [dse-found, ccdak:2]

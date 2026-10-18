@@ -1,0 +1,14 @@
+id: SPK-04
+title: Spark SQL and data sources
+track: SPK
+hours: 5
+requires: [SPK-03]
+labs: []
+cost: free
+cert_objectives:
+  - spark-assoc:2.1
+  - spark-assoc:2.2
+  - spark-assoc:2.3
+  - spark-assoc:2.4
+  - spark-assoc:3.6
+from_your_world: "dbt {{ ref() }} and marts vs. temp views and SQL on files"

@@ -1,0 +1,16 @@
+# Alt: boundary-of-band numbers, minimal required factors.
+scenario_1:
+  topology: active_passive
+  rpo_seconds: 1
+  rto_seconds: 60
+  factors: [async_replication, offset_translation, warm_standby]
+scenario_2:
+  topology: stretched
+  rpo_seconds: 1
+  rto_seconds: 0
+  factors: [synchronous_replication, three_failure_domains]
+scenario_3:
+  topology: active_active
+  rpo_seconds: 600
+  rto_seconds: 120
+  factors: [async_replication, loop_prevention_prefix, local_low_latency]

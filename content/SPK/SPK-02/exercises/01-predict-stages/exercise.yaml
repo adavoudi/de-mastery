@@ -1,0 +1,10 @@
+id: SPK-02/01-predict-stages
+title: Predict the stage count for six queries
+entry: solution.py
+lab: none
+timeout_s: 240
+hints:
+  - "Stages = (number of shuffles / wide transformations) + 1 for a linear job. Count the wide steps on the path to the action."
+  - "filter/select/withColumn are narrow (0 shuffles). groupBy, distinct, orderBy, repartition each add one shuffle. A non-broadcast join adds one shuffle per side being shuffled (two for a shuffle hash/sort-merge join)."
+  - "For the join queries the tests disable broadcast, so each join shuffles BOTH sides. join alone = 2 shuffles -> 3 stages; join then groupBy = 3 shuffles -> 4 stages."
+cert_objectives: [spark-assoc:1.4, spark-assoc:1.5, spark-assoc:1.6]

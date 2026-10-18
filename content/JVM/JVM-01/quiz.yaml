@@ -1,0 +1,114 @@
+- id: JVM-01-q1
+  type: single
+  prompt: >-
+    You have `String a = "USD";` and another `String b` built at runtime that also holds "USD".
+    Which test reliably checks they represent the same text?
+  options:
+    A: "a == b, because strings are values in Java"
+    B: "a.equals(b), because == compares object references, not contents"
+    C: "a is b"
+    D: "Objects.hashCode(a) == Objects.hashCode(b) is sufficient"
+  answer: [B]
+  explanation: >-
+    `==` on objects compares identity (same reference). Two equal-looking strings built differently
+    may be distinct objects, so `==` can be false. Use `.equals()` for value equality. Equal
+    hashCodes are necessary but not sufficient (collisions exist).
+  source: "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)"
+  objectives: [dse-found]
+
+- id: JVM-01-q2
+  type: single
+  prompt: "What does a one-line `public record Order(String currency, double amount) {}` give you?"
+  options:
+    A: "A mutable class where you must write getters and setters yourself."
+    B: "An immutable value type with a canonical constructor, accessors currency()/amount(), and generated equals/hashCode/toString."
+    C: "Only a constructor; equals and hashCode still use object identity."
+    D: "A Python-style namedtuple that is iterable."
+  answer: [B]
+  explanation: >-
+    A record is an immutable carrier of data: Java generates the constructor, component accessors
+    (named like the components, e.g. currency()), plus value-based equals/hashCode and a readable
+    toString. It is the Java analogue of a frozen dataclass.
+  source: "https://docs.oracle.com/en/java/javase/21/language/records.html"
+  objectives: [dse-found]
+
+- id: JVM-01-q3
+  type: single
+  prompt: >-
+    A method may fail to find a value. Which return type best expresses "possibly absent" so callers
+    must handle it, rather than risking a NullPointerException?
+  options:
+    A: "Return null and document it in a comment."
+    B: "Throw an exception when absent."
+    C: "Return Optional<T> and let callers use orElse/map/ifPresent."
+    D: "Return an empty String as a sentinel."
+  answer: [C]
+  explanation: >-
+    Optional<T> encodes absence in the type so the caller is nudged to handle it (orElse, map,
+    ifPresent). Returning null invites NullPointerException; magic sentinels are error-prone.
+  source: "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Optional.html"
+  objectives: [dse-found]
+
+- id: JVM-01-q4
+  type: single
+  prompt: "Which statement about checked vs unchecked exceptions in Java is correct?"
+  options:
+    A: "All exceptions must be declared with throws."
+    B: "Checked exceptions (e.g. IOException) must be caught or declared; unchecked (RuntimeException subclasses) need not be."
+    C: "Unchecked exceptions must be caught or declared; checked ones need not be."
+    D: "Java has no checked exceptions, exactly like Python."
+  answer: [B]
+  explanation: >-
+    Checked exceptions extend Exception (not RuntimeException) and the compiler forces you to catch
+    or declare them. Unchecked ones (RuntimeException and subclasses like IllegalArgumentException)
+    do not require declaration. Python has no checked-exception concept.
+  source: "https://docs.oracle.com/javase/tutorial/essential/exceptions/catchOrDeclare.html"
+  objectives: [dse-found]
+
+- id: JVM-01-q5
+  type: single
+  prompt: "What is `x -> x * 2` in Java?"
+  options:
+    A: "A syntax error; Java has no lambdas."
+    B: "A lambda that implements a functional (single-abstract-method) interface, e.g. Function<Integer,Integer>."
+    C: "A generic type parameter."
+    D: "A ternary expression."
+  answer: [B]
+  explanation: >-
+    A lambda is concise syntax for an instance of a functional interface (exactly one abstract
+    method), such as Function, Predicate or Comparator. It is the compiled analogue of a Python
+    lambda.
+  source: "https://docs.oracle.com/javase/tutorial/java/javaOO/lambdaexpressions.html"
+  objectives: [dse-found]
+
+- id: JVM-01-q6
+  type: single
+  prompt: >-
+    A file declares `package de.mastery;` and `public class Money`. Where must the source file live
+    relative to the source root?
+  options:
+    A: "Anywhere; Java ignores folder layout."
+    B: "In de/mastery/Money.java under the source root, matching the package to the directory path."
+    C: "In a folder named Money/."
+    D: "In the same folder as the build tool's config only."
+  answer: [B]
+  explanation: >-
+    The directory structure under the source root must mirror the package: package de.mastery means
+    the file is de/mastery/Money.java. Build tools and the compiler rely on this convention.
+  source: "https://docs.oracle.com/javase/tutorial/java/package/managingfiles.html"
+  objectives: [dse-found]
+
+- id: JVM-01-q7
+  type: single
+  prompt: "Why does `if (someList)` not compile in Java the way `if some_list:` works in Python?"
+  options:
+    A: "Java requires an explicit boolean condition; there is no truthiness, so you write if (!list.isEmpty())."
+    B: "Lists are always truthy in Java."
+    C: "You must cast the list to int first."
+    D: "It compiles but always evaluates to false."
+  answer: [A]
+  explanation: >-
+    Java has no truthiness: an if condition must be a boolean. Test emptiness explicitly, e.g.
+    if (!list.isEmpty()). Relying on Python-style truthiness is a common porting bug.
+  source: "https://docs.oracle.com/javase/specs/jls/se21/html/jls-14.html#jls-14.9"
+  objectives: [dse-found]

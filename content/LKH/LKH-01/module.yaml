@@ -1,0 +1,9 @@
+id: LKH-01
+title: The Iceberg metadata tree
+track: LKH
+hours: 4
+requires: [FND-06]
+labs: []
+cost: free
+cert_objectives: []
+from_your_world: "The Iceberg tables you query in Athena"

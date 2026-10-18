@@ -1,0 +1,11 @@
+# Alt: both unity_catalog and liquid_clustering present, with extra defensible
+# factors (ordering differs, superset of required). Still exactly correct.
+scenario_1:
+  format: delta
+  factors: [single_vendor, databricks_native, unity_catalog, liquid_clustering]
+scenario_2:
+  format: iceberg
+  factors: [multi_engine, hidden_partitioning, engine_neutral, partition_evolution]
+scenario_3:
+  format: hudi
+  factors: [upsert_heavy, incremental_pulls, record_level_index]

@@ -1,0 +1,9 @@
+id: FND-05
+title: Delivery semantics
+track: FND
+hours: 3
+requires: [FND-01]
+labs: []
+cost: free
+cert_objectives: []
+from_your_world: "Re-running a dbt model safely; SOX 'completeness and accuracy'; idempotent MERGE on a natural key"

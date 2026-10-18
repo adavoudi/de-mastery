@@ -1,0 +1,10 @@
+id: ZZZF-01/01-keyed-sum
+title: Keyed sum over a bounded stream
+entry: src/main/java/de/selftest/KeyedSum.java
+lab: none
+timeout_s: 300
+hints:
+  - "Build a StreamExecutionEnvironment and fromData the input."
+  - "keyBy the key field, then sum the value field."
+  - "Collect with executeAndCollect() and fold into a Map."
+cert_objectives: [dse-flink:selftest]

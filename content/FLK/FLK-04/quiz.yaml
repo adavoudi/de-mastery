@@ -1,0 +1,71 @@
+- id: FLK-04-q1
+  type: single
+  prompt: "What is the result of a Flink SQL query, conceptually?"
+  options: {A: "A one-shot result set like a batch query", B: "A dynamic table that changes over time, represented by a changelog stream", C: "A Kafka topic", D: "A materialized view that never updates"}
+  answer: [B]
+  explanation: "A continuous Flink SQL query produces a dynamic table — a continuously-updating result — whose changes are a changelog stream of rows tagged with a RowKind."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/concepts/dynamic_tables/"
+  objectives: [dse-flink:sql]
+
+- id: FLK-04-q2
+  type: multi
+  prompt: "Which RowKinds does an UNBOUNDED GROUP BY aggregation emit as new rows for existing keys arrive? (select all)"
+  options: {A: "+I (INSERT)", B: "-U (UPDATE_BEFORE)", C: "+U (UPDATE_AFTER)", D: "It emits nothing until the stream ends"}
+  answer: [A, B, C]
+  explanation: "A key first appears as +I; when its aggregate changes, the query retracts the old value (-U) and emits the new one (+U). It is an updating query, not append-only."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/concepts/dynamic_tables/"
+  objectives: [dse-flink:changelog]
+
+- id: FLK-04-q3
+  type: single
+  prompt: "Which query is APPEND-ONLY (emits only +I)?"
+  options: {A: "SELECT k, COUNT(*) FROM t GROUP BY k (unbounded)", B: "A windowed aggregation over a TUMBLE window TVF", C: "SELECT k, LAST_VALUE(v) FROM t GROUP BY k", D: "A deduplication keeping the latest row per key"}
+  answer: [B]
+  explanation: "A window TVF aggregation emits each window once when it closes, so it is append-only. Unbounded GROUP BY and latest-per-key queries are updating (they retract/revise)."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/window-tvf/"
+  objectives: [dse-flink:changelog]
+
+- id: FLK-04-q4
+  type: single
+  prompt: "You have an updating query (GROUP BY producing -U/+U). Which sink preserves its semantics?"
+  options: {A: "A plain append-only kafka connector", B: "upsert-kafka keyed by the GROUP BY key", C: "A filesystem CSV sink", D: "print()"}
+  answer: [B]
+  explanation: "upsert-kafka writes a compacted, keyed changelog (latest value per key; null value = delete), which materialises the updating query's dynamic table. A plain append topic would duplicate every revision."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/connectors/table/upsert-kafka/"
+  objectives: [dse-flink:changelog]
+
+- id: FLK-04-q5
+  type: single
+  prompt: "After all input has been consumed, how does the final materialized state of an updating streaming query relate to the batch answer over the same data?"
+  options: {A: "They can differ", B: "The streaming final state equals the batch result", C: "The streaming state is always larger", D: "Only append-only queries match batch"}
+  answer: [B]
+  explanation: "The retractions in the changelog are intermediate; once all input is folded, the dynamic table's state equals the batch answer over the same events. This is the streaming/batch agreement oracle (G6)."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/concepts/dynamic_tables/"
+  objectives: [dse-flink:changelog]
+
+- id: FLK-04-q6
+  type: single
+  prompt: "What does a -D (DELETE) RowKind in a changelog represent?"
+  options: {A: "A duplicate row", B: "Removal of a row from the dynamic table", C: "A late event", D: "A watermark"}
+  answer: [B]
+  explanation: "-D removes a row from the result (e.g. a key no longer qualifies). Together with +I/-U/+U it is how the changelog expresses every mutation of the dynamic table."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/concepts/dynamic_tables/"
+  objectives: [dse-flink:changelog]
+
+- id: FLK-04-q7
+  type: single
+  prompt: "In Flink 2.x SQL, how do you express a one-hour tumbling window over a table t with event-time column ts?"
+  options: {A: "GROUP BY FLOOR(ts TO HOUR)", B: "TABLE(TUMBLE(TABLE t, DESCRIPTOR(ts), INTERVAL '1' HOUR)) then GROUP BY window_start, window_end", C: "WINDOW w AS (ORDER BY ts)", D: "PARTITION BY HOUR(ts)"}
+  answer: [B]
+  explanation: "Flink 2.x uses window table-valued functions: TUMBLE/HOP/CUMULATE produce window_start/window_end columns you GROUP BY. The aggregation is append-only (one row per closed window)."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/window-tvf/"
+  objectives: [dse-flink:sql, dse-flink:windows]
+
+- id: FLK-04-q8
+  type: single
+  prompt: "Why grade a ported dbt model on its changelog output rather than just the final printed number?"
+  options: {A: "The final number is always wrong", B: "To verify the query is a correct updating query that converges (right RowKinds + right final state), not one that merely prints the right value once", C: "Because changelogs are faster", D: "To check column order"}
+  answer: [B]
+  explanation: "Checking RowKinds proves the query updates correctly (retracts and re-emits) and the folded final state matches the batch oracle — catching queries that are wrong about append-vs-update even if a single snapshot looks right."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/concepts/dynamic_tables/"
+  objectives: [dse-flink:changelog]

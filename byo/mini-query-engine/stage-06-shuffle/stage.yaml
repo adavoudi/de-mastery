@@ -1,0 +1,7 @@
+title: Partitioned execution with a hash shuffle (multiprocessing)
+entry: engine.py
+timeout_s: 60
+hints:
+  - "stable_hash() must be deterministic across processes. Python's built-in hash() is salted per interpreter (PYTHONHASHSEED), so use hashlib (e.g. blake2b over repr(key)) instead. Partition = stable_hash(key) % num_partitions."
+  - "Shuffle like Spark: the map side hash-partitions rows by the group keys and writes one file per partition; reduce workers (separate processes) read a partition file and compute its PARTIAL aggregate. Because each key hashes to exactly one partition, no cross-partition merge of the same key is needed."
+  - "Use multiprocessing with the 'fork' start method so children inherit the loaded module (avoids spawn re-import/pickle pain under pytest). Pass only picklable primitives (file paths, keys, aggs) to the worker; it writes its partial state back to disk; the parent merges them."

@@ -1,0 +1,72 @@
+- id: FND-02-q1
+  type: single
+  prompt: "Two tables are both hash-partitioned on customer_id across the same number of partitions. A join on customer_id will:"
+  options:
+    A: "Run locally per partition with no shuffle (collocated join)"
+    B: "Always require a full shuffle of both tables"
+    C: "Require broadcasting the larger table"
+    D: "Fail unless the keys are sorted"
+  answer: [A]
+  explanation: "Equal keys hash to the same partition on both sides, so each partition joins its local slice — no network redistribution. This is Redshift's collocated DISTKEY join."
+  source: "https://docs.aws.amazon.com/redshift/latest/dg/c_choosing_dist_sort.html"
+  objectives: []
+- id: FND-02-q2
+  type: single
+  prompt: "You hash-partition orders on company_id, but one of three companies has 90% of the rows. What happens?"
+  options:
+    A: "Severe skew: one partition holds ~90% of rows and its task is a straggler"
+    B: "The data is perfectly balanced because hashing is uniform"
+    C: "The join becomes a broadcast join automatically"
+    D: "Nothing — hashing fixes skew"
+  answer: [A]
+  explanation: "Hashing spreads distinct keys, not row volume. A low-cardinality, skewed key puts most rows in one partition. Use a high-cardinality key or salt the hot value."
+  source: "https://spark.apache.org/docs/latest/sql-performance-tuning.html"
+  objectives: []
+- id: FND-02-q3
+  type: single
+  prompt: "What is the best practical signal that a partitioning is skewed?"
+  options:
+    A: "A high max/mean ratio of per-partition row counts (or bytes)"
+    B: "The query plan contains the word 'shuffle'"
+    C: "The number of partitions is a prime number"
+    D: "The output is unsorted"
+  answer: [A]
+  explanation: "Skew shows up as an uneven partition-size distribution; max/mean >> 1 means one task does far more work and becomes a straggler."
+  source: "https://spark.apache.org/docs/latest/sql-performance-tuning.html"
+  objectives: []
+- id: FND-02-q4
+  type: single
+  prompt: "Why is a shuffle expensive?"
+  options:
+    A: "It serializes records to disk and moves them across the network between every mapper and reducer"
+    B: "It recompiles the query plan"
+    C: "It always sorts the entire dataset twice"
+    D: "It requires a broadcast of all data to all nodes"
+  answer: [A]
+  explanation: "The map side spills partitioned records; the reduce side pulls its slice from every source. Serialization, disk, and network — the three slowest operations — all happen."
+  source: "https://research.google/pubs/pub62/"
+  objectives: []
+- id: FND-02-q5
+  type: multi
+  prompt: "Which are valid fixes for a single hot key causing skew? (select all)"
+  options:
+    A: "Salt the hot key (append a random suffix), aggregate, then re-aggregate"
+    B: "Choose a higher-cardinality partition key if the logic allows"
+    C: "Broadcast the small side if the join's other table is small"
+    D: "Increase the modulus P so hash(key) % P changes for the hot key"
+  answer: [A, B, C]
+  explanation: "Salting, a better key, and broadcasting all help. Increasing P does NOT help a single hot key: hash(k) % P is still one value, so all its rows still collide."
+  source: "https://spark.apache.org/docs/latest/sql-performance-tuning.html"
+  objectives: []
+- id: FND-02-q6
+  type: single
+  prompt: "Range partitioning picks boundaries best by:"
+  options:
+    A: "Sampling the actual data to choose balanced split points"
+    B: "Always using evenly spaced numeric boundaries"
+    C: "Hashing the key first"
+    D: "Using the alphabetical order of column names"
+  answer: [A]
+  explanation: "Range partitioners sample the data so each range gets a similar number of rows; evenly spaced boundaries skew when the data is non-uniform."
+  source: "https://spark.apache.org/docs/latest/sql-performance-tuning.html"
+  objectives: []

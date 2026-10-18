@@ -1,0 +1,7 @@
+title: Transactional (2PC) sink — end-to-end exactly-once
+entry: processor.py
+timeout_s: 90
+hints:
+  - "TransactionalSink models Flink's TwoPhaseCommitSinkFunction. write() buffers into the OPEN transaction. pre_commit(cid) flushes the open txn into prepared[cid] (durable, invisible) and clears the open txn. commit(cid) appends prepared[cid] to the visible `committed` list EXACTLY ONCE (ignore a duplicate/absent cid). abort(cid) drops prepared[cid]; abort_open() drops the open txn."
+  - "run_exactly_once_sink injects barriers; on each Barrier pre_commit the open txn (record the source offset) and queue a pending commit; a commit notification lands commit_lag barriers later (pop the oldest pending and commit it). When the job finishes cleanly, do a FINAL pre_commit of the trailing open txn and flush all pending commits."
+  - "On crash: abort the open txn AND any prepared txn whose checkpoint was never notified (aborted = not visible). Then replay the source from the last COMPLETED checkpoint's offset into a fresh sink, pre_commit + commit that tail, and the visible output = committed-before-crash + replayed tail. For every crash point and lag the sorted committed output must equal the batch oracle (each input exactly once)."

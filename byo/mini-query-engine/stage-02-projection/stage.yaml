@@ -1,0 +1,7 @@
+title: Projection and filter operators (Volcano model)
+entry: engine.py
+timeout_s: 60
+hints:
+  - "In the Volcano/iterator model each operator pulls batches from its child. Add Project and Filter branches to your _batches() generator so they transform the batches flowing up from the Scan."
+  - "Project: map the requested column names to indices and use RecordBatch.select(idxs). Filter: evaluate the predicate to a boolean mask with pyarrow.compute and call batch.filter(mask)."
+  - "Evaluate expressions structurally: Compare(left, op, right) maps op to pc.equal/less/greater/...; And/Or combine child masks with pc.and_kleene/pc.or_kleene so NULLs follow three-valued logic like SQL."

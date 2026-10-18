@@ -1,0 +1,10 @@
+id: FND-01/01-scale-up-vs-out
+title: One big box (DuckDB) vs. a process pool — and why bytes-read decides
+entry: solution.py
+lab: none
+timeout_s: 180
+hints:
+  - "DuckDB can read a Parquet file directly: `SELECT ... FROM read_parquet('path')`. Only project the columns you aggregate, so the engine prunes the rest and reads fewer bytes."
+  - "For the pool version, split the CSV row-index range into N chunks, aggregate each chunk in a worker with multiprocessing.Pool, then combine the partial (sum, count) pairs. Combine is associative, so order doesn't matter."
+  - "bytes_read for the DuckDB/Parquet path should be the on-disk size of only the columns you scan is hard to get exactly — instead report the Parquet file size for the columns you projected via `parquet_metadata`/`parquet_file_metadata`; for the CSV path report the full file size on disk. Columnar + projection must read strictly fewer bytes than scanning the whole CSV."
+cert_objectives: []

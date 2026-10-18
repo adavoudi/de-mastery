@@ -1,0 +1,90 @@
+- id: KFK-05-q1
+  type: single
+  prompt: "In a transactional read-process-write loop, what must be committed atomically with the output writes to achieve exactly-once?"
+  options:
+    A: "Nothing; the writes alone are enough."
+    B: "The input consumer's offsets, via send_offsets_to_transaction, so 'consumed up to here' and 'wrote outputs' commit together."
+    C: "The broker's replication factor."
+    D: "The producer's linger.ms."
+  answer: [B]
+  explanation: >-
+    Committing the input offsets inside the transaction makes consume+produce atomic: a crash either
+    rolls back both or commits both, so no input is processed twice or dropped.
+  source: "https://kafka.apache.org/documentation/#semantics"
+  objectives: [ccdak:2]
+
+- id: KFK-05-q2
+  type: single
+  prompt: "A downstream consumer must NOT see records from aborted or in-flight transactions. What do you set?"
+  options:
+    A: "isolation.level=read_uncommitted"
+    B: "isolation.level=read_committed"
+    C: "enable.auto.commit=false"
+    D: "acks=all"
+  answer: [B]
+  explanation: >-
+    read_committed makes the consumer skip records belonging to aborted or not-yet-committed
+    transactions. read_uncommitted (the default) would surface them, breaking exactly-once.
+  source: "https://kafka.apache.org/documentation/#consumerconfigs_isolation.level"
+  objectives: [ccdak:2]
+
+- id: KFK-05-q3
+  type: single
+  prompt: "Why must the transactional.id be STABLE per logical processor (not random per run)?"
+  options:
+    A: "To make logs easier to read."
+    B: "So zombie fencing works: init_transactions bumps the epoch and fences the old instance; a random id would let a zombie and its replacement both commit."
+    C: "Random ids are rejected by Kafka."
+    D: "It controls the partition count."
+  answer: [B]
+  explanation: >-
+    Fencing keys on transactional.id + epoch. A stable id lets a new instance fence the old one. With
+    random ids the two instances have different ids and both could commit — duplicates.
+  source: "https://kafka.apache.org/documentation/#producerconfigs"
+  objectives: [ccdak:2]
+
+- id: KFK-05-q4
+  type: single
+  prompt: "What happens to a transaction's writes if the producer calls abort_transaction()?"
+  options:
+    A: "They are kept but marked as warnings."
+    B: "They are invisible to read_committed consumers — all-or-nothing."
+    C: "They are duplicated to a dead-letter topic."
+    D: "They commit anyway after a delay."
+  answer: [B]
+  explanation: >-
+    Aborting discards the transaction atomically; read_committed consumers never see its records.
+    This is the atomicity half of exactly-once.
+  source: "https://kafka.apache.org/documentation/#semantics"
+  objectives: [ccdak:2]
+
+- id: KFK-05-q5
+  type: multi
+  prompt: "Which are required/true for transactional exactly-once in Kafka? (choose all)"
+  options:
+    A: "The producer must be idempotent (transactions require and enable it)."
+    B: "A stable transactional.id is configured."
+    C: "Input offsets are sent inside the transaction."
+    D: "Downstream consumers use read_committed."
+  answer: [A, B, C, D]
+  explanation: >-
+    All four are needed: idempotence as the base, a stable transactional.id for fencing, offsets
+    committed in the transaction for atomic consume+produce, and read_committed to hide
+    aborted/in-flight records.
+  source: "https://developer.confluent.io/courses/architecture/exactly-once/"
+  objectives: [ccdak:2]
+
+- id: KFK-05-q6
+  type: single
+  prompt: "When is plain at-least-once (KFK-04) + an idempotent sink preferable to Kafka transactions?"
+  options:
+    A: "Never; always use transactions."
+    B: "When the output is a store you can upsert by business key, so duplicates self-correct — simpler and lower latency than transaction coordination."
+    C: "Only when data loss is acceptable."
+    D: "Only for single-partition topics."
+  answer: [B]
+  explanation: >-
+    If a downstream idempotent upsert dedups for you, at-least-once avoids the transaction
+    coordinator overhead and latency. Transactions shine when you need cross-Kafka-topic atomicity.
+  source: "https://developer.confluent.io/courses/architecture/exactly-once/"
+  objectives: [ccdak:2]

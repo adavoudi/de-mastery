@@ -1,0 +1,89 @@
+- id: KFK-03-q1
+  type: single
+  prompt: "Which single setting, when enabled, makes a producer reject duplicates AND preserve per-partition order across retries?"
+  options:
+    A: "acks=1"
+    B: "enable.idempotence=true"
+    C: "compression.type=zstd"
+    D: "linger.ms=100"
+  answer: [B]
+  explanation: >-
+    The idempotent producer uses a producer id + per-partition sequence numbers so the broker drops
+    duplicates and out-of-order sequences. It also pins acks=all and bounds in-flight requests.
+  source: "https://kafka.apache.org/documentation/#producerconfigs_enable.idempotence"
+  objectives: [ccdak:2, dse-found]
+
+- id: KFK-03-q2
+  type: single
+  prompt: "With enable.idempotence=true, what is the maximum value of max.in.flight.requests.per.connection that still preserves ordering under retries?"
+  options:
+    A: "1"
+    B: "5"
+    C: "100"
+    D: "Unlimited"
+  answer: [B]
+  explanation: >-
+    Idempotence preserves ordering only up to 5 in-flight requests per connection. Above 5 a retried
+    request can be reordered relative to later successful ones.
+  source: "https://kafka.apache.org/documentation/#producerconfigs_max.in.flight.requests.per.connection"
+  objectives: [ccdak:2]
+
+- id: KFK-03-q3
+  type: multi
+  prompt: "To tune a JSON event producer for THROUGHPUT while keeping per-key order and no duplicates, which do you set? (choose all)"
+  options:
+    A: "A small positive linger.ms (e.g. 5-20 ms)."
+    B: "A larger batch.size."
+    C: "compression.type=lz4 or zstd."
+    D: "enable.idempotence=true with a key per record."
+  answer: [A, B, C, D]
+  explanation: >-
+    Larger, compressed batches (linger + batch.size + compression) raise throughput; idempotence +
+    a per-record key keep order per key and prevent duplicates on retry. All four apply.
+  source: "https://developer.confluent.io/courses/architecture/producer-hardware/"
+  objectives: [ccdak:2, dse-found]
+
+- id: KFK-03-q4
+  type: single
+  prompt: "A producer with retries enabled and max.in.flight=6 (idempotence off) occasionally writes account events out of order within a partition. Why?"
+  options:
+    A: "Kafka never preserves order."
+    B: "A retried request can be sent after a later request that already succeeded, flipping order; nothing dedups or re-sequences it."
+    C: "The consumer is misconfigured."
+    D: "Compression reorders records."
+  answer: [B]
+  explanation: >-
+    Without idempotence and with >1 in-flight request, a retry can land after a subsequent successful
+    request. Idempotence (and in-flight <= 5) prevents this via sequence numbers.
+  source: "https://kafka.apache.org/documentation/#semantics"
+  objectives: [ccdak:2]
+
+- id: KFK-03-q5
+  type: single
+  prompt: "What does the default partitioner do with a record that HAS a key?"
+  options:
+    A: "Round-robins it across all partitions."
+    B: "Sends it to a partition chosen by hashing the key, so the same key always goes to the same partition."
+    C: "Sends it to partition 0 always."
+    D: "Chooses the partition with the fewest records."
+  answer: [B]
+  explanation: >-
+    Keyed records are hash-partitioned, so one key consistently maps to one partition — the basis of
+    per-key ordering. Keyless records use sticky batching across partitions for throughput.
+  source: "https://kafka.apache.org/documentation/#producerconfigs"
+  objectives: [ccdak:2]
+
+- id: KFK-03-q6
+  type: single
+  prompt: "Enabling enable.idempotence=true implicitly sets which of these?"
+  options:
+    A: "acks=0 and retries=0"
+    B: "acks=all, bounded retries (via delivery.timeout.ms), and max.in.flight <= 5"
+    C: "compression.type=gzip"
+    D: "linger.ms=1000"
+  answer: [B]
+  explanation: >-
+    Idempotence requires and sets the safe defaults: acks=all, effectively-infinite bounded retries,
+    and in-flight <= 5. Compression and linger are independent throughput knobs you choose.
+  source: "https://kafka.apache.org/documentation/#producerconfigs_enable.idempotence"
+  objectives: [ccdak:2]

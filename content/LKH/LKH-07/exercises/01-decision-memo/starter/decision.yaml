@@ -1,0 +1,11 @@
+# Fill in your decision for each scenario. See README.md for the scenarios and the
+# controlled vocabulary of factor keys. format must be one of: iceberg | delta | hudi.
+scenario_1:
+  format: ???        # TODO
+  factors: []        # TODO: list the required factor keys
+scenario_2:
+  format: ???        # TODO
+  factors: []        # TODO
+scenario_3:
+  format: ???        # TODO
+  factors: []        # TODO

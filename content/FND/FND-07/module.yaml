@@ -1,0 +1,9 @@
+id: FND-07
+title: Back-of-envelope estimation
+track: FND
+hours: 3
+requires: [FND-01, FND-06]
+labs: []
+cost: free
+cert_objectives: []
+from_your_world: "Sizing the commerce mart; translating 'bytes scanned' into an Athena bill; capacity-planning a feed"

@@ -1,0 +1,9 @@
+id: FLK-02
+title: DataStream API
+track: FLK
+hours: 6
+requires: [FLK-01]
+labs: []
+cost: free
+cert_objectives: [dse-flink:datastream, dse-foundations:flink101]
+from_your_world: "a dbt staging model (filter + enrich + route), but as a continuous DataStream job"

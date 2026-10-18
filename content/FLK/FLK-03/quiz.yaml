@@ -1,0 +1,71 @@
+- id: FLK-03-q1
+  type: single
+  prompt: "What does a watermark of T assert as it flows through the stream?"
+  options: {A: "Exactly T events have been processed", B: "No event with a timestamp <= T is expected to arrive after this point", C: "The processing-time clock is now T", D: "The window of size T is full"}
+  answer: [B]
+  explanation: "A watermark of T claims completeness up to event time T: the system believes no further events with timestamp <= T will arrive, so event-time windows ending at or before T can fire."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/concepts/time/"
+  objectives: [dse-flink:watermarks]
+
+- id: FLK-03-q2
+  type: single
+  prompt: "forBoundedOutOfOrderness(Duration.ofSeconds(5)) emits a watermark equal to:"
+  options: {A: "the current processing time", B: "the maximum event timestamp seen minus 5 seconds", C: "the minimum event timestamp seen", D: "exactly 5 seconds"}
+  answer: [B]
+  explanation: "It tracks the max event timestamp observed and emits (max - bound). A larger bound tolerates more out-of-order events but delays firing; a smaller bound is prompter but drops more as late."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/event-time/generating_watermarks/"
+  objectives: [dse-flink:watermarks]
+
+- id: FLK-03-q3
+  type: single
+  prompt: "An event arrives after the watermark has already passed its window's end, and no late-data handling is configured. What happens to it?"
+  options: {A: "It re-opens the window automatically", B: "It is silently dropped", C: "It is buffered forever", D: "The job fails"}
+  answer: [B]
+  explanation: "By default, events later than the watermark for their window are silently dropped. allowedLateness keeps the window to re-fire; sideOutputLateData routes the too-late events to a stream so they aren't lost silently."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/operators/windows/"
+  objectives: [dse-flink:windows]
+
+- id: FLK-03-q4
+  type: single
+  prompt: "What does sideOutputLateData(tag) do?"
+  options: {A: "Delays all output by a fixed amount", B: "Routes events that arrive after end + allowedLateness to a side-output stream instead of dropping them", C: "Fires the window early", D: "Enables processing-time windows"}
+  answer: [B]
+  explanation: "It captures events too late for their window (past end + allowedLateness) into a side-output stream — a dead-letter for late facts you can audit or reconcile, instead of silently losing them."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/operators/windows/#getting-late-data-as-a-side-output"
+  objectives: [dse-flink:windows]
+
+- id: FLK-03-q5
+  type: single
+  prompt: "A keyed operator's watermark is the MINIMUM across its input partitions. One partition goes quiet (no events). Without idleness, what happens to windows on the busy partitions?"
+  options: {A: "They keep firing normally", B: "They stop firing because the combined watermark freezes at the quiet partition's last value", C: "They switch to processing time", D: "They fire twice as fast"}
+  answer: [B]
+  explanation: "The watermark can't advance past a partition that might still produce older data, so a quiet partition pins the minimum and every window stalls — even for busy partitions. This is the stuck-watermark trap."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/event-time/generating_watermarks/#dealing-with-idle-sources"
+  objectives: [dse-flink:watermarks]
+
+- id: FLK-03-q6
+  type: single
+  prompt: "withIdleness(Duration.ofSeconds(10)) does what?"
+  options: {A: "Pauses the job for 10 seconds", B: "Marks a partition idle after 10s of no events so it is excluded from the watermark minimum, letting windows fire on the active partitions", C: "Drops events older than 10 seconds", D: "Sets the window size to 10 seconds"}
+  answer: [B]
+  explanation: "An idle partition is temporarily excluded from the watermark computation, so the combined watermark advances on active partitions and windows fire again. The partition rejoins when it produces data."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/event-time/generating_watermarks/#dealing-with-idle-sources"
+  objectives: [dse-flink:watermarks]
+
+- id: FLK-03-q7
+  type: single
+  prompt: "Which window assigner closes a window only after a configurable gap of inactivity for a key?"
+  options: {A: "Tumbling", B: "Sliding", C: "Session", D: "Global"}
+  answer: [C]
+  explanation: "Session windows group bursts of activity and close after a gap of no events for the key — unlike tumbling (fixed non-overlapping) and sliding (fixed, overlapping) windows."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/operators/windows/#session-windows"
+  objectives: [dse-flink:windows]
+
+- id: FLK-03-q8
+  type: single
+  prompt: "Why is bucketing hourly GMV by processing time (arrival) a problem?"
+  options: {A: "It is slower", B: "A delayed event lands in the wrong hour, so the result is wrong and not reproducible on replay", C: "It uses more memory", D: "Processing time is unavailable in Flink"}
+  answer: [B]
+  explanation: "Processing-time buckets depend on when Flink saw the event, so network delays shift events into the wrong hour and replaying the same events gives different answers. Event time fixes the bucket to when the event happened."
+  source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/concepts/time/"
+  objectives: [dse-flink:windows]

@@ -1,0 +1,13 @@
+-- C3 / M3 — Flink SQL stub: fct_orders enriched by an FX temporal (as-of) join.
+-- TODO(learner): join orders to the versioned fx_rates dimension FOR SYSTEM_TIME
+-- AS OF the order timestamp, compute usd_amount = amount * fx_rate, write to
+-- fct_orders (ddl/fct_orders.sql).
+--
+-- Intentionally incomplete -> acceptance test FAILS (G1).
+
+-- TODO: INSERT INTO fct_orders
+--   SELECT o.order_id, o.customer_id, o.company_id, o.order_ts, o.currency,
+--          o.amount, fx.usd_per_unit AS fx_rate, o.amount * fx.usd_per_unit
+--   FROM orders o
+--   JOIN fx_rates FOR SYSTEM_TIME AS OF o.order_time AS fx
+--     ON o.currency = fx.currency;

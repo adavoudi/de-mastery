@@ -1,0 +1,9 @@
+id: LKH-03
+title: Catalogs, branching & write-audit-publish
+track: LKH
+hours: 4
+requires: [LKH-02]
+labs: []
+cost: free
+cert_objectives: []
+from_your_world: "SOX: an audited publish step before data reaches the mart"

@@ -1,0 +1,11 @@
+id: KFK-04
+title: Consumers & groups — manual commits, at-least-once, no loss across crashes
+track: KFK
+hours: 6
+requires: [KFK-02]
+labs: []
+cost: free
+cert_objectives:
+  - dse-found
+  - ccdak:2
+from_your_world: "SOX completeness: a crash must never drop an unprocessed event"

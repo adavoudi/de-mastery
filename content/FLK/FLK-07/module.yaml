@@ -1,0 +1,9 @@
+id: FLK-07
+title: Process functions — timers, keyed state & broadcast rules
+track: FLK
+hours: 5
+requires: [FLK-06]
+labs: []
+cost: free
+cert_objectives: [dse-flink:process]
+from_your_world: "a dynamic business rule applied to a session of events, where the rule can change over time and must be applied as of each event"

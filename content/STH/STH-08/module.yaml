@@ -1,0 +1,9 @@
+id: STH-08
+title: Latency tiers & cost — seconds, minutes, hours
+track: STH
+hours: 3
+requires: [STH-07]
+labs: []
+cost: free
+cert_objectives: [sth:cost]
+from_your_world: "Daily SLA trade-offs: what a nightly batch costs vs. a near-real-time pipeline, in compute, storage, ops and people"

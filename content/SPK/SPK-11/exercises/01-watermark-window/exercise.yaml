@@ -1,0 +1,10 @@
+id: SPK-11/01-watermark-window
+title: Event-time windowed counts with a watermark into Iceberg
+entry: solution.py
+lab: none
+timeout_s: 300
+hints:
+  - "Read the JSON stream (schema 'event_id INT, company_id STRING, amount DOUBLE, event_ts TIMESTAMP'). Add a watermark on the EVENT-TIME column: .withWatermark('event_ts', '10 minutes'). Never use current_timestamp()/processing time."
+  - "Aggregate: groupBy(window('event_ts','5 minutes'), 'company_id').count(). Project to the table columns: company_id, w_start = window.start, n = count."
+  - "Append the finalized windows to the Iceberg table with .writeStream.outputMode('append').option('checkpointLocation', checkpoint).trigger(availableNow=True).toTable(table); processAllAvailable(); stop(). Reuse the same checkpoint so late events (arriving after a window finalizes) are correctly dropped."
+cert_objectives: [spark-assoc:5.3, spark-assoc:5.4]

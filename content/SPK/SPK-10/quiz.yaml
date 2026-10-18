@@ -1,0 +1,109 @@
+- id: SPK-10-q1
+  type: single
+  prompt: "In the micro-batch model, when are the new source offsets committed to the checkpoint?"
+  options:
+    A: "Before the micro-batch runs, so the offsets reserve the work."
+    B: "After the sink write for that batch succeeds, so a crash either redoes the batch or starts cleanly."
+    C: "Only when the query is stopped gracefully."
+    D: "Never; offsets live only in memory."
+  answer: [B]
+  explanation: >-
+    Offsets are committed durably after the write. A crash before the commit simply redoes the batch
+    from the same offsets; a crash after it starts the next batch cleanly. This ordering is what
+    makes recovery exactly-once with an idempotent/transactional sink.
+  source: "https://spark.apache.org/docs/4.0.0/structured-streaming-programming-guide.html#recovering-from-failures-with-checkpointing"
+  objectives: [spark-assoc:5.1]
+
+- id: SPK-10-q2
+  type: single
+  prompt: "You restart a streaming job but point it at a BRAND NEW checkpoint directory each run. What happens?"
+  options:
+    A: "Nothing changes; checkpoints are interchangeable."
+    B: "The query has no memory of prior progress, so it reprocesses from the start and duplicates data."
+    C: "It resumes exactly where it left off."
+    D: "Spark refuses to start without the old directory."
+  answer: [B]
+  explanation: >-
+    The checkpoint stores committed offsets. A fresh directory looks like a never-run query, so it
+    re-ingests everything — the most common cause of duplicates on restart. Reuse the same checkpoint.
+  source: "https://spark.apache.org/docs/4.0.0/structured-streaming-programming-guide.html#recovering-from-failures-with-checkpointing"
+  objectives: [spark-assoc:5.1]
+
+- id: SPK-10-q3
+  type: single
+  prompt: "Which output mode is valid for a streaming query that has NO aggregation (each input row -> one output row)?"
+  options:
+    A: "complete"
+    B: "append"
+    C: "complete or update only"
+    D: "none; non-aggregating streams cannot be written"
+  answer: [B]
+  explanation: >-
+    append emits each new result row once and is the natural mode for a map-like (non-aggregating)
+    stream. complete is only valid for aggregations (it rewrites the whole result each batch).
+  source: "https://spark.apache.org/docs/4.0.0/structured-streaming-programming-guide.html#output-modes"
+  objectives: [spark-assoc:5.2, spark-assoc:5.3]
+
+- id: SPK-10-q4
+  type: single
+  prompt: "Why does Spark reject append output mode on a running (unwatermarked) streaming aggregation?"
+  options:
+    A: "append is deprecated."
+    B: "Aggregate rows keep changing as new data arrives, so there is nothing 'final' to append until a watermark lets a group close."
+    C: "Aggregations always require complete mode forever."
+    D: "append silently works but double-counts."
+  answer: [B]
+  explanation: >-
+    Without a watermark, any group may still receive more input, so its result is never final and
+    cannot be appended. complete or update works; a watermark (SPK-11) lets windows finalize and
+    then append becomes valid.
+  source: "https://spark.apache.org/docs/4.0.0/structured-streaming-programming-guide.html#output-modes"
+  objectives: [spark-assoc:5.3]
+
+- id: SPK-10-q5
+  type: single
+  prompt: "What does trigger(availableNow=True) do?"
+  options:
+    A: "Runs forever at a fixed interval."
+    B: "Processes all data available right now (in one or more batches), then stops — useful for deterministic/incremental-batch runs."
+    C: "Processes exactly one row."
+    D: "Disables checkpointing."
+  answer: [B]
+  explanation: >-
+    availableNow drains everything currently available and then stops, while still honoring the
+    checkpoint. It is ideal for tests (no wall-clock waiting) and for incremental batch jobs.
+  source: "https://spark.apache.org/docs/4.0.0/structured-streaming-programming-guide.html#triggers"
+  objectives: [spark-assoc:5.2]
+
+- id: SPK-10-q6
+  type: single
+  prompt: >-
+    A sink appends rows by collecting the micro-batch to the driver and inserting them, with no
+    dedup and no transactional offset tracking. A batch is redone after a crash. What is the result?
+  options:
+    A: "Exactly-once; Spark protects every sink automatically."
+    B: "At-most-once."
+    C: "Duplicates, because the non-idempotent sink re-inserts the redone batch's rows."
+    D: "Data loss only."
+  answer: [C]
+  explanation: >-
+    Exactly-once needs the sink to be idempotent or transactional. A plain append-on-redo
+    double-writes. The file and Iceberg table sinks track committed batches to avoid this.
+  source: "https://spark.apache.org/docs/4.0.0/structured-streaming-programming-guide.html#recovering-from-failures-with-checkpointing"
+  objectives: [spark-assoc:5.1]
+
+- id: SPK-10-q7
+  type: single
+  prompt: "How is the dbt incremental-model 'high-water mark' most like Structured Streaming?"
+  options:
+    A: "Both require you to hand-pick an updated_at column that the engine then forgets."
+    B: "Both track where processing stopped so the next run only handles new data; Streaming stores source offsets in the checkpoint automatically."
+    C: "Neither can recover from a failed run."
+    D: "Both reprocess the full table every run."
+  answer: [B]
+  explanation: >-
+    The incremental model's watermark and the stream's committed offsets both answer 'what is new
+    since last time'. Streaming manages the offsets for you in the checkpoint, rather than relying
+    on a column predicate you maintain.
+  source: "https://spark.apache.org/docs/4.0.0/structured-streaming-programming-guide.html#basic-concepts"
+  objectives: [spark-assoc:5.1]

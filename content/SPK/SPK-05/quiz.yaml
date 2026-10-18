@@ -1,0 +1,119 @@
+- id: SPK-05-q1
+  type: single
+  prompt: >-
+    In which Catalyst stage do predicate pushdown and column pruning happen?
+  options:
+    A: "Parsed (unresolved) logical plan"
+    B: "Analyzed logical plan"
+    C: "Optimized logical plan (rule-based rewrites)"
+    D: "Only at runtime, never in planning"
+  answer: [C]
+  explanation: >-
+    Pushdown, pruning, filter reordering and constant folding are rule-based rewrites applied to
+    the analyzed plan to produce the optimized logical plan. The physical plan then carries the
+    results (e.g. PushedFilters on the scan).
+  source: "https://spark.apache.org/docs/4.0.0/sql-programming-guide.html"
+  objectives: [spark-assoc:1.3]
+
+- id: SPK-05-q2
+  type: single
+  prompt: >-
+    You read a Parquet file, filter on currency = 'USD', and the FileScan node shows
+    PushedFilters: []. What is the most likely cause?
+  options:
+    A: "Parquet never supports pushdown."
+    B: "The filter is wrapped in a Python UDF or a non-pushable expression, so Catalyst cannot push it to the reader."
+    C: "The DataFrame is cached."
+    D: "shuffle.partitions is too low."
+  answer: [B]
+  explanation: >-
+    A native column predicate on a Parquet source normally appears in PushedFilters. An empty list
+    on an expected filter usually means a Python UDF or a non-pushable function wraps the column,
+    making the predicate opaque to Catalyst.
+  source: "https://spark.apache.org/docs/4.0.0/sql-data-sources-parquet.html"
+  objectives: [spark-assoc:1.3]
+
+- id: SPK-05-q3
+  type: single
+  prompt: >-
+    A query selects only order_id and currency from a 7-column Parquet table. In the formatted
+    plan, what proves column pruning worked?
+  options:
+    A: "Exchange count is 0"
+    B: "The FileScan ReadSchema lists only order_id and currency, not all 7 columns"
+    C: "PushedFilters is empty"
+    D: "The plan contains BroadcastHashJoin"
+  answer: [B]
+  explanation: >-
+    Column pruning is visible as a narrow ReadSchema on the scan node: only the referenced columns
+    are read. Because Parquet is columnar, this is a real I/O reduction, not cosmetic.
+  source: "https://spark.apache.org/docs/4.0.0/sql-performance-tuning.html"
+  objectives: [spark-assoc:1.3]
+
+- id: SPK-05-q4
+  type: single
+  prompt: "Which explain mode prints the physical plan as a numbered tree with a details section?"
+  options:
+    A: "explain('simple')"
+    B: "explain('codegen')"
+    C: "explain('formatted')"
+    D: "explain('cost')"
+  answer: [C]
+  explanation: >-
+    'formatted' prints the physical operators as a compact numbered tree plus a details block
+    (ReadSchema, PushedFilters, output). 'cost' adds row/size estimates; 'codegen' dumps generated
+    Java; 'simple' is one line per operator.
+  source: "https://spark.apache.org/docs/4.0.0/api/python/reference/pyspark.sql/api/pyspark.sql.DataFrame.explain.html"
+  objectives: [spark-assoc:1.3]
+
+- id: SPK-05-q5
+  type: single
+  prompt: >-
+    Why does pushing a filter into the Parquet scan reduce work beyond just filtering fewer rows
+    later?
+  options:
+    A: "It changes the number of shuffle partitions."
+    B: "Row groups whose footer min/max statistics cannot match the predicate are skipped and never deserialized."
+    C: "It forces a broadcast join."
+    D: "It disables Catalyst."
+  answer: [B]
+  explanation: >-
+    Pushed predicates let the Parquet reader skip entire row groups using column min/max stats in
+    the footer, so those bytes are never read or decoded. This is the same idea as Redshift zone
+    maps skipping blocks.
+  source: "https://spark.apache.org/docs/4.0.0/sql-data-sources-parquet.html"
+  objectives: [spark-assoc:1.3]
+
+- id: SPK-05-q6
+  type: single
+  prompt: >-
+    You filter orders then join to a small products table. Catalyst moves the filter below the
+    join in the optimized logical plan. What is this rewrite called and why does it help?
+  options:
+    A: "Broadcast — it caches the small side."
+    B: "Predicate (filter) pushdown / filter reordering — fewer rows enter the join, so the shuffle/join is cheaper."
+    C: "Vectorization — it batches rows."
+    D: "Whole-stage codegen — it fuses operators."
+  answer: [B]
+  explanation: >-
+    Pushing the filter below the join shrinks the join inputs. Catalyst applies this as a
+    rule-based rewrite in the optimized logical plan, exactly like a warehouse planner pushing a
+    WHERE clause before a join.
+  source: "https://spark.apache.org/docs/4.0.0/sql-performance-tuning.html"
+  objectives: [spark-assoc:1.3]
+
+- id: SPK-05-q7
+  type: single
+  prompt: "Which statement about df.explain() is TRUE?"
+  options:
+    A: "It triggers a Spark job and returns the results."
+    B: "It prints plans without executing the query; the physical plan is what will run when an action fires."
+    C: "It mutates the DataFrame to be faster."
+    D: "It is only available in Spark SQL, not the DataFrame API."
+  answer: [B]
+  explanation: >-
+    explain is a planning-only operation: it shows the parsed/analyzed/optimized/physical plans
+    without running the query. No data is read until an action triggers execution of the physical
+    plan.
+  source: "https://spark.apache.org/docs/4.0.0/api/python/reference/pyspark.sql/api/pyspark.sql.DataFrame.explain.html"
+  objectives: [spark-assoc:1.3]

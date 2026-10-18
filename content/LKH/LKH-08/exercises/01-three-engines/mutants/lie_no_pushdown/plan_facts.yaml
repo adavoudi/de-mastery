@@ -1,0 +1,3 @@
+# WRONG: claims the data filter is not pushed, but the plan shows it is.
+data_filter_pushed: false
+partition_filter_pushed: true

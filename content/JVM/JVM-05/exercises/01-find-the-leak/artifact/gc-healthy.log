@@ -1,0 +1,10 @@
+[0.480s][info][gc] GC(0) Pause Young (G1 Evacuation Pause) 410M->120M(1024M) 6.0ms
+[1.900s][info][gc] GC(1) Pause Young (G1 Evacuation Pause) 520M->130M(1024M) 6.3ms
+[3.420s][info][gc] GC(2) Pause Young (G1 Evacuation Pause) 505M->118M(1024M) 6.1ms
+[4.950s][info][gc] GC(3) Pause Young (G1 Evacuation Pause) 530M->125M(1024M) 6.4ms
+[6.510s][info][gc] GC(4) Pause Young (G1 Evacuation Pause) 515M->122M(1024M) 6.2ms
+[8.090s][info][gc] GC(5) Pause Young (G1 Evacuation Pause) 528M->119M(1024M) 6.3ms
+[9.700s][info][gc] GC(6) Pause Young (G1 Evacuation Pause) 540M->128M(1024M) 6.5ms
+[11.330s][info][gc] GC(7) Pause Young (G1 Evacuation Pause) 522M->121M(1024M) 6.2ms
+[12.990s][info][gc] GC(8) Pause Young (G1 Evacuation Pause) 535M->124M(1024M) 6.4ms
+[14.670s][info][gc] GC(9) Pause Young (G1 Evacuation Pause) 518M->120M(1024M) 6.1ms

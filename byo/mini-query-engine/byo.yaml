@@ -1,0 +1,14 @@
+id: SPK-BYO
+title: Build your own mini columnar query engine
+track: SPK
+hours: 12
+# Stage order (slugs). Dirs are stage-NN-<slug> matching this list 1:1.
+stages:
+  - scan
+  - projection
+  - pushdown
+  - aggregate
+  - join
+  - shuffle
+  - optimizer
+  - spill

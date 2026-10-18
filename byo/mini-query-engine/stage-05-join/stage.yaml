@@ -1,0 +1,7 @@
+title: Hash join and broadcast join
+entry: engine.py
+timeout_s: 60
+hints:
+  - "Build a hash multimap from the smaller (build) side: key tuple -> list of rows. Keep it a LIST, not a single row, so duplicate build keys fan out correctly. Then probe with every row of the other side."
+  - "SQL join semantics: a NULL key never matches anything. Drop rows whose key tuple contains None from both the build map and the probe lookups."
+  - "BroadcastJoin has the SAME result as HashJoin (only the data distribution differs), so route both through one join routine. For how='left', emit unmatched left rows once with NULLs for the right columns."

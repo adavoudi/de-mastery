@@ -1,0 +1,51 @@
+# Template. Copy to learner.yaml (gitignored, yours only):  cp learner.example.yaml learner.yaml
+# Learner profile. Edit freely: `de plan` recomputes the schedule from this file.
+# No date is mandatory. Leave target_date empty for "self-paced, no deadline".
+
+learner:
+  name: Your Name
+  role: Your current role
+  goal: >
+    What you want to be able to do after this course.
+  current_stack: [dbt, SQL]
+  strengths: []
+  languages:
+    python: strong
+    java: beginner
+    scala: none
+
+pace:
+  hours_per_week: 6            # change anytime; the schedule rescales
+  study_days: [sat, sun, wed]  # used only for reminders and calendar export
+  target_date:                 # optional, YYYY-MM-DD. Empty = no deadline
+  # Per-track overrides (optional), e.g. finish Spark before a specific interview:
+  track_deadlines:
+    # SPK: 2027-03-01
+
+tracks:
+  order: [FND, SPK, LKH, CDW, JVM, KFK, FLK, STH, ARC]  # ARC modules run in parallel; see ROADMAP
+  skip_modules: []          # e.g. [LKH-01] if already mastered (placement quiz can suggest these)
+
+certs:
+  # status: planned | studying | booked | passed | skipped
+  - id: confluent-dse-foundations
+    status: planned
+  - id: databricks-spark-developer-associate
+    status: planned
+  - id: confluent-ccdak
+    status: planned
+  - id: confluent-dse-flink
+    status: planned
+  - id: confluent-ccaak
+    status: planned
+  - id: databricks-de-professional
+    status: skipped          # optional; Databricks-specific. DEA prep lives in a separate project
+
+machine:
+  ram_gb: 32
+  docker: true
+
+cloud:
+  aws_budget_usd: 100        # labs flagged 💲 show an estimate; `de` warns before exceeding
+  allow_paid_labs: ask       # ask | yes | no
+  free_tiers: [databricks-free-edition, confluent-cloud-trial]

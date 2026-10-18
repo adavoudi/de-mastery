@@ -1,0 +1,10 @@
+id: SPK-06/01-broadcast-join
+title: Broadcast the small dimension
+entry: solution.py
+lab: none
+timeout_s: 300
+hints:
+  - "Join orders to companies on company_id with a LEFT join (keep every order). The test disables auto-broadcast, so wrap the small side explicitly: F.broadcast(companies)."
+  - "Broadcast the SMALL side (companies), never the large fact. The plan must show BroadcastHashJoin and no SortMergeJoin."
+  - "Return order_id, company_id, name (the company name). Row/column order are not checked; the data is compared to a DuckDB LEFT JOIN oracle."
+cert_objectives: [spark-assoc:3.10, spark-assoc:3.5]

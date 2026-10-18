@@ -1,0 +1,103 @@
+- id: KFK-08-q1
+  type: single
+  prompt: "What is the key semantic difference between a KStream and a KTable?"
+  options:
+    A: "A KStream is append-only events; a KTable is the latest value per key (a changelog)"
+    B: "A KStream is stored on disk; a KTable is in memory only"
+    C: "A KStream can be joined but a KTable cannot"
+    D: "A KTable is append-only; a KStream keeps only the latest value"
+  answer: [A]
+  explanation: "A KStream models an unbounded sequence of independent facts (each record stands alone). A KTable models the current value per key, interpreting the topic as a changelog — a new record for an existing key replaces it."
+  source: "https://kafka.apache.org/documentation/streams/concepts"
+  objectives: [ccdak:3, dse-found]
+
+- id: KFK-08-q2
+  type: single
+  prompt: "In a KStream-KTable join, what triggers an output record?"
+  options:
+    A: "Only a change to the KTable"
+    B: "An arriving KStream record (looked up against the current KTable value)"
+    C: "Both sides must change simultaneously"
+    D: "A commit of the consumer offset"
+  answer: [B]
+  explanation: "The stream drives the join: each incoming KStream record is enriched with the current KTable value for its key. A KTable update alone produces no output — this is why orders (stream) enriched with customers (table) emit on each order."
+  source: "https://kafka.apache.org/documentation/streams/developer-guide/dsl-api.html#kstream-ktable-join"
+  objectives: [ccdak:3]
+
+- id: KFK-08-q3
+  type: single
+  prompt: "What is required for a KStream-KTable join to work correctly?"
+  options:
+    A: "The two topics must have the same number of partitions and the same key (co-partitioning)"
+    B: "The KTable must be a GlobalKTable"
+    C: "Both topics must use the same compression codec"
+    D: "The stream must be re-keyed to a random value"
+  answer: [A]
+  explanation: "KStream-KTable joins require co-partitioning: identical key and identical partition count, so matching keys land on the same partition/task. A GlobalKTable avoids this requirement but replicates the whole table to every instance."
+  source: "https://kafka.apache.org/documentation/streams/developer-guide/dsl-api.html#joining"
+  objectives: [ccdak:3]
+
+- id: KFK-08-q4
+  type: single
+  prompt: "How does a Kafka Streams state store survive an application crash?"
+  options:
+    A: "It is backed by a compacted changelog topic in Kafka and rebuilt on restart"
+    B: "It is flushed to a relational database every commit"
+    C: "State is never persisted; it is recomputed from scratch each start"
+    D: "RocksDB replicates to other instances synchronously"
+  answer: [A]
+  explanation: "Each state store is backed by a compacted changelog topic. On restart (or on another instance after a rebalance), the local store is restored by replaying the changelog, which is what makes stateful operations fault-tolerant."
+  source: "https://kafka.apache.org/documentation/streams/architecture"
+  objectives: [ccdak:3]
+
+- id: KFK-08-q5
+  type: single
+  prompt: "Why is TopologyTestDriver the preferred way to unit-test a Streams topology?"
+  options:
+    A: "It runs the topology in-process with no broker and no RocksDB, deterministically in event time"
+    B: "It spins up a real 3-broker cluster quickly"
+    C: "It only tests serialization, not logic"
+    D: "It requires Testcontainers and Docker"
+  answer: [A]
+  explanation: "TopologyTestDriver executes the full topology in-process without a broker or RocksDB. You pipe inputs and read outputs with controlled event time, so tests are fast and deterministic — no sleeps, no cluster."
+  source: "https://kafka.apache.org/documentation/streams/developer-guide/testing.html"
+  objectives: [ccdak:3, ccdak:4]
+
+- id: KFK-08-q6
+  type: single
+  prompt: "When would you use a GlobalKTable instead of a KTable in a join?"
+  options:
+    A: "When the stream and table are NOT co-partitioned and you can afford to replicate the table to every instance"
+    B: "When the table is extremely large and must be sharded"
+    C: "When you need windowed aggregation"
+    D: "When exactly-once is required"
+  answer: [A]
+  explanation: "A GlobalKTable is fully replicated to every instance, so a KStream-GlobalKTable join can look up by a key derived from the stream record and needs no co-partitioning. The tradeoff is memory/replication cost, so it suits smaller reference tables."
+  source: "https://kafka.apache.org/documentation/streams/developer-guide/dsl-api.html#kstream-globalktable-join"
+  objectives: [ccdak:3]
+
+- id: KFK-08-q7
+  type: single
+  prompt: "A windowed aggregation groups events into 1-minute tumbling windows. Which time should it use for correctness under reordering?"
+  options:
+    A: "Event time (a timestamp carried by the record)"
+    B: "Processing time (the wall clock when the record is handled)"
+    C: "Ingestion time at the broker only"
+    D: "The consumer's commit time"
+  answer: [A]
+  explanation: "Event-time windowing assigns each record to a window by its own timestamp, so results are correct even when records arrive out of order or late. Processing time makes results depend on nondeterministic arrival timing."
+  source: "https://kafka.apache.org/documentation/streams/core-concepts#streams_time"
+  objectives: [ccdak:3]
+
+- id: KFK-08-q8
+  type: single
+  prompt: "What does EOS v2 (exactly-once semantics) guarantee in a read-process-write Streams app?"
+  options:
+    A: "That consume, process, produce and state update commit atomically, so a failure doesn't double-count"
+    B: "That messages are never delayed"
+    C: "That each consumer gets its own partition"
+    D: "That the changelog topic is disabled"
+  answer: [A]
+  explanation: "EOS v2 wraps the input offset commit, the output produce and the state-store changelog write in one transaction. On failure the whole unit aborts and is retried, so each input affects the output and state exactly once."
+  source: "https://kafka.apache.org/documentation/streams/core-concepts#streams_processing_guarantee"
+  objectives: [ccdak:3]

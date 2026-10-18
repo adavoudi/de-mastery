@@ -1,0 +1,103 @@
+- id: KFK-07-q1
+  type: single
+  prompt: "In a Debezium change event, what does op='r' mean?"
+  options:
+    A: "A row was removed"
+    B: "A row read during the initial consistent snapshot"
+    C: "A read-only replica event"
+    D: "A rollback"
+  answer: [B]
+  explanation: "op='r' is emitted for every existing row during the initial snapshot, before streaming begins. Downstream logic should treat it like an initial insert. c/u/d are create/update/delete."
+  source: "https://debezium.io/documentation/reference/3.0/connectors/postgresql.html#postgresql-events"
+  objectives: [ccdak:2, ccaak:4]
+
+- id: KFK-07-q2
+  type: single
+  prompt: "What is a Debezium tombstone message?"
+  options:
+    A: "A message whose value is the full before-image"
+    B: "A message with a non-null key and a null value, emitted after a delete"
+    C: "The first message of a snapshot"
+    D: "A heartbeat message on an idle connector"
+  answer: [B]
+  explanation: "After a delete, Debezium emits a tombstone (key present, value null) so a log-compacted topic can physically drop the key. It carries no new state; SCD2 derivation skips it because the preceding op='d' already closed the row."
+  source: "https://debezium.io/documentation/reference/3.0/connectors/postgresql.html#postgresql-delete-events"
+  objectives: [ccdak:2]
+
+- id: KFK-07-q3
+  type: single
+  prompt: "In Kafka Connect, what is the relationship between a connector and tasks?"
+  options:
+    A: "A task hosts multiple connectors"
+    B: "A connector splits its work into one or more tasks that move the data"
+    C: "A connector and a task are the same thing"
+    D: "Tasks are only used by sink connectors"
+  answer: [B]
+  explanation: "A connector is a configured integration; it divides the work into tasks (e.g. per table or per partition range) that the workers execute. tasks.max bounds how many run."
+  source: "https://kafka.apache.org/documentation/#connect_concepts"
+  objectives: [ccdak:2, ccaak:4]
+
+- id: KFK-07-q4
+  type: single
+  prompt: "Which Postgres setting must be enabled for Debezium logical CDC to work?"
+  options:
+    A: "wal_level=logical"
+    B: "fsync=off"
+    C: "hot_standby=on"
+    D: "synchronous_commit=remote_apply"
+  answer: [A]
+  explanation: "Logical decoding (which Debezium uses) requires wal_level=logical plus a replication slot. The slot retains WAL until consumed, so a stalled consumer can fill the disk — a key operational caveat."
+  source: "https://debezium.io/documentation/reference/3.0/connectors/postgresql.html#setting-up-postgresql"
+  objectives: [ccaak:4]
+
+- id: KFK-07-q5
+  type: single
+  prompt: "For an UPDATE event when deriving SCD2, what is the correct action?"
+  options:
+    A: "Overwrite the current row in place"
+    B: "Close the current version (set valid_to) and open a new one from the after image"
+    C: "Only insert a new row, leaving the old one open"
+    D: "Delete the old row and insert the new one with no validity window"
+  answer: [B]
+  explanation: "SCD2 keeps history: an update closes the prior version (valid_to = change ts, is_current=false) and opens a new current version from the after image. Overwriting loses history; leaving the old row open gives two current versions."
+  source: "https://debezium.io/documentation/reference/3.0/connectors/postgresql.html#postgresql-update-events"
+  objectives: [ccdak:2]
+
+- id: KFK-07-q6
+  type: single
+  prompt: "What problem does the outbox pattern solve?"
+  options:
+    A: "It compresses change events"
+    B: "It decouples the public event schema from internal table shapes, written atomically with the business transaction"
+    C: "It replaces the need for a replication slot"
+    D: "It guarantees exactly-once delivery to all consumers"
+  answer: [B]
+  explanation: "Services write domain events to an outbox table in the SAME transaction as the business change; Debezium streams the outbox. Consumers get a stable, curated event contract instead of raw internal tables, and the write is atomic with the state change."
+  source: "https://debezium.io/documentation/reference/3.0/transformations/outbox-event-router.html"
+  objectives: [ccdak:2, ccaak:4]
+
+- id: KFK-07-q7
+  type: single
+  prompt: "What is the purpose of a dead-letter queue (DLQ) in Kafka Connect?"
+  options:
+    A: "To store the connector's offsets"
+    B: "To capture records that fail conversion/processing so one bad record doesn't halt the pipeline"
+    C: "To hold tombstones until compaction"
+    D: "To buffer records during a rebalance"
+  answer: [B]
+  explanation: "A DLQ routes records that fail (e.g. deserialization) to a separate topic, letting the connector keep running. You then inspect/replay the DLQ instead of blocking the whole task on a poison record."
+  source: "https://kafka.apache.org/documentation/#connect_errorreporting"
+  objectives: [ccdak:2, ccaak:4]
+
+- id: KFK-07-q8
+  type: multi
+  prompt: "Which fields appear in a Debezium Postgres change event value? Select all that apply."
+  options:
+    A: "op (the operation code)"
+    B: "before (row image before the change)"
+    C: "after (row image after the change)"
+    D: "source (LSN, commit ts_ms, table metadata)"
+  answer: [A, B, C, D]
+  explanation: "The envelope carries op, before, after and source. before is null for inserts/reads; after is null for deletes; source holds the LSN, commit timestamp and table identity used to order and audit events."
+  source: "https://debezium.io/documentation/reference/3.0/connectors/postgresql.html#postgresql-events"
+  objectives: [ccdak:2]

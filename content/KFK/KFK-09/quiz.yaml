@@ -1,0 +1,103 @@
+- id: KFK-09-q1
+  type: single
+  prompt: "Kafka guarantees message ordering at what scope?"
+  options:
+    A: "Across an entire topic"
+    B: "Within a single partition"
+    C: "Across a consumer group"
+    D: "Across the whole cluster"
+  answer: [B]
+  explanation: "Ordering is guaranteed only within a partition. To keep all events for one entity ordered, they must share a partition — which is why the key choice (key -> partition) is the ordering contract."
+  source: "https://kafka.apache.org/documentation/#intro_concepts_and_terms"
+  objectives: [ccdak:1]
+
+- id: KFK-09-q2
+  type: single
+  prompt: "The default producer partitioner maps a non-null key to a partition how?"
+  options:
+    A: "Round-robin regardless of key"
+    B: "murmur2(key) modulo the number of partitions"
+    C: "By the key's insertion order"
+    D: "By the broker with the least load"
+  answer: [B]
+  explanation: "The default partitioner uses murmur2(key) % numPartitions for non-null keys, so the same key always goes to the same partition (given a fixed partition count). A null key is distributed round-robin/sticky."
+  source: "https://kafka.apache.org/documentation/#producerconfigs_partitioner.class"
+  objectives: [ccdak:1]
+
+- id: KFK-09-q3
+  type: single
+  prompt: "In a skewed multi-tenant platform, why is keying every event by company_id a poor choice?"
+  options:
+    A: "It breaks per-entity ordering"
+    B: "It sends a large tenant's entire traffic to one partition, creating a hot partition"
+    C: "It prevents log compaction"
+    D: "It requires a GlobalKTable"
+  answer: [B]
+  explanation: "company_id is low-cardinality and skewed: the biggest tenant's events all hash to one partition, capping its throughput and lag. Key by the high-cardinality entity id so a big tenant's load spreads across partitions while each entity stays ordered."
+  source: "https://kafka.apache.org/documentation/#intro_concepts_and_terms"
+  objectives: [ccdak:1]
+
+- id: KFK-09-q4
+  type: single
+  prompt: "You need the LATEST state per customer, rebuildable from the topic. Which topic design fits?"
+  options:
+    A: "An event topic retained by time"
+    B: "A compacted entity topic keyed by customer id"
+    C: "A null-keyed topic with many partitions"
+    D: "Topic-per-customer"
+  answer: [B]
+  explanation: "Log compaction retains the most recent value per key, so a compacted topic keyed by customer id is a changelog of current state that a KTable/consumer can rebuild from the beginning. Time-retained event topics keep history, not a clean latest-state view."
+  source: "https://kafka.apache.org/documentation/#compaction"
+  objectives: [ccdak:1]
+
+- id: KFK-09-q5
+  type: single
+  prompt: "Why is increasing a topic's partition count a disruptive change?"
+  options:
+    A: "It deletes existing data"
+    B: "It changes the key-to-partition mapping, so existing keys may move partitions and lose their established ordering"
+    C: "It requires downtime of the whole cluster"
+    D: "It disables compaction"
+  answer: [B]
+  explanation: "key -> partition is murmur2(key) % numPartitions. Changing numPartitions remaps keys, so a key's new events can land on a different partition than its old ones, breaking per-key ordering across the change. Size partitions for future load up front."
+  source: "https://kafka.apache.org/documentation/#intro_concepts_and_terms"
+  objectives: [ccdak:1]
+
+- id: KFK-09-q6
+  type: single
+  prompt: "What is the correct distinction between an event topic and an entity topic?"
+  options:
+    A: "Event topics are compacted; entity topics are time-retained"
+    B: "Event topics are append-only facts (time-retained); entity topics are compacted changelogs of latest state per key"
+    C: "They are the same thing with different names"
+    D: "Entity topics cannot be keyed"
+  answer: [B]
+  explanation: "An event topic records independent facts and is retained by time (your fact feed). An entity topic is a compacted changelog keyed by entity id, keeping the latest state per key (your dimension/KTable source)."
+  source: "https://kafka.apache.org/documentation/#compaction"
+  objectives: [ccdak:1]
+
+- id: KFK-09-q7
+  type: single
+  prompt: "What is the main drawback of a topic-per-tenant design at thousands of tenants?"
+  options:
+    A: "It cannot preserve per-entity ordering"
+    B: "Partition and metadata explosion that burdens the controller and brokers"
+    C: "It disables consumer groups"
+    D: "It forces round-robin partitioning"
+  answer: [B]
+  explanation: "Each topic has partitions with fixed overhead (files, replication, controller metadata). Thousands of tenant topics multiply that overhead and strain the cluster, even though isolation is strong. A shared, well-keyed topic usually scales better."
+  source: "https://kafka.apache.org/documentation/#intro_concepts_and_terms"
+  objectives: [ccdak:1]
+
+- id: KFK-09-q8
+  type: single
+  prompt: "To preserve per-entity ordering while spreading a skewed tenant's load, which key is best?"
+  options:
+    A: "company_id"
+    B: "a random UUID per event"
+    C: "the high-cardinality entity id (e.g. order_id)"
+    D: "null (let the producer round-robin)"
+  answer: [C]
+  explanation: "Keying by the entity id co-locates all of one entity's events (ordering) while distributing many entities of a big tenant across partitions (no hot spot). A random key per event destroys ordering; a null key round-robins; company_id hot-spots."
+  source: "https://kafka.apache.org/documentation/#producerconfigs_partitioner.class"
+  objectives: [ccdak:1]

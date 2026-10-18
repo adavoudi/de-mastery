@@ -1,0 +1,7 @@
+title: Operator graph + push-based execution
+entry: processor.py
+timeout_s: 60
+hints:
+  - "A job is a linear chain of operators starting at a Source. Build it with the Stream builder (map/filter/sink already append operator objects to self.ops). Your job is to make the operators actually run."
+  - "Push model: the Source calls a downstream callback once per record; each operator's process(elem, out) does its work and calls out(...) 0+ times. Markers (Watermark, Barrier) must be FORWARDED by map/filter and DROPPED by the sink. Wire the chain in _drive_chain by composing per-operator callbacks from the last operator backwards."
+  - "collect() runs _drive_chain and returns the Sink's collected list (data events only). With no Sink, return the terminal data events (filter out Watermark/Barrier). An empty source yields an empty list."

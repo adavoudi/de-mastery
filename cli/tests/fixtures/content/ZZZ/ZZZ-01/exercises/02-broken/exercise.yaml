@@ -1,0 +1,10 @@
+id: ZZZ-01/02-broken
+title: Deliberately broken exercise (for CLI self-test)
+entry: solution.py
+lab: none
+timeout_s: 60
+hints:
+  - "n/a"
+  - "n/a"
+  - "n/a"
+cert_objectives: []

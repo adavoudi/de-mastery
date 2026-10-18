@@ -1,0 +1,9 @@
+id: KFK-12
+title: Security — SASL/SCRAM authentication & ACL authorization
+track: KFK
+hours: 4
+requires: [KFK-02]
+labs: []
+cost: free
+cert_objectives: [ccaak:2]
+from_your_world: "SOX access controls: who may read/write which object, provable least privilege"

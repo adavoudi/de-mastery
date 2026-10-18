@@ -1,0 +1,1 @@
+The as-of boundary is flipped to (valid_from, valid_to]: an order exactly on a change boundary is valued at the previous version, and an order at valid_from=0 of the first version is dropped, so fct_orders fails reconciliation.

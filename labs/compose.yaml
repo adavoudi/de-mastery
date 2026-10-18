@@ -1,0 +1,560 @@
+# =============================================================================
+# labs/compose.yaml  —  local lab stack for the DE Mastery platform.
+#
+# Only the `core` profile is defined here (Build Phase 1). Later phases add
+# `streaming`, `flink`, `streamhouse` and `observability` profiles; each new
+# service just gets its own `profiles:` list, so this file grows without
+# touching what already works.
+#
+# Run:   docker compose --env-file .env --profile core up -d
+# Stop:  docker compose --env-file .env --profile core down -v
+# (or use labs/smoke_core.sh, which wraps both.)
+#
+# Image versions are pinned exactly and recorded in labs/versions.lock.
+# All host ports bind to 127.0.0.1 only. Credentials come from labs/.env.
+# =============================================================================
+
+name: de-core
+
+x-core: &core-profile
+  profiles: [core]
+  networks: [lake]
+  restart: unless-stopped
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # Object store (S3-compatible). pgsty/silo is a maintained drop-in fork of
+  # MinIO: upstream MinIO stopped publishing community images (Docker Hub repos
+  # deleted, quay.io gated behind auth) in 2025-2026, so a plain `minio/minio`
+  # pin is no longer pullable. silo keeps the MINIO_* env vars, the S3 API, the
+  # x-minio-* headers and the web console, so it behaves exactly like MinIO for
+  # a learning lab. See labs/versions.lock for the rationale.
+  # ---------------------------------------------------------------------------
+  silo:
+    <<: *core-profile
+    image: pgsty/silo:RELEASE.2026-09-03T13-18-01Z
+    container_name: de-silo
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID}
+      MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY}
+      MINIO_REGION: ${AWS_REGION}
+    ports:
+      - "127.0.0.1:${S3_API_PORT:-9000}:9000"
+      - "127.0.0.1:${S3_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - silo-data:/data
+    healthcheck:
+      # silo bundles the client as `mcli`; `ready local` is true once the
+      # server can serve the S3 API.
+      test: ["CMD", "mcli", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 1500m
+
+  # ---------------------------------------------------------------------------
+  # One-shot bucket creator: waits for silo, creates the `warehouse` bucket,
+  # then exits 0. Other services wait for it via `service_completed_successfully`.
+  # ---------------------------------------------------------------------------
+  create-buckets:
+    <<: *core-profile
+    image: pgsty/mc:RELEASE.2026-09-16T00-00-00Z
+    container_name: de-create-buckets
+    restart: "no"
+    depends_on:
+      silo:
+        condition: service_healthy
+    environment:
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      WAREHOUSE_BUCKET: ${WAREHOUSE_BUCKET:-warehouse}
+    entrypoint: >
+      /bin/sh -c "
+      set -e;
+      until mc alias set lab http://silo:9000 \"$$AWS_ACCESS_KEY_ID\" \"$$AWS_SECRET_ACCESS_KEY\" 2>/dev/null; do
+        echo 'waiting for silo...'; sleep 1;
+      done;
+      mc mb --ignore-existing lab/$$WAREHOUSE_BUCKET;
+      echo 'BUCKET_READY: '$$WAREHOUSE_BUCKET;
+      "
+
+  # ---------------------------------------------------------------------------
+  # Iceberg REST catalog. apache/iceberg-rest-fixture is the Apache-maintained
+  # reference REST catalog (preferred over the community tabulario/iceberg-rest,
+  # which is unmaintained). It is backed by an in-memory metadata store but
+  # writes all table data + metadata to silo (S3), which is what the exercises
+  # inspect. Good enough for a single-node learning lab; NOT a production catalog.
+  # ---------------------------------------------------------------------------
+  iceberg-rest:
+    <<: *core-profile
+    image: apache/iceberg-rest-fixture:1.10.0
+    container_name: de-iceberg-rest
+    depends_on:
+      create-buckets:
+        condition: service_completed_successfully
+    environment:
+      CATALOG_WAREHOUSE: s3://${WAREHOUSE_BUCKET:-warehouse}/
+      CATALOG_IO__IMPL: org.apache.iceberg.aws.s3.S3FileIO
+      CATALOG_S3_ENDPOINT: http://silo:9000
+      CATALOG_S3_PATH__STYLE__ACCESS: "true"
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION}
+    ports:
+      - "127.0.0.1:${ICEBERG_REST_PORT:-8181}:8181"
+    healthcheck:
+      # The fixture image has no curl/wget; use the JVM already present to probe
+      # the config endpoint.
+      test: ["CMD", "java", "-version"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+
+  # ---------------------------------------------------------------------------
+  # Spark 4.0.0, single container, driver in local[*] mode, exposing a Spark
+  # Connect server on 15002.
+  #
+  # WHY single container + Spark Connect instead of master + 2 workers:
+  #   * Reliability: a standalone master/worker cluster adds moving parts
+  #     (registration races, flaky worker health, shared-jar distribution) that
+  #     break far more often than they teach anything in a 32 GB laptop lab.
+  #   * Memory: one JVM at ~2-3 GB vs. 3+ JVMs. Keeps the profile under 10 GB.
+  #   * Fidelity to the syllabus: SPK-01 explicitly teaches Spark Connect
+  #     (client/server split) and the local scheduler still produces real jobs,
+  #     stages, tasks, shuffles and a Spark UI — everything SPK-01..08 inspect.
+  #   * Host access: PySpark on the host connects over gRPC with
+  #     `SparkSession.builder.remote("sc://localhost:15002")` — no local JARs,
+  #     no Java needed on the host (important: host Java is 24, unusable for
+  #     Spark). See labs/README.md.
+  # The two Iceberg jars are baked into the image (see images/spark/Dockerfile)
+  # so there is no runtime ivy/--packages resolution and nothing to download or
+  # write at startup.
+  # ---------------------------------------------------------------------------
+  spark:
+    <<: *core-profile
+    image: de-core/spark:4.0.0-iceberg1.10.0
+    build:
+      context: ./images/spark
+    container_name: de-spark
+    depends_on:
+      iceberg-rest:
+        condition: service_started
+      create-buckets:
+        condition: service_completed_successfully
+    environment:
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION}
+    command:
+      - /bin/bash
+      - -lc
+      - |
+        /opt/spark/sbin/start-connect-server.sh \
+          --conf spark.connect.grpc.binding.port=15002 && \
+        echo "spark-connect-started" && \
+        tail -f /opt/spark/logs/*org.apache.spark.sql.connect.service.SparkConnectServer*.out
+    ports:
+      - "127.0.0.1:${SPARK_CONNECT_PORT:-15002}:15002"
+      - "127.0.0.1:${SPARK_UI_PORT:-4040}:4040"
+    volumes:
+      - ./config/spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf:ro
+    healthcheck:
+      # The Spark driver UI (HTTP, port 4040) is only served once the Connect
+      # server's SparkSession is live; curl is present in the image.
+      test: ["CMD-SHELL", "curl -fsS http://localhost:4040 >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 3500m
+
+  # ---------------------------------------------------------------------------
+  # Jupyter with PySpark 4.0.0 matching the Spark container. Talks to the Spark
+  # Connect server over gRPC (sc://spark:15002), so the notebook kernel is a
+  # thin client — no second Spark JVM.
+  # ---------------------------------------------------------------------------
+  jupyter:
+    <<: *core-profile
+    image: quay.io/jupyter/pyspark-notebook:spark-4.0.0
+    container_name: de-jupyter
+    depends_on:
+      spark:
+        condition: service_healthy
+    environment:
+      JUPYTER_ENABLE_LAB: "yes"
+      SPARK_CONNECT_URL: sc://spark:15002
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION}
+    command:
+      - start-notebook.py
+      - --IdentityProvider.token=${JUPYTER_TOKEN:-}
+    ports:
+      - "127.0.0.1:${JUPYTER_PORT:-8888}:8888"
+    volumes:
+      - ./notebooks:/home/jovyan/work
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8888/api"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 1500m
+
+  # ---------------------------------------------------------------------------
+  # Trino with an Iceberg catalog pointed at the same REST catalog + silo S3.
+  # This is the "query the lakehouse from a second engine" surface (LKH-08).
+  # ---------------------------------------------------------------------------
+  trino:
+    <<: *core-profile
+    image: trinodb/trino:476
+    container_name: de-trino
+    depends_on:
+      iceberg-rest:
+        condition: service_started
+      create-buckets:
+        condition: service_completed_successfully
+    environment:
+      WAREHOUSE_BUCKET: ${WAREHOUSE_BUCKET:-warehouse}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION}
+    ports:
+      - "127.0.0.1:${TRINO_PORT:-8080}:8080"
+    volumes:
+      - ./config/trino/catalog:/etc/trino/catalog:ro
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/v1/info"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+
+  # ===========================================================================
+  # PROFILE: streaming  (Phase 3) — Kafka 4.x (KRaft) + Schema Registry +
+  # Kafka Connect (Debezium Postgres) + a CDC Postgres + a web UI.
+  #
+  # Start:  de lab up streaming      (or: docker compose --profile streaming up -d)
+  # Smoke:  bash labs/smoke_streaming.sh
+  #
+  # Ports (ALL 127.0.0.1 only, and deliberately NON-standard so they never clash
+  # with your own containers — in particular NEVER 5432/8888):
+  #   Kafka            19092   (host) / 9092 (in-network)
+  #   Schema Registry   8081
+  #   Kafka Connect     8083
+  #   CDC Postgres      5433   (NOT 5432)
+  #   Kafka UI          8085
+  # Image tags are pinned AND digests recorded in labs/versions.lock.
+  #
+  # NOTE on the no-Docker rule: every graded Kafka exercise also runs against the
+  # NATIVE broker (labs/.kafka via the kafka_broker/kafka_cluster fixtures); this
+  # lab is an OPTIONAL extra layer behind the lab_* fixtures (which SKIP when the
+  # lab is down). KFK-07 (Debezium CDC) is the one topic that benefits most from
+  # the lab, but even it keeps a no-Docker graded part.
+  # ===========================================================================
+  kafka:
+    profiles: [streaming]
+    networks: [stream]
+    restart: unless-stopped
+    image: apache/kafka:4.3.1
+    container_name: de-kafka
+    environment:
+      # Single-node KRaft (combined broker+controller) — enough for the lab.
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
+      KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,EXTERNAL://0.0.0.0:19092"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092,EXTERNAL://localhost:19092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_HEAP_OPTS: "-Xmx768m -Xms256m"
+    ports:
+      - "127.0.0.1:${LAB_KAFKA_PORT:-19092}:19092"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 18
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 1200m
+
+  schema-registry:
+    profiles: [streaming]
+    networks: [stream]
+    restart: unless-stopped
+    image: confluentinc/cp-schema-registry:8.0.8
+    container_name: de-schema-registry
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: "PLAINTEXT://kafka:9092"
+      SCHEMA_REGISTRY_LISTENERS: "http://0.0.0.0:8081"
+      SCHEMA_REGISTRY_SCHEMA_COMPATIBILITY_LEVEL: "backward"
+      SCHEMA_REGISTRY_HEAP_OPTS: "-Xmx512m"
+    ports:
+      - "127.0.0.1:${LAB_SR_PORT:-8081}:8081"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8081/subjects || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 800m
+
+  cdc-postgres:
+    profiles: [streaming]
+    networks: [stream]
+    restart: unless-stopped
+    image: postgres:16.6
+    container_name: de-cdc-postgres
+    # Logical replication ON (Debezium needs wal_level=logical). This is a
+    # DEDICATED CDC source, totally separate from a local Postgres on 5432.
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=logical"
+      - "-c"
+      - "max_wal_senders=4"
+      - "-c"
+      - "max_replication_slots=4"
+    environment:
+      POSTGRES_USER: ${LAB_PG_USER:-cdc}
+      POSTGRES_PASSWORD: ${LAB_PG_PASSWORD:-cdc}
+      POSTGRES_DB: ${LAB_PG_DB:-cdc}
+    ports:
+      # HOST port 5433 — NEVER 5432 (commonly used by a local Postgres).
+      - "127.0.0.1:${LAB_PG_PORT:-5433}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${LAB_PG_USER:-cdc} -d ${LAB_PG_DB:-cdc}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 500m
+
+  connect:
+    profiles: [streaming]
+    networks: [stream]
+    restart: unless-stopped
+    # Debezium's Connect image ships the Debezium Postgres connector + the
+    # Confluent Avro converters, so KFK-07 CDC works out of the box.
+    image: debezium/connect:3.0.0.Final
+    container_name: de-connect
+    depends_on:
+      kafka:
+        condition: service_healthy
+      cdc-postgres:
+        condition: service_healthy
+      schema-registry:
+        condition: service_started
+    environment:
+      BOOTSTRAP_SERVERS: "kafka:9092"
+      GROUP_ID: "de-connect"
+      CONFIG_STORAGE_TOPIC: "connect_configs"
+      OFFSET_STORAGE_TOPIC: "connect_offsets"
+      STATUS_STORAGE_TOPIC: "connect_statuses"
+      CONFIG_STORAGE_REPLICATION_FACTOR: "1"
+      OFFSET_STORAGE_REPLICATION_FACTOR: "1"
+      STATUS_STORAGE_REPLICATION_FACTOR: "1"
+      KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      KAFKA_HEAP_OPTS: "-Xmx768m -Xms256m"
+    ports:
+      - "127.0.0.1:${LAB_CONNECT_PORT:-8083}:8083"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8083/connectors || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 24
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 1200m
+
+  kafka-ui:
+    profiles: [streaming]
+    networks: [stream]
+    restart: unless-stopped
+    # kafbat/kafka-ui is the maintained community fork of the former
+    # provectuslabs/kafka-ui. Optional convenience; not used by any test.
+    image: kafbat/kafka-ui:v1.1.0
+    container_name: de-kafka-ui
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_CLUSTERS_0_NAME: streaming
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "kafka:9092"
+      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: "http://schema-registry:8081"
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME: connect
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: "http://connect:8083"
+      DYNAMIC_CONFIG_ENABLED: "true"
+    ports:
+      - "127.0.0.1:${LAB_UI_PORT:-8085}:8080"
+    deploy:
+      resources:
+        limits:
+          memory: 500m
+
+  # ===========================================================================
+  # PROFILE: flink  (Phase 4) — Flink 2.x session cluster (JobManager +
+  # TaskManager) + the SQL Gateway. Optional EXTRA layer for FLK-01/12 "deploy
+  # & operate" demos; every graded FLK exercise also runs with NO Docker on the
+  # native dist (labs/.flink via the flink_java/flink_sql/flink_cluster fixtures).
+  #
+  # Start:  de lab up flink           (or: docker compose --profile flink up -d)
+  # Smoke:  bash labs/smoke_flink.sh
+  #
+  # Ports (ALL 127.0.0.1 only; deliberately NON-standard; NEVER 5432/8888):
+  #   JobManager REST   8086   (host) / 8081 (in-container)
+  #   SQL Gateway       8087   (host) / 8083 (in-container)
+  # Image pinned to flink:2.2.1-scala_2.12-java17 (tag + digest in versions.lock).
+  # ===========================================================================
+  flink-jobmanager:
+    profiles: [flink]
+    networks: [flink]
+    restart: unless-stopped
+    image: flink:2.2.1-scala_2.12-java17
+    container_name: de-flink-jobmanager
+    command: jobmanager
+    environment:
+      FLINK_PROPERTIES: |
+        jobmanager.rpc.address: flink-jobmanager
+        rest.address: 0.0.0.0
+        rest.bind-address: 0.0.0.0
+        taskmanager.numberOfTaskSlots: 2
+        parallelism.default: 1
+        jobmanager.memory.process.size: 1024m
+    ports:
+      - "127.0.0.1:${LAB_FLINK_REST_PORT:-8086}:8081"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8081/overview || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 24
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 1500m
+
+  flink-taskmanager:
+    profiles: [flink]
+    networks: [flink]
+    restart: unless-stopped
+    image: flink:2.2.1-scala_2.12-java17
+    container_name: de-flink-taskmanager
+    command: taskmanager
+    depends_on:
+      flink-jobmanager:
+        condition: service_healthy
+    environment:
+      FLINK_PROPERTIES: |
+        jobmanager.rpc.address: flink-jobmanager
+        taskmanager.numberOfTaskSlots: 2
+        taskmanager.memory.process.size: 1600m
+    deploy:
+      resources:
+        limits:
+          memory: 2000m
+
+  flink-sql-gateway:
+    profiles: [flink]
+    networks: [flink]
+    restart: unless-stopped
+    image: flink:2.2.1-scala_2.12-java17
+    container_name: de-flink-sql-gateway
+    depends_on:
+      flink-jobmanager:
+        condition: service_healthy
+    # Start the SQL Gateway pointed at the session cluster's JobManager.
+    command: >
+      bash -c "/opt/flink/bin/sql-gateway.sh start-foreground
+      -Dsql-gateway.endpoint.rest.address=0.0.0.0
+      -Drest.address=flink-jobmanager -Drest.port=8081"
+    ports:
+      - "127.0.0.1:${LAB_FLINK_SQL_GW_PORT:-8087}:8083"
+    deploy:
+      resources:
+        limits:
+          memory: 1024m
+
+  # ===========================================================================
+  # PROFILE: streamhouse  (Phase 5) — OPTIONAL serving engine over the lakehouse
+  # tables the STH track produces (Paimon / Iceberg). This is an EXTRA layer only
+  # and is NOT needed for grading: every graded STH exercise runs with NO Docker
+  # on the native path (labs/.flink + labs/.fluss via the paimon_sql / iceberg_sql
+  # / fluss_cluster / serving_query fixtures), and serving reads use pure-Python
+  # pypaimon / pyiceberg. This container just lets you SQL the tables interactively.
+  #
+  # Start:  de lab up streamhouse      (or: docker compose --profile streamhouse up -d)
+  # Smoke:  bash labs/smoke_streamhouse.sh   (the native path — needs NO Docker)
+  #
+  # Ports (127.0.0.1 only; deliberately non-standard; NEVER 5432/8888):
+  #   serving query   8089   (host)
+  # Trino reads Paimon + Iceberg via its connectors; image pinned in versions.lock.
+  # ===========================================================================
+  streamhouse-serving:
+    profiles: [streamhouse]
+    networks: [lake]
+    restart: unless-stopped
+    image: trinodb/trino:476
+    container_name: de-streamhouse-serving
+    ports:
+      - "127.0.0.1:${LAB_STREAMHOUSE_PORT:-8089}:8080"
+    deploy:
+      resources:
+        limits:
+          memory: 1536m
+
+networks:
+  lake:
+    name: de-lake
+  stream:
+    name: de-stream
+  flink:
+    name: de-flink
+
+volumes:
+  silo-data:

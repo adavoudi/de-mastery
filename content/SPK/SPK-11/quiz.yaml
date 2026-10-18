@@ -1,0 +1,129 @@
+- id: SPK-11-q1
+  type: single
+  prompt: "What does a watermark on an event-time column do?"
+  options:
+    A: "It speeds up the stream by skipping old data on read."
+    B: "It sets a moving threshold below which late data is dropped, which bounds state and lets windows finalize."
+    C: "It converts processing time to event time."
+    D: "It guarantees no data is ever dropped."
+  answer: [B]
+  explanation: >-
+    The watermark trails the max observed event time by a fixed delay. Once it passes a window's
+    end, the window finalizes (its result can be appended) and its state is freed; data older than
+    the watermark is treated as late and dropped. It is a completeness/latency trade-off, not a
+    no-loss guarantee.
+  source: "https://spark.apache.org/docs/4.0.0/structured-streaming-programming-guide.html#handling-late-data-and-watermarking"
+  objectives: [spark-assoc:5.3]
+
+- id: SPK-11-q2
+  type: single
+  prompt: "Why must windowed streaming aggregations use event time rather than processing time?"
+  options:
+    A: "Processing time is always wrong."
+    B: "Only event time is stable under reordering, delay and replay, so results are reproducible; processing-time results depend on when the job ran."
+    C: "Event time is faster to compute."
+    D: "Processing time cannot be read in Spark."
+  answer: [B]
+  explanation: >-
+    Event time is a property of the data; the same events yield the same windows no matter when or
+    how they are processed. Processing-time windows change with scheduling, which breaks
+    reproducibility (and auditability).
+  source: "https://spark.apache.org/docs/4.0.0/structured-streaming-programming-guide.html#window-operations-on-event-time"
+  objectives: [spark-assoc:5.3]
+
+- id: SPK-11-q3
+  type: single
+  prompt: "A windowed count is written in append output mode. What makes that legal?"
+  options:
+    A: "Append is always legal."
+    B: "A watermark lets each window finalize exactly once, so there is a final row to append."
+    C: "The memory sink special-cases it."
+    D: "It is not legal under any condition."
+  answer: [B]
+  explanation: >-
+    Without a watermark an aggregation's groups never finalize, so append is rejected. With a
+    watermark, a window becomes final once event time passes its end + delay, and that final row is
+    appended once.
+  source: "https://spark.apache.org/docs/4.0.0/structured-streaming-programming-guide.html#output-modes"
+  objectives: [spark-assoc:5.3]
+
+- id: SPK-11-q4
+  type: single
+  prompt: "What is the advantage of dropDuplicatesWithinWatermark over dropDuplicates(['id'])?"
+  options:
+    A: "It dedups more aggressively, forever."
+    B: "It bounds state by only remembering ids within the watermark horizon, instead of remembering every id forever."
+    C: "It does not need a key."
+    D: "It is faster but less correct in all cases."
+  answer: [B]
+  explanation: >-
+    Plain dropDuplicates keeps all seen keys indefinitely (unbounded state). The watermarked form
+    forgets keys older than the horizon, which bounds state at the cost of not recognizing a
+    duplicate that arrives after the horizon — consistent with the watermark contract.
+  source: "https://spark.apache.org/docs/4.0.0/structured-streaming-programming-guide.html#streaming-deduplication"
+  objectives: [spark-assoc:5.4]
+
+- id: SPK-11-q5
+  type: single
+  prompt: "In a streaming SCD2 upsert via foreachBatch + MERGE INTO, how many open (valid_to IS NULL) rows should exist per natural key?"
+  options:
+    A: "Zero."
+    B: "Exactly one."
+    C: "One per micro-batch."
+    D: "As many as there have been changes."
+  answer: [B]
+  explanation: >-
+    SCD2 keeps exactly one current/open version per natural key; prior versions are closed with a
+    non-null valid_to. Leaving multiple rows open (forgetting to close the old one) is a classic
+    SCD2 bug.
+  source: "https://iceberg.apache.org/docs/latest/spark-writes/#merge-into"
+  objectives: [spark-assoc:3.8]
+
+- id: SPK-11-q6
+  type: single
+  prompt: "Why is foreachBatch the right tool for a streaming MERGE INTO an Iceberg dimension?"
+  options:
+    A: "It is the only sink that supports append."
+    B: "It exposes each micro-batch as a normal batch DataFrame, so you can run arbitrary batch SQL/DML such as MERGE INTO."
+    C: "It disables checkpointing."
+    D: "It guarantees millisecond latency."
+  answer: [B]
+  explanation: >-
+    foreachBatch gives you the micro-batch as a batch DataFrame and a batch_id, so any batch
+    operation (including Iceberg MERGE INTO) works. The streaming sinks themselves don't express a
+    merge.
+  source: "https://spark.apache.org/docs/4.0.0/structured-streaming-programming-guide.html#foreachbatch"
+  objectives: [spark-assoc:3.8]
+
+- id: SPK-11-q7
+  type: single
+  prompt: "An SCD2 upsert overwrites the dimension row in place on each change. What have you actually built?"
+  options:
+    A: "A correct SCD2."
+    B: "SCD1 — you keep only the latest value and lose history; valid_from/valid_to are meaningless."
+    C: "A watermarked dedup."
+    D: "An append-only fact table."
+  answer: [B]
+  explanation: >-
+    Overwriting in place is SCD type 1: no versioning, no history. SCD2 must close the old version
+    and insert a new one so prior states remain queryable.
+  source: "https://iceberg.apache.org/docs/latest/spark-writes/#merge-into"
+  objectives: [spark-assoc:3.8]
+
+- id: SPK-11-q8
+  type: single
+  prompt: >-
+    A 5-minute window [00:00, 00:05) uses a 10-minute watermark on event_ts. Which arriving event
+    FINALIZES that window?
+  options:
+    A: "The first event with event_ts >= 00:05."
+    B: "The first event with event_ts >= 00:15 (window end + 10-minute delay)."
+    C: "Any event at processing time 00:05."
+    D: "It never finalizes."
+  answer: [B]
+  explanation: >-
+    The watermark trails max event time by 10 minutes, so it passes the window end (00:05) only once
+    an event with event_ts >= 00:15 is seen. After that the window is emitted and later events for
+    it are late.
+  source: "https://spark.apache.org/docs/4.0.0/structured-streaming-programming-guide.html#handling-late-data-and-watermarking"
+  objectives: [spark-assoc:5.3, spark-assoc:5.4]

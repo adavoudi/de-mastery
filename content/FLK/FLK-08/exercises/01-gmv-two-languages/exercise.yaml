@@ -1,0 +1,12 @@
+id: FLK-08/01-gmv-two-languages
+title: Per-currency GMV in Java Table API and PyFlink
+entry:
+  - src/main/java/de/flk/GmvTable.java
+  - job.py
+lab: none
+timeout_s: 300
+hints:
+  - "Java: TableEnvironment.create(EnvironmentSettings.inBatchMode()); build a table with fromValues, then groupBy($(\"ccy\")).select($(\"ccy\"), $(\"amt\").sum()) OR just executeSql a GROUP BY. Collect the Rows into a Map<String,Long>."
+  - "PyFlink: TableEnvironment.create(EnvironmentSettings.in_batch_mode()); from_elements or execute_sql a GROUP BY; iterate result.collect() and print 'DE_RESULT=' + json.dumps(totals, sort_keys=True)."
+  - "Both must return the SAME per-currency totals (SUM of amtMinor as a long). The grader compares each language's output against one Python oracle; the APIs may differ, the numbers may not."
+cert_objectives: [dse-flink:tableapi]

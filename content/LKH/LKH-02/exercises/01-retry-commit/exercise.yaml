@@ -1,0 +1,10 @@
+id: LKH-02/01-retry-commit
+title: Resolve a write conflict with refresh-and-reapply
+entry: solution.py
+lab: none
+timeout_s: 180
+hints:
+  - "Each attempt must start from a FRESH load: call catalog.load_table(identifier) inside the loop, not once before it. Read the current balance from that fresh table."
+  - "Compute new = mutate(current), then call before_commit(attempt) if given, then write with table.overwrite(arrow_row, overwrite_filter=EqualTo('id', 1)). Wrap the overwrite in try/except pyiceberg.exceptions.CommitFailedException."
+  - "On CommitFailedException, do NOT reuse the old value and do NOT swallow the error: loop again (which reloads the table and re-reads the now-updated balance). Re-raise only after max_retries attempts."
+cert_objectives: []
