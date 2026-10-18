@@ -89,4 +89,23 @@
     });
   });
   paintProgress();
+
+  // animated diagrams: pause / replay controls (SMIL; paused up front if the reader prefers less motion)
+  document.querySelectorAll("figure.diagram[data-anim]").forEach(function (fig) {
+    var svg = fig.querySelector("svg");
+    if (!svg || !svg.pauseAnimations) return;
+    var bar = document.createElement("div"); bar.className = "dg-ctrl";
+    var play = document.createElement("button"), again = document.createElement("button");
+    play.type = again.type = "button"; again.textContent = "Replay";
+    var paused = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    function sync() { play.textContent = paused ? "Play" : "Pause"; }
+    if (paused) svg.pauseAnimations();
+    play.addEventListener("click", function () {
+      paused = !paused; if (paused) svg.pauseAnimations(); else svg.unpauseAnimations(); sync();
+    });
+    again.addEventListener("click", function () {
+      svg.setCurrentTime(0); paused = false; svg.unpauseAnimations(); sync();
+    });
+    sync(); bar.appendChild(play); bar.appendChild(again); fig.appendChild(bar);
+  });
 })();

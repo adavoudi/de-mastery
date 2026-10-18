@@ -132,3 +132,37 @@ def test_roadmap_lists_every_module_and_syllabus_only_tracks_are_gone(client, li
         assert f'href="/m/{m.id}"' in html, m.id
     assert "CDW" not in lib.tracks and "ARC" not in lib.tracks
     assert "Certifications" not in client.get("/").text
+
+
+def test_diagrams_are_inlined_safely(lib, client):
+    """Every ![..](diagrams/x.svg) in a lesson exists, is valid SVG, and is served inline and CSP-safe."""
+    import re
+    import xml.etree.ElementTree as ET
+    seen = 0
+    for m in lib.modules.values():
+        lesson = m.dir / "lesson.md"
+        refs = re.findall(r"!\[[^\]]*\]\((diagrams/[\w-]+\.svg)\)", lesson.read_text()) if lesson.exists() else []
+        for ref in refs:
+            svg = m.dir / ref
+            assert svg.is_file(), f"{m.id}: missing {ref}"
+            root = ET.parse(svg).getroot()
+            assert root.tag.endswith("svg") and root.get("viewBox"), f"{ref}: needs a viewBox"
+            text = svg.read_text()
+            assert "<script" not in text and "onclick" not in text and "foreignObject" not in text, ref
+            html = client.get(f"/m/{m.id}").text
+            assert 'class="diagram"' in html and f"{ref}" not in html.split("<main")[1], f"{m.id}: {ref} not inlined"
+            assert "<style" not in html.split("<main")[1], f"{m.id}: inline <style> would break the CSP"
+            seen += 1
+    assert seen >= 0
+
+
+def test_diagram_renderer(tmp_path):
+    from de_web import render as r
+    (tmp_path / "diagrams").mkdir()
+    (tmp_path / "diagrams" / "a.svg").write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><style>x{}</style>'
+        '<script>1</script><rect style="fill:red" onclick="x()"/><animate/></svg>')
+    html = r.render("# T\n\n![Cap & co](diagrams/a.svg)\n\n![x](diagrams/../../etc/passwd)\n", base_dir=tmp_path).html
+    assert '<figure class="diagram" data-anim><svg' in html and "Cap &amp; co" in html
+    assert "<script" not in html and "<style" not in html and "onclick" not in html and "style=" not in html
+    assert "<img" in html  # path traversal falls back to a plain image, never a file read

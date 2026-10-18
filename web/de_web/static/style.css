@@ -342,3 +342,26 @@ details.hint p { margin: 0; padding: 0 16px 14px; font: 400 1.02rem/1.6 var(--se
 .side a.is-done::after { content: "\2713"; margin-left: 6px; color: var(--ok); font-weight: 600; }
 .mark-done { margin: 4px 0 10px; }
 .mark-done[aria-pressed="true"] { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); }
+
+/* Course diagrams: inline SVG from <module>/diagrams/*.svg, themed through these classes */
+.diagram { margin: 1.6em 0; padding: 14px 14px 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.diagram svg { display: block; width: 100%; height: auto; max-width: 760px; margin: 0 auto; font-family: var(--sans); font-size: 14px; }
+.diagram figcaption { margin-top: 8px; text-align: center; font: 400 .85rem/1.4 var(--sans); color: var(--muted); }
+.diagram .dg-ctrl { display: flex; justify-content: center; gap: 8px; margin-top: 8px; }
+.diagram .dg-ctrl button { font: 500 .78rem/1 var(--sans); padding: 6px 12px; border: 1px solid var(--line-2); border-radius: 99px; background: var(--sunken); color: var(--ink-2); cursor: pointer; }
+.diagram .dg-ctrl button:hover { border-color: var(--accent); color: var(--accent); }
+.dg-box { fill: var(--surface); stroke: var(--ink-2); stroke-width: 1.5; }
+.dg-accent { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+.dg-ok { fill: var(--ok-soft); stroke: var(--ok); stroke-width: 1.5; }
+.dg-bad { fill: var(--bad-soft); stroke: var(--bad); stroke-width: 1.5; }
+.dg-warn { fill: var(--warn-soft); stroke: #b8860b; stroke-width: 1.5; }
+.dg-text { fill: var(--ink); }
+.dg-muted { fill: var(--muted); font-size: 12px; }
+.dg-mono { font-family: var(--mono); }
+.dg-b { font-weight: 600; }
+.dg-line { fill: none; stroke: var(--ink-2); stroke-width: 1.5; }
+.dg-dash { stroke-dasharray: 5 4; }
+.dg-head { fill: var(--ink-2); }
+.dg-dot { fill: var(--accent); }
+.dg-dot-bad { fill: var(--bad); }
+.dg-dot-ok { fill: var(--ok); }

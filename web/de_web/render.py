@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 from typing import Callable
 
 from markdown_it import MarkdownIt
@@ -63,6 +63,61 @@ def _rewrite_links(state) -> None:
                 child.attrSet("class", "ext")
 
 
+_SVG_STRIP = [re.compile(p, re.S | re.I) for p in (
+    r"<\?xml[^>]*\?>", r"<!DOCTYPE[^>]*>", r"<script\b.*?</script>", r"<style\b.*?</style>",
+    r"<foreignObject\b.*?</foreignObject>", r'\s(?:style|on\w+)\s*=\s*"[^"]*"')]
+
+
+def load_diagram(base_dir: Path, src: str) -> str | None:
+    """Return the sanitised markup of ``diagrams/<name>.svg`` next to a markdown file, else None.
+
+    Only files directly inside ``<base_dir>/diagrams`` are served. ``<style>`` blocks are dropped
+    because the page CSP forbids them; the site styles diagrams through the ``dg-*`` classes in
+    style.css, while the ``<style>`` block keeps the file readable when opened on its own.
+    """
+    m = re.fullmatch(r"diagrams/([\w-]+)\.svg", src)
+    if not m:
+        return None
+    path = base_dir / "diagrams" / f"{m.group(1)}.svg"
+    try:
+        svg = path.read_text()
+    except OSError:
+        return None
+    for rx in _SVG_STRIP:
+        svg = rx.sub("", svg)
+    return svg.strip() if svg.lstrip().startswith("<svg") else None
+
+
+def _inline_diagrams(state) -> None:
+    """Turn a paragraph that is just ``![caption](diagrams/x.svg)`` into an inline <figure>."""
+    base_dir: Path | None = state.env.get("base_dir")
+    if base_dir is None:
+        return
+    out, toks, i = [], state.tokens, 0
+    while i < len(toks):
+        t = toks[i]
+        if (t.type == "paragraph_open" and i + 2 < len(toks) and toks[i + 2].type == "paragraph_close"
+                and len(toks[i + 1].children or []) == 1 and toks[i + 1].children[0].type == "image"):
+            img = toks[i + 1].children[0]
+            svg = load_diagram(base_dir, img.attrGet("src") or "")
+            if svg:
+                caption = _inline_text(img) or ""
+                animated = "<animate" in svg
+                tok = Token("html_block", "", 0)
+                tok.content = (f'<figure class="diagram"{" data-anim" if animated else ""}>{svg}'
+                               f'<figcaption>{_esc(caption)}</figcaption></figure>\n')
+                out.append(tok)
+                i += 3
+                continue
+        out.append(t)
+        i += 1
+    state.tokens = out
+
+
+def _esc(text: str) -> str:
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+
+
 def make_parser() -> MarkdownIt:
     md = (MarkdownIt("commonmark", {"html": True, "typographer": False, "highlight": _highlight_fence})
           .enable("table").enable("strikethrough")
@@ -70,6 +125,7 @@ def make_parser() -> MarkdownIt:
           .use(tasklists_plugin)
           .use(footnote_plugin))
     md.core.ruler.push("de_rewrite_links", _rewrite_links)
+    md.core.ruler.push("de_inline_diagrams", _inline_diagrams)
     return md
 
 
@@ -87,8 +143,11 @@ def _inline_text(tok: Token) -> str:
     return "".join(c.content for c in (tok.children or []) if c.type in ("text", "code_inline"))
 
 
-def render(text: str, resolve: Callable[[str], tuple[str, bool]] | None = None) -> Rendered:
+def render(text: str, resolve: Callable[[str], tuple[str, bool]] | None = None,
+           base_dir: Path | None = None) -> Rendered:
     env: dict = {"resolve": resolve} if resolve else {}
+    if base_dir is not None:
+        env["base_dir"] = base_dir
     tokens = _MD.parse(text, env)
     title = None
     if len(tokens) >= 3 and tokens[0].type == "heading_open" and tokens[0].tag == "h1":

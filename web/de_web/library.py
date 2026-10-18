@@ -259,12 +259,12 @@ class Library:
         return _render_cached(self, path)
 
     def render_text(self, text: str, source: Path) -> render_mod.Rendered:
-        return render_mod.render(text, self.make_resolver(self.rel(source)))
+        return render_mod.render(text, self.make_resolver(self.rel(source)), source.parent)
 
 
 @lru_cache(maxsize=1024)
 def _render_cached(lib: Library, path: Path) -> render_mod.Rendered:
-    return render_mod.render(_read(path), lib.make_resolver(lib.rel(path)))
+    return render_mod.render(_read(path), lib.make_resolver(lib.rel(path)), path.parent)
 
 
 def load_quiz(module: Module) -> list[dict]:
