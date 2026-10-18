@@ -33,8 +33,8 @@ uv run de next           # your next exercise
 
 Spark needs Java 17+. If `de doctor` can't find it, run `bash labs/setup_jdk.sh`.
 
-**Read the course in a browser:** `uv sync --extra web && uv run de web`, then open
-http://127.0.0.1:8000. It has the lessons, a roadmap where you can tick off modules, and the exercise
+**Read the course in a browser:** https://adavoudi.info/de-mastery, or locally with
+`uv sync --extra web && uv run de web` (http://127.0.0.1:8000). It has the lessons, a roadmap where you can tick off modules, and the exercise
 statements. Exercises are still run and graded in the terminal. See [docs/WEB.md](docs/WEB.md).
 
 ## Where to look

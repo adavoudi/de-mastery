@@ -22,6 +22,16 @@ Every exercise page ends with a "Run it locally" box with the exact `de start` /
 commands. Quizzes on the site are practice-only (instant feedback, nothing recorded); the scored run
 is `uv run de quiz <MODULE>`.
 
+## Published site
+
+The course is published at **https://adavoudi.info/de-mastery**. A GitHub Actions workflow
+(`.github/workflows/pages.yml`) rebuilds it on every push to `main`. To build the same static files
+yourself:
+
+```bash
+uv run python -m de_web.export --out dist --base /de-mastery   # --base '' for a site at the root
+```
+
 ## Host it for others
 
 The site is a small Python app (about 100 MB of RAM). Serve it with uvicorn behind a reverse proxy

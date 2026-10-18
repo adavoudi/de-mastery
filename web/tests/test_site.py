@@ -166,3 +166,13 @@ def test_diagram_renderer(tmp_path):
     assert '<figure class="diagram" data-anim><svg' in html and "Cap &amp; co" in html
     assert "<script" not in html and "<style" not in html and "onclick" not in html and "style=" not in html
     assert "<img" in html  # path traversal falls back to a plain image, never a file read
+
+
+def test_static_export_prefixes_links(tmp_path):
+    from de_web.export import export
+    n = export(tmp_path, "/de-mastery", ROOT)
+    assert n > 400 and (tmp_path / ".nojekyll").exists() and (tmp_path / "404.html").exists()
+    html = (tmp_path / "m" / "FND-01" / "index.html").read_text()
+    assert 'href="/de-mastery/static/style.css' in html and 'href="/de-mastery/roadmap"' in html
+    assert 'href="/roadmap"' not in html and 'src="/static' not in html
+    assert 'url("/de-mastery/static/fonts' in (tmp_path / "static" / "style.css").read_text()
