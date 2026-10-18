@@ -1,66 +1,80 @@
 # KFK-03 · Producers — batching, idempotence, ordering under retries
 
-## Why the producer is where correctness is won or lost
+## Why the producer decides correctness
 
-The producer is deceptively simple: `produce(topic, key, value)`. But between that call and a durable
-record on the leader sit the decisions that determine throughput, ordering and whether a retry
-creates a duplicate. This module is about tuning for throughput **without** sacrificing the two
-guarantees a SOX-style financial feed needs: **no duplicates** and **no reordering per key**, even
-when the network hiccups and the client retries.
+The producer looks simple: `produce(topic, key, value)`. But many decisions happen between that
+call and a durable record on the leader. These decisions determine throughput and ordering. They
+also determine whether a retry creates a duplicate. This module teaches you to tune for throughput
+**without** losing the two guarantees that a SOX-style financial feed needs. The two guarantees are
+**no duplicates** and **no reordering per key**. They must hold even when the network has a short
+failure and the client retries.
 
 ## How the producer works
 
-A record you `produce()` is not sent immediately. It is appended to a per-partition **batch** in an
-in-memory buffer (`buffer.memory`), and a background I/O thread sends batches to brokers.
+The producer does not send a record immediately when you call `produce()`. It appends the record to
+a per-partition **batch** in an in-memory buffer (`buffer.memory`). A background I/O thread sends
+the batches to the brokers.
 
-- **`linger.ms`** — how long the producer waits to let a batch fill before sending. `0` sends as
-  soon as possible (lowest latency, smallest batches); a few milliseconds dramatically improves
-  throughput by amortising per-request overhead across more records.
-- **`batch.size`** — the max bytes per partition batch. Bigger batches = fewer, larger requests =
-  higher throughput, at the cost of latency and memory.
-- **`compression.type`** (`lz4`, `zstd`, `snappy`, `gzip`) — compresses each batch. `lz4`/`zstd`
-  give large throughput and storage wins for text/JSON at low CPU cost. Compression happens per
-  batch, so it pairs with a non-zero `linger.ms`.
-- **The partitioner** decides which partition a record goes to. With a **key**, the default
-  partitioner hashes the key so the **same key always lands in the same partition** — the basis of
-  per-key ordering. With no key it spreads records (sticky batching) across partitions for
-  throughput. Ordering is only ever guaranteed *within* a partition.
+- **`linger.ms`** — how long the producer waits for a batch to fill before it sends the batch.
+  `0` sends as soon as possible. This gives the lowest latency and the smallest batches. A wait of
+  a few milliseconds greatly improves throughput. The producer shares the overhead of each request
+  across more records.
+- **`batch.size`** — the maximum bytes in a partition batch. Bigger batches mean fewer and larger
+  requests. This gives higher throughput. The cost is more latency and more memory.
+- **`compression.type`** (`lz4`, `zstd`, `snappy`, `gzip`) — compresses each batch. For text or JSON,
+  `lz4` and `zstd` give high throughput and save storage. They use little CPU. Compression happens
+  for each batch, so use it together with a `linger.ms` that is not zero.
+- **The partitioner** decides which partition receives a record. When a record has a **key**, the
+  default partitioner hashes the key. The **same key always goes to the same partition**. This is
+  the basis of per-key ordering. When a record has no key, the partitioner spreads records across
+  partitions (sticky batching) for throughput. Kafka guarantees order only *within* a partition.
 
-Tuning for throughput is therefore: raise `linger.ms` a little, raise `batch.size`, turn on `lz4`
-compression — send fewer, bigger, compressed batches.
+To tune for throughput, follow these steps:
+
+1. Raise `linger.ms` a little.
+2. Raise `batch.size`.
+3. Turn on `lz4` compression.
+
+The result is fewer, bigger, compressed batches.
 
 ## Retries, ordering, and idempotence
 
-Here is the trap. A produce request can fail transiently (leader moved, timeout). The producer
-**retries**. Two bad things can happen:
+Here is the trap. A produce request can fail for a short time (the leader moved, or a timeout). The
+producer **retries**. Two bad things can happen:
 
-1. **Duplicates.** The record was actually written, but the ack was lost; the retry writes it again.
-2. **Reordering.** With more than one in-flight request per connection, a retried request can land
-   *after* a later request that already succeeded — so within one partition the order flips.
+1. **Duplicates.** Kafka wrote the record, but the ack was lost. The retry writes the record again.
+2. **Reordering.** Suppose there is more than one in-flight request for each connection. A retried
+   request can arrive *after* a later request that already succeeded. Then the order flips within
+   one partition.
 
 The fix is the **idempotent producer** (`enable.idempotence=true`). The producer gets a producer id
-and per-partition sequence numbers; the broker rejects duplicates and out-of-order sequences, so a
-retry neither duplicates nor reorders. Enabling it also sets safe defaults: `acks=all`,
-`retries=INT_MAX` (bounded by `delivery.timeout.ms`), and `max.in.flight.requests.per.connection<=5`.
-That last bound is the subtle one: idempotence preserves ordering across retries **only** up to 5
-in-flight requests; set it to `6+` and you can still reorder on retry.
+and per-partition sequence numbers. The broker rejects duplicates and out-of-order sequences. So a
+retry does not duplicate and does not reorder. This setting also sets safe defaults:
+`acks=all`, `retries=INT_MAX` (limited by `delivery.timeout.ms`), and
+`max.in.flight.requests.per.connection<=5`. The last limit is easy to miss. Idempotence preserves
+ordering across retries **only** up to 5 in-flight requests. If you set it to `6` or more, retries
+can still reorder records.
 
 ![A lost ack triggers a retry; the producer id and sequence number let the broker reject the duplicate](diagrams/idempotent-retry.svg)
 
-So the throughput-safe recipe is: **`enable.idempotence=true`** (which pins `acks=all` and bounded
-in-flight), a tuned `linger.ms`/`batch.size`/`compression.type` for throughput, and a key per record
-so each key's events stay ordered in one partition. You get bigger batches AND no dup / no reorder.
+So the recipe for safe throughput has three parts:
 
-> We never grade "how many records per second did you hit" — throughput is machine- and
-> load-dependent and would be flaky. The exercise grades the **properties** that make throughput
-> safe (the config) and the **invariant** that per-key order in the consumed log equals the order
-> you produced, even with retries enabled.
+- Set **`enable.idempotence=true`**. This pins `acks=all` and limits in-flight requests.
+- Tune `linger.ms`, `batch.size`, and `compression.type` for throughput.
+- Give each record a key, so the events of each key stay in order in one partition.
+
+You get bigger batches AND no duplicates AND no reordering.
+
+> We never grade "how many records per second did you hit". Throughput depends on the machine and
+> the load, so the test would be flaky. The exercise grades two things. First, the **properties**
+> (the config) that make throughput safe. Second, the **invariant**: the per-key order in the
+> consumed log equals the order that you produced, even with retries enabled.
 
 ## KIP-848 / KIP-932 note
 
-These are consumer-side (KFK-04): the **new consumer group protocol (KIP-848)** and **share groups
-(KIP-932)**. They do not change producer semantics; a producer's idempotence/ordering guarantees are
-independent of how consumers are grouped.
+These two items belong to the consumer side (KFK-04): the **new consumer group protocol (KIP-848)**
+and **share groups (KIP-932)**. They do not change producer semantics. The idempotence and ordering
+guarantees of a producer do not depend on how consumers are grouped.
 
 ## From your world
 
@@ -71,14 +85,14 @@ independent of how consumers are grouped.
 | dbt model micro-batch size vs latency | `linger.ms` / `batch.size` | throughput vs latency trade |
 | Parquet/zstd column compression | `compression.type=zstd` | same idea, per batch on the wire |
 
-## When NOT to turn every knob up
+## When NOT to turn every setting up
 
-- **Strict low latency.** A big `linger.ms` adds latency; if you need sub-10ms end-to-end, keep
-  `linger.ms` small and accept smaller batches.
-- **You truly don't need ordering or dedup.** For lossy metrics you can leave idempotence off and
-  use `acks=1` for speed — but never for financial/SOX data.
-- **Huge in-flight for raw speed.** Don't raise `max.in.flight` above 5 with idempotence expecting
-  ordering; above 5 the ordering guarantee under retry is lost.
+- **Strict low latency.** A big `linger.ms` adds latency. If you need less than 10 ms end to end,
+  keep `linger.ms` small and accept smaller batches.
+- **You really do not need ordering or deduplication.** For lossy metrics, you can leave idempotence
+  off and use `acks=1` for speed. Never do this for financial or SOX data.
+- **A very high in-flight count for raw speed.** Do not raise `max.in.flight` above 5 with
+  idempotence and expect ordering. Above 5, the ordering guarantee under retry is lost.
 
 ## Further reading
 

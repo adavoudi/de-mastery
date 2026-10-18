@@ -2,27 +2,29 @@
 
 ## Why maintenance exists
 
-An Iceberg (or Delta, or Hudi) table is a pile of immutable data files plus metadata that says
-which files are live. Every write adds files; `MERGE`/`UPDATE`/`DELETE` adds more (and delete
-files on top). Streaming or frequent micro-batch writes are the worst: a commit every few seconds
-produces thousands of tiny files. Nothing ever rewrites those files for you. Left alone, a healthy
-table rots into the **small-files problem**: query planning has to open and read the footers of
-tens of thousands of files, each scan task does almost no useful work, and your Athena/Trino bill
-and latency climb even though the data barely grew.
+An Iceberg (or Delta, or Hudi) table is a pile of immutable data files plus metadata. The
+metadata says which files are live. Every write adds files. `MERGE`, `UPDATE` and `DELETE` add
+more files (and delete files on top). Streaming or frequent micro-batch writes are the worst case.
+A commit every few seconds produces thousands of tiny files. Nothing rewrites those files for
+you. If you leave the table alone, a healthy table decays into the **small-files problem**:
 
-You already know this disease from two angles. On Redshift, tables fragment as you load and delete,
-so you run `VACUUM` to reclaim space and re-sort, and you choose a `SORTKEY` so range-restricted
-scans skip blocks. On S3 + Athena you have felt a Hive-style table with millions of 10 KB files
-crawl. A lakehouse table needs the same housekeeping, and the format gives you explicit, atomic
-operations to do it: **compaction**, **sort order**, **snapshot expiration**, and **orphan-file
-removal**. Running them is operations work, not a one-time setup.
+- Query planning must open and read the footers of tens of thousands of files.
+- Each scan task does almost no useful work.
+- Your Athena/Trino bill and latency climb, even though the data barely grew.
+
+You already know this problem from two sides. On Redshift, tables fragment as you load and delete
+data. So you run `VACUUM` to reclaim space and re-sort. You also choose a `SORTKEY`, so that
+range-restricted scans skip blocks. On S3 + Athena, you have seen a Hive-style table with millions
+of 10 KB files run very slowly. A lakehouse table needs the same housekeeping. The format gives
+you explicit, atomic operations to do it: **compaction**, **sort order**, **snapshot expiration**,
+and **orphan-file removal**. Running them is operations work. It is not a one-time setup.
 
 ## How it works
 
-**Compaction (`rewrite_data_files`).** This reads many small data files and rewrites them into
-fewer, right-sized ones (default target ~512 MB), committing the result as a *new snapshot*. The
-old files stay referenced by old snapshots until you expire them, so compaction never loses data
-and is safe to run concurrently with reads. In Spark:
+**Compaction (`rewrite_data_files`).** This operation reads many small data files. It rewrites
+them into fewer files of the right size (the default target is ~512 MB). It commits the result as
+a *new snapshot*. The old files stay referenced by old snapshots until you expire them. So
+compaction never loses data. It is also safe to run at the same time as reads. In Spark:
 
 ```sql
 CALL local.system.rewrite_data_files(
@@ -32,32 +34,32 @@ CALL local.system.rewrite_data_files(
 
 The returned row tells you `rewritten_data_files_count` and `added_data_files_count`.
 
-**Sort order (`WRITE ORDERED BY`).** Iceberg stores per-column min/max in each data file's
-metadata. If rows are clustered by a column, a predicate on that column lets the planner skip whole
-files (file pruning, LKH-01/FND-06). You declare the order once; compaction (and future ordered
-writes) honor it:
+**Sort order (`WRITE ORDERED BY`).** Iceberg stores the min/max of each column in the metadata of
+each data file. Suppose rows are clustered by a column. Then a predicate on that column lets the
+planner skip whole files (file pruning, LKH-01/FND-06). You declare the order once. Compaction (and
+future ordered writes) follow it:
 
 ```sql
 ALTER TABLE local.db.events WRITE ORDERED BY event_date
 ```
 
-This is the Iceberg analogue of a Redshift `SORTKEY`. `WRITE DISTRIBUTED BY PARTITION LOCALLY
-ORDERED BY ...` controls the shuffle too.
+This is the Iceberg equivalent of a Redshift `SORTKEY`. `WRITE DISTRIBUTED BY PARTITION LOCALLY
+ORDERED BY ...` also controls the shuffle.
 
 **Hidden partitioning & partition evolution.** Iceberg partitions on *transforms* of a column
-(`days(ts)`, `bucket(16, id)`), and the transform is recorded in metadata — so you query on the raw
-column (`WHERE ts >= ...`) and Iceberg prunes partitions for you. No `dt=2026-01-01` string column
-in your `WHERE`, no leaking the physical layout into queries (the Hive mistake). And because the
-partition spec lives in metadata, you can **evolve** it (`ALTER TABLE ... ADD PARTITION FIELD
-days(ts)`) without rewriting old data; new data uses the new spec, old data keeps its own. The one
-rule that never changes: **partition on a low-cardinality transform.** Partitioning on a
-high-cardinality raw column (a user id, an order id) creates one tiny file per value — the
-small-files problem by construction.
+(`days(ts)`, `bucket(16, id)`). It records the transform in metadata. So you query on the raw
+column (`WHERE ts >= ...`) and Iceberg prunes partitions for you. You do not need a string column
+such as `dt=2026-01-01` in your `WHERE`. The physical layout does not leak into your queries (the
+Hive mistake). The partition spec lives in metadata. So you can **evolve** it
+(`ALTER TABLE ... ADD PARTITION FIELD days(ts)`) without a rewrite of old data. New data uses the
+new spec. Old data keeps its own spec. One rule never changes: **partition on a low-cardinality
+transform.** Suppose you partition on a high-cardinality raw column (a user id or an order id).
+Then Iceberg creates one tiny file per value. This is the small-files problem by construction.
 
-**Snapshot expiration (`expire_snapshots`).** Every commit creates a snapshot; time travel and
-rollback depend on them, but they also pin old data files so disk never shrinks. Expiration deletes
-snapshots (and the data/manifest files only they reference) older than a cutoff, keeping a
-retention window:
+**Snapshot expiration (`expire_snapshots`).** Every commit creates a snapshot. Time travel and
+rollback depend on snapshots. But snapshots also pin old data files, so the disk use never shrinks.
+Expiration deletes the snapshots that are older than a cutoff. It also deletes the data files and
+manifest files that only those snapshots reference. It keeps a retention window:
 
 ```sql
 CALL local.system.expire_snapshots(
@@ -66,20 +68,25 @@ CALL local.system.expire_snapshots(
   retain_last => 5)
 ```
 
-The subtlety that bites everyone: `retain_last` alone will NOT reclaim recent snapshots, because
-`expire_snapshots` also honors a default `max_snapshot_age_ms` (5 days) that protects anything
-recent. To actually reclaim in a maintenance job you set `older_than`. And you must keep enough
-history for your rollback/time-travel SLA — expiring *everything* throws away your ability to
-recover from a bad write.
+This detail causes problems for everyone. `retain_last` alone will NOT reclaim recent snapshots.
+The reason is that `expire_snapshots` also uses a default `max_snapshot_age_ms` (5 days). This
+default protects all recent snapshots. To reclaim space in a maintenance job, you set `older_than`.
+You must also keep enough history for your rollback and time-travel SLA. If you expire
+*everything*, you lose the ability to recover from a bad write.
 
 **Orphan files (`remove_orphan_files`).** Failed or aborted writes can leave data files on object
-storage that no snapshot references. These are not reclaimed by `expire_snapshots` (which only
-touches files reachable from expired snapshots). `remove_orphan_files` lists the table directory and
-deletes unreferenced files older than a cutoff. Use a conservative `older_than` (default 3 days) so
-you never delete a file that an in-flight commit is about to reference.
+storage that no snapshot references. `expire_snapshots` does not reclaim these files. It only
+touches files that are reachable from expired snapshots. `remove_orphan_files` lists the table
+directory. It deletes unreferenced files that are older than a cutoff. Use a conservative
+`older_than` (default 3 days). Then you never delete a file that an in-flight commit is about to
+reference.
 
-The healthy-maintenance recipe, run on a schedule: **compact → (keep the sort order) → expire old
-snapshots → occasionally remove orphans.**
+The recipe for healthy maintenance, which you run on a schedule:
+
+1. Compact.
+2. Keep the sort order.
+3. Expire old snapshots.
+4. Remove orphans, from time to time.
 
 ## From your world
 
@@ -94,17 +101,18 @@ snapshots → occasionally remove orphans.**
 
 ## When NOT to do it (or when it backfires)
 
-- **Don't compact a table that is only ever appended in large files.** If each write already
-  produces ~512 MB files, compaction just burns compute rewriting them. Compact when you have *many
-  small* files, not on a reflex.
-- **Don't expire snapshots inside your time-travel / rollback window.** If your DR policy is "7 days
-  of recovery", `older_than` must be ≥7 days ago. Expiring aggressively to save a little S3 removes
-  your safety net.
-- **Don't partition on a high-cardinality column** to "spread the data out". It creates the exact
-  small-files problem compaction exists to fix. Partition on a low-cardinality transform
-  (`days(ts)`, `bucket(N, key)`), and use sort order for the high-cardinality column instead.
-- **Don't run `remove_orphan_files` with a short `older_than` on a busy table.** You can race an
-  in-flight commit and delete a file it is about to reference. Keep the default-ish 3-day cushion.
+- **Do not compact a table that you only append to in large files.** Suppose each write already
+  produces ~512 MB files. Then compaction only uses compute to rewrite them. Compact when you have
+  *many small* files. Do not compact out of habit.
+- **Do not expire snapshots inside your time-travel or rollback window.** Suppose your DR policy
+  is "7 days of recovery". Then `older_than` must be at least 7 days ago. If you expire
+  aggressively to save a little S3 space, you remove your safety net.
+- **Do not partition on a high-cardinality column** to "spread the data out". This creates the
+  exact small-files problem that compaction exists to fix. Partition on a low-cardinality
+  transform (`days(ts)`, `bucket(N, key)`). Use the sort order for the high-cardinality column.
+- **Do not run `remove_orphan_files` with a short `older_than` on a busy table.** You can race an
+  in-flight commit and delete a file that it is about to reference. Keep the cushion of about 3
+  days from the default.
 
 ## Further reading
 

@@ -2,28 +2,28 @@
 
 ## Why Flink is the CDC-to-lakehouse engine
 
-You already load your lakehouse: an operational database changes, and those changes have to land in
-Iceberg so your dbt/Spark models can read a current, queryable table. The clean way to do that is
-**Change Data Capture (CDC)**: the database's write-ahead log is turned into a stream of
-**change events** (insert / update / delete), usually by **Debezium**, and a stream processor
-**applies** those changes to a target table. Flink is purpose-built for this because:
+You already load your lakehouse. An operational database changes, and those changes must arrive in
+Iceberg. Then your dbt/Spark models can read a current table that you can query. The clean way to do this is
+**Change Data Capture (CDC)**. Debezium usually turns the write-ahead log of the database into a stream of
+**change events** (insert / update / delete). A stream processor
+**applies** those changes to a target table. Flink is purpose-built for this, for three reasons:
 
-- it understands **changelog semantics** natively — a Debezium event stream is just a changelog
-  (`+I` / `-U` / `+U` / `-D`), the same RowKinds you met in FLK-04;
-- its Iceberg sink **commits on checkpoint**, so the target table advances **atomically** and
-  **exactly-once** — each Iceberg snapshot corresponds to a completed Flink checkpoint;
-- it handles **schema evolution**: a new column in the source becomes a new Iceberg column, and the
+- It understands **changelog semantics** natively. A Debezium event stream is a changelog
+  (`+I` / `-U` / `+U` / `-D`). These are the same RowKinds that you met in FLK-04.
+- Its Iceberg sink **commits on checkpoint**. So the target table advances **atomically** and
+  **exactly-once**. Each Iceberg snapshot matches a completed Flink checkpoint.
+- It handles **schema evolution**. A new column in the source becomes a new Iceberg column. The
   old rows read back `NULL` for it.
 
-This is the SOX-grade loading path: no double-applied change, no dropped change, and a full snapshot
+This is the SOX-grade loading path. It has no double-applied change and no dropped change. It also keeps a full snapshot
 history on the target.
 
 ## How it works
 
 ### 1. Read the change stream as a changelog
 
-Flink ships the `debezium-json` format (part of `flink-json`, in the dist). A table declared with
-`'format' = 'debezium-json'` interprets each Debezium envelope
+Flink includes the `debezium-json` format (part of `flink-json`, in the dist). You declare a table with
+`'format' = 'debezium-json'`. The table interprets each Debezium envelope
 (`{"before":…, "after":…, "op":"c|u|d"}`) and emits the right RowKinds:
 
 ```sql
@@ -37,15 +37,15 @@ CREATE TABLE cdc (
 - `op=u` → `-U` (old) then `+U` (new)
 - `op=d` → `-D`
 
-In production the source is `upsert-kafka` or the Flink CDC connectors (Debezium embedded) reading
-the DB log directly; in this module the no-Docker graded path reads a **Debezium-JSON file** so the
+In production, the source is `upsert-kafka` or the Flink CDC connectors (Debezium embedded). They read
+the database log directly. In this module, the graded path needs no Docker. It reads a **Debezium-JSON file**, so the
 whole pipeline is deterministic and needs no containers. The live Postgres→Debezium path is an
-optional `streaming`-lab layer.
+optional layer of the `streaming` lab.
 
 ### 2. Define an upsert-capable Iceberg sink
 
-To **apply** a changelog (not just append it) the Iceberg table must be **v2** (merge-on-read,
-position/equality deletes) and have a **primary key** so Flink knows which row an update/delete
+You want to **apply** a changelog, not only append it. For this, the Iceberg table must be **v2** (merge-on-read,
+position/equality deletes). It must also have a **primary key**. Then Flink knows which row an update or delete
 targets:
 
 ```sql
@@ -55,22 +55,22 @@ CREATE TABLE ice.db.customers (
 ) WITH ('format-version' = '2');
 ```
 
-Then the sink is just an `INSERT … SELECT` from the changelog table into the Iceberg table:
+Then the sink is an `INSERT … SELECT` from the changelog table into the Iceberg table:
 
 ```sql
 INSERT INTO ice.db.customers SELECT id, name, amt FROM cdc;
 ```
 
-Flink routes `+U`/`-U`/`-D` into Iceberg equality deletes + new data files keyed on the primary
-key. The result: the Iceberg table always reflects the **current** state of the source.
+Flink sends `+U`/`-U`/`-D` into Iceberg equality deletes and new data files. Both use the primary
+key. The result is that the Iceberg table always shows the **current** state of the source.
 
 ### 3. Commit on checkpoint (exactly-once)
 
-The Iceberg sink **buffers writes and commits an Iceberg snapshot only when a Flink checkpoint
-completes**. That is what makes the pipeline exactly-once: on recovery, Flink replays from the last
-checkpoint and the sink's committer is idempotent per checkpoint id, so a snapshot is never
-double-committed and never lost. You can see it on disk — the table's `metadata/` grows a new
-`vN.metadata.json` and a `snap-*.avro` manifest list per committed checkpoint.
+The Iceberg sink **buffers writes. It commits an Iceberg snapshot only when a Flink checkpoint
+completes**. This makes the pipeline exactly-once. On recovery, Flink replays from the last
+checkpoint. The committer of the sink is idempotent for each checkpoint id. So the sink never
+double-commits a snapshot and never loses one. You can see it on disk. For each committed checkpoint, the
+`metadata/` folder of the table gets a new `vN.metadata.json` and a `snap-*.avro` manifest list.
 
 ![Buffered changes become visible in Iceberg only when a checkpoint completes and the committer creates a snapshot](diagrams/commit-on-checkpoint.svg)
 
@@ -82,22 +82,22 @@ When the source adds a column, evolve the target with an Iceberg `ALTER TABLE �
 ALTER TABLE ice.db.customers ADD (region STRING);
 ```
 
-Iceberg schema evolution is **metadata-only** and **safe**: existing rows read back `NULL` for the
-new column, new rows carry it, and no data is rewritten. This is the same column-add you rely on in
-your Athena/Iceberg tables, driven here by the CDC pipeline.
+Iceberg schema evolution is **metadata-only** and **safe**. Existing rows read back `NULL` for the
+new column. New rows carry it. Iceberg does not rewrite any data. This is the same column-add that you use in
+your Athena/Iceberg tables. Here the CDC pipeline drives it.
 
 ## What the test asserts
 
-- **Reconciliation (G6).** After applying the change events, the Iceberg table's contents must equal
+- **Reconciliation (G6).** The test applies the change events. Then the contents of the Iceberg table must equal
   an independent **DuckDB** fold of the *same* events (apply c/u/d by primary key). Deleted keys are
-  absent; updated keys show the latest values. The streaming result must equal the batch answer over
+  absent. Updated keys show the latest values. The streaming result must equal the batch answer over
   the same changelog (TESTING.md streaming rule).
 - **Commit on checkpoint.** The table has ≥1 Iceberg snapshot after the job completes (the commit
-  happened); the data is visible only via that committed snapshot.
-- **Schema evolution.** After `ALTER … ADD`, old rows read `NULL` for the new column and new rows
-  carry its value — reconciled against the DuckDB fold that models the same evolution.
+  happened). The data is visible only through that committed snapshot.
+- **Schema evolution.** After `ALTER … ADD`, old rows read `NULL` for the new column. New rows
+  carry its value. The test reconciles this against the DuckDB fold that models the same evolution.
 
-Nothing is graded on timing or on the exact SQL text (an alternate upsert phrasing passes).
+The test grades nothing on timing or on the exact SQL text (an alternate upsert phrasing passes).
 
 ## From your world
 
@@ -110,14 +110,14 @@ Nothing is graded on timing or on the exact SQL text (an alternate upsert phrasi
 
 ## When NOT to use this
 
-- **Append-only event logs.** If you never update or delete, a plain append Iceberg sink (or Kafka →
+- **Append-only event logs.** Suppose you never update or delete. Then a plain append Iceberg sink (or Kafka →
   Iceberg) is simpler than a v2 upsert table with equality deletes.
-- **Tiny, low-change dimensions.** A periodic batch `MERGE` (dbt/Spark) may be cheaper to operate
+- **Tiny, low-change dimensions.** A periodic batch `MERGE` (dbt/Spark) may cost less to operate
   than a standing Flink job.
-- **No primary key available.** Upsert needs a key; without one you can only append, and dedup/SCD2
-  must be modelled explicitly downstream.
-- **Heavy historical backfills.** Bulk-load with batch first, then switch the CDC job on for the
-  tail — streaming a full history through equality deletes is wasteful.
+- **No primary key available.** Upsert needs a key. Without a key, you can only append. You must model dedup and SCD2
+  explicitly downstream.
+- **Heavy historical backfills.** First bulk-load with batch. Then switch the CDC job on for the
+  tail. It is wasteful to stream a full history through equality deletes.
 
 ## Further reading
 

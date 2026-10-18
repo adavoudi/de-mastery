@@ -3,23 +3,23 @@
   prompt: "A dashboard tile on a streaming revenue mart must answer in about a second. What is the standard serving-layer design?"
   options:
     A: "Scan the raw primary-key fact table on every tile load and add more CPU"
-    B: "Read a small pre-aggregated rollup table and prune it with the dashboard's predicate"
-    C: "Iterate the table's changelog stream until it ends"
+    B: "Read a small pre-aggregated rollup table and prune it with the predicate of the dashboard"
+    C: "Iterate the changelog stream of the table until it ends"
     D: "Cache the entire fact table in the browser"
   answer: [B]
-  explanation: "The raw fact is laid out for ingestion (small files, LSM levels, delete files). Serving reads a small pre-aggregated rollup and prunes it, exactly like a BI rollup / materialized view in a batch warehouse."
+  explanation: "The layout of the raw fact is for ingestion (small files, LSM levels, delete files). Serving reads a small pre-aggregated rollup and prunes it. This is exactly like a BI rollup / materialized view in a batch warehouse."
   source: "https://paimon.apache.org/docs/2.0/"
 
 - id: STH-07-q2
   type: single
-  prompt: "To serve the current state of a Paimon partial-update primary-key table, which read do you use?"
+  prompt: "You must serve the current state of a Paimon partial-update primary-key table. Which read do you use?"
   options:
     A: "A streaming read of the changelog, summing every record"
     B: "A batch snapshot read, which applies the merge engine and returns the latest value per key"
     C: "A read of the audit_log system table only"
     D: "A raw file listing of the newest data files"
   answer: [B]
-  explanation: "A batch snapshot read applies the merge (dedup / partial-update / aggregation) and returns the merged latest-per-key state. Iterating the changelog is for downstream pipelines and would double-count superseded versions."
+  explanation: "A batch snapshot read applies the merge (dedup / partial-update / aggregation). It returns the merged latest-per-key state. Iterating the changelog is for downstream pipelines. It would double-count superseded versions."
   source: "https://paimon.apache.org/docs/2.0/"
 
 - id: STH-07-q3
@@ -27,35 +27,35 @@
   prompt: "Why is a query plan (EXPLAIN) a better proof of serving performance than wall-clock time?"
   options:
     A: "Wall-clock time is always slower than the plan predicts"
-    B: "The plan shows the query reads the rollup and prunes with the predicate; timing is flaky because of cache state and machine load"
+    B: "The plan shows that the query reads the rollup and prunes with the predicate. Timing is flaky because of cache state and machine load"
     C: "EXPLAIN runs the query faster"
-    D: "Plans are required by SOX; timing is not"
+    D: "SOX requires plans, and it does not require timing"
   answer: [B]
-  explanation: "The durable proof is structural: the plan shows the rollup table is read and the predicate prunes it. Wall-clock is only a generous guardrail (warm cache, median of N) because it depends on cache state, GC and a possibly loaded machine."
+  explanation: "The durable proof is structural. The plan shows that the query reads the rollup table and that the predicate prunes it. Wall-clock time is only a generous guardrail (warm cache, median of N). It depends on cache state, GC and a machine that may be loaded."
   source: "https://iceberg.apache.org/docs/latest/"
 
 - id: STH-07-q4
   type: single
   prompt: "A streaming dashboard shows roughly 50% more revenue than a nightly batch rebuild of the same events. What is the most likely cause?"
   options:
-    A: "The batch job is simply wrong; trust the stream"
-    B: "The serving read is summing the changelog / un-merged versions, double-counting superseded rows instead of reading the merged snapshot"
+    A: "The batch job is simply wrong. Trust the stream"
+    B: "The serving read sums the changelog / un-merged versions. It double-counts superseded rows and does not read the merged snapshot"
     C: "DuckDB cannot add integers correctly"
-    D: "The dashboard is caching too aggressively"
+    D: "The dashboard caches too aggressively"
   answer: [B]
-  explanation: "Reading the changelog or un-merged versions double-counts superseded rows. Serving must read the merged snapshot (latest per key). The G6 invariant: the OLAP answer over the merged snapshot equals a batch rebuild of the same events."
+  explanation: "If you read the changelog or un-merged versions, you double-count superseded rows. Serving must read the merged snapshot (latest per key). The G6 invariant: the OLAP answer over the merged snapshot equals a batch rebuild of the same events."
   source: "https://paimon.apache.org/docs/2.0/"
 
 - id: STH-07-q5
   type: single
-  prompt: "DuckDB's iceberg_scan cannot open an Iceberg table written by Flink's hadoop catalog. What is the recommended workaround in this stack?"
+  prompt: "The iceberg_scan of DuckDB cannot open an Iceberg table that the Flink hadoop catalog wrote. What is the recommended workaround in this stack?"
   options:
     A: "Rewrite every manifest path by hand"
     B: "Read the table with pyiceberg to an Arrow table, register it in DuckDB, then run SQL"
     C: "Give up and use the changelog"
     D: "Convert the table to CSV first"
   answer: [B]
-  explanation: "The Flink hadoop catalog stores manifest paths with a file: scheme DuckDB's iceberg extension rejects. Read via pyiceberg (StaticTable.from_metadata -> scan().to_arrow()), register the Arrow table in DuckDB, then query."
+  explanation: "The Flink hadoop catalog stores manifest paths with a file: scheme. The iceberg extension of DuckDB rejects this scheme. Read the table via pyiceberg (StaticTable.from_metadata -> scan().to_arrow()). Register the Arrow table in DuckDB. Then query it."
   source: "https://iceberg.apache.org/docs/latest/"
 
 - id: STH-07-q6
@@ -67,17 +67,17 @@
     C: "The consumer is another streaming pipeline, which should read the changelog instead"
     D: "The merged table is already tiny, so a direct scan is simpler than maintaining a rollup"
   answer: [A, C, D]
-  explanation: "Rollups help interactive aggregate reads over large facts (B). A single-key drill-down is a point lookup (A); a downstream pipeline should read the changelog, not an OLAP snapshot (C); and a tiny merged table doesn't need the extra rollup to maintain (D)."
+  explanation: "Rollups help interactive aggregate reads over large facts (B). A drill-down on a single key is a point lookup (A). A downstream pipeline should read the changelog, not an OLAP snapshot (C). A tiny merged table does not need the extra rollup to maintain (D)."
   source: "https://paimon.apache.org/docs/2.0/"
 
 - id: STH-07-q7
   type: single
-  prompt: "What does pruning (predicate pushdown) buy a serving query over a columnar rollup?"
+  prompt: "What does pruning (predicate pushdown) give a serving query over a columnar rollup?"
   options:
     A: "It rewrites the SQL to use fewer joins"
-    B: "The engine skips row groups and columns the predicate and projection don't need, reading far less data"
+    B: "The engine skips the row groups and columns that the predicate and projection do not need, so it reads far less data"
     C: "It guarantees exactly-once semantics"
     D: "It compacts the small files automatically"
   answer: [B]
-  explanation: "A predicate (one company, a date range) plus column projection lets a columnar engine skip row groups and unneeded columns, reading only what the tile requires — the core of interactive serving latency."
+  explanation: "A predicate (one company, a date range) plus column projection lets a columnar engine skip row groups and unneeded columns. It reads only what the tile requires. This is the core of interactive serving latency."
   source: "https://iceberg.apache.org/docs/latest/"

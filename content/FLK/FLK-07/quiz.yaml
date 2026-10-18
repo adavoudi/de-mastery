@@ -1,25 +1,25 @@
 - id: FLK-07-q1
   type: single
-  prompt: "Which primitives does a KeyedProcessFunction give you that a windowed aggregation hides?"
+  prompt: "Which primitives does a KeyedProcessFunction give you? A windowed aggregation hides these primitives."
   options:
     A: "Only keyed state"
-    B: "Keyed state, timers (event- or processing-time callbacks), and access to the current watermark"
+    B: "Keyed state, timers (event-time or processing-time callbacks), and access to the current watermark"
     C: "Only broadcast state"
     D: "SQL changelog semantics"
   answer: [B]
-  explanation: "A process function exposes direct keyed state, registerable timers, and time/watermark access — the building blocks the windowing API wraps up. You use it when you need custom timer logic or per-event control."
+  explanation: "A process function gives direct access to keyed state, timers, and time and watermark information. The windowing API wraps these building blocks. You use a process function when you need custom timer logic or control of each event."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/operators/process_function/"
 
 - id: FLK-07-q2
   type: single
-  prompt: "To implement a session timeout (end the session after a gap of inactivity) with a process function, you:"
+  prompt: "How do you implement a session timeout (end the session after a gap of inactivity) with a process function?"
   options:
     A: "Call Thread.sleep for the gap duration"
-    B: "On each event register an event-time timer at event_time + gap (deleting any earlier timer); onTimer fires when the watermark passes it with no newer event"
+    B: "On each event, register an event-time timer at event_time + gap and delete any earlier timer. onTimer fires when the watermark passes that time and no newer event exists"
     C: "Use a processing-time timer so it fires on wall clock"
     D: "Emit immediately on every event"
   answer: [B]
-  explanation: "The session end is 'gap after the last event'. Register an event-time timer at last_event+gap and delete the previous one so only the latest fires; when the watermark reaches it with no newer event, the session has timed out. No sleep, deterministic."
+  explanation: "The session ends at 'the gap after the last event'. Register an event-time timer at last_event+gap. Delete the previous timer, so only the latest timer fires. When the watermark reaches that time and no newer event exists, the session has timed out. This approach does not use sleep and it is deterministic."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/operators/process_function/"
 
 - id: FLK-07-q3
@@ -27,69 +27,69 @@
   prompt: "What is broadcast state used for?"
   options:
     A: "To shard keyed data across tasks"
-    B: "To replicate a low-volume control stream (rules/config) to every parallel instance so each key can consult the latest rules"
+    B: "To replicate a low-volume control stream (rules/config) to every parallel instance, so each key can use the latest rules"
     C: "To store checkpoints"
     D: "To increase parallelism automatically"
   answer: [B]
-  explanation: "Broadcast state holds a control stream (e.g. fraud rules) that is replicated to all parallel subtasks via processBroadcastElement, so processElement on any key can read the current rule. It is the broadcast state pattern."
+  explanation: "Broadcast state holds a control stream (for example, fraud rules). processBroadcastElement replicates it to all parallel subtasks. So processElement on any key can read the current rule. This is the broadcast state pattern."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/fault-tolerance/broadcast_state/"
 
 - id: FLK-07-q4
   type: single
-  prompt: "Events and a broadcast rule stream are independent inputs. Why can evaluating each event against 'whatever rule is in state now' be non-deterministic?"
+  prompt: "Events and a broadcast rule stream are independent inputs. Why can the evaluation of each event against 'whatever rule is in state now' be non-deterministic?"
   options:
     A: "Because broadcast state is not fault-tolerant"
-    B: "Because there is no ordering guarantee between the broadcast and keyed inputs, so a rule may or may not have arrived when an event is processed"
+    B: "Because there is no ordering guarantee between the broadcast and keyed inputs. A rule may or may not have arrived when Flink processes an event"
     C: "Because timers are random"
     D: "Because keyed state is cleared between events"
   answer: [B]
-  explanation: "The two inputs are not ordered relative to each other. An event might be processed before or after the rule update that should apply to it, so immediate evaluation gives run-dependent results. Buffer and evaluate as-of the event's time instead."
+  explanation: "The two inputs have no order relative to each other. Flink might process an event before or after the rule update that must apply to it. So immediate evaluation gives results that depend on the run. Instead, buffer the event and evaluate it as-of the time of the event."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/fault-tolerance/broadcast_state/"
 
 - id: FLK-07-q5
   type: single
-  prompt: "The business says 'a transaction is judged by the fraud policy in force on its date'. How do you implement that with a broadcast rule stream?"
+  prompt: "The business says 'a transaction is judged by the fraud policy in force on its date'. How do you implement this with a broadcast rule stream?"
   options:
     A: "Always use the newest rule"
-    B: "Version each rule by an effective time, buffer events, and on an event-time timer apply the rule with the greatest effective_from <= the event time"
+    B: "Version each rule by an effective time. Buffer events. On an event-time timer, apply the rule with the greatest effective_from <= the event time"
     C: "Apply the first rule ever seen"
     D: "Use a processing-time timer"
   answer: [B]
-  explanation: "This is the as-of rule again: keep rule versions, and evaluate each event against the version effective at or before the event's time, deciding on an event-time timer so the watermark guarantees the right version is known. Correct business semantics and deterministic."
+  explanation: "This is the as-of rule again. Keep the rule versions. Evaluate each event against the version that is effective at or before the time of the event. Decide on an event-time timer, so the watermark guarantees that the right version is known. This gives correct business semantics and it is deterministic."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/fault-tolerance/broadcast_state/"
 
 - id: FLK-07-q6
   type: single
-  prompt: "When onTimer fires for a timed-out session, what should the function typically do?"
+  prompt: "A session has timed out and onTimer fires. What should the function typically do?"
   options:
     A: "Register another timer immediately and never emit"
-    B: "Emit the session result (e.g. its summary / flags) and clear the keyed state for that session"
+    B: "Emit the session result (for example, its summary or flags) and clear the keyed state for that session"
     C: "Delete all other keys' state"
     D: "Throw an exception"
   answer: [B]
-  explanation: "A timed-out session is complete: emit its result and clear the per-key state so memory is reclaimed and the next session for that key starts fresh. Leaving state around leaks memory and can corrupt the next session."
+  explanation: "A timed-out session is complete. Emit its result and clear the per-key state. Then Flink reclaims the memory and the next session for that key starts fresh. If you leave the state, it leaks memory and can corrupt the next session."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/operators/process_function/"
 
 - id: FLK-07-q7
   type: multi
-  prompt: "Why prefer event-time timers over processing-time timers for business logic like session timeouts and rule application? (choose all)"
+  prompt: "Why do you prefer event-time timers to processing-time timers for business logic such as session timeouts and rule application? (choose all)"
   options:
-    A: "They are deterministic across replays (driven by the data's own clock)"
-    B: "They let the result be reconciled against a batch oracle over the same events"
-    C: "They fire based on wall-clock, which is reproducible"
-    D: "They respect out-of-order events via watermarks"
+    A: "They are deterministic across replays (the clock of the data drives them)"
+    B: "You can reconcile the result against a batch oracle over the same events"
+    C: "They fire on the wall clock, which is reproducible"
+    D: "They handle out-of-order events through watermarks"
   answer: [A, B, D]
-  explanation: "Event-time timers fire by watermark progress, so replays and out-of-order data produce the same result and can be reconciled with a batch answer. Processing-time timers fire on wall clock, which is NOT reproducible — the opposite of what C claims."
+  explanation: "Event-time timers fire when the watermark advances. So replays and out-of-order data give the same result, and you can reconcile it with a batch answer. Processing-time timers fire on the wall clock, which is NOT reproducible. This is the opposite of what option C says."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/concepts/time/"
 
 - id: FLK-07-q8
   type: single
-  prompt: "A KeyedBroadcastProcessFunction's processElement has a ReadOnlyContext for the broadcast state, while processBroadcastElement has a read-write Context. Why?"
+  prompt: "In a KeyedBroadcastProcessFunction, processElement has a ReadOnlyContext for the broadcast state. processBroadcastElement has a read-write Context. Why?"
   options:
     A: "A bug in the API"
-    B: "So only the broadcast side mutates the (replicated) rules; keyed element processing may read but not write them, keeping every parallel instance's broadcast state identical"
+    B: "Only the broadcast side changes the (replicated) rules. Processing of keyed elements may read the rules but not write them. So the broadcast state stays identical in every parallel instance"
     C: "To make keyed state read-only"
     D: "To disable timers on the keyed side"
   answer: [B]
-  explanation: "Broadcast state must stay identical across all parallel instances. Allowing per-key writes would diverge the copies. So only processBroadcastElement (which runs for the replicated stream) can modify it; processElement gets a read-only view."
+  explanation: "Broadcast state must stay identical across all parallel instances. Per-key writes would make the copies different. So only processBroadcastElement (which runs for the replicated stream) can change it. processElement gets a read-only view."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/fault-tolerance/broadcast_state/"

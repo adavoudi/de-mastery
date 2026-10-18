@@ -1,46 +1,46 @@
 - id: FND-03-q1
   type: single
-  prompt: "With N=5 replicas, which quorum setting guarantees every read sees the latest acknowledged write?"
+  prompt: "With N=5 replicas, which quorum setting guarantees that every read sees the latest acknowledged write?"
   options:
     A: "W=3, R=3 (W + R > N)"
     B: "W=1, R=1"
     C: "W=2, R=2"
     D: "W=5, R=0"
   answer: [A]
-  explanation: "W + R > N (3 + 3 = 6 > 5) forces the read set to overlap the write set on at least one replica that has the newest value."
+  explanation: "W + R > N (3 + 3 = 6 > 5) forces the read set to overlap the write set on at least one replica. That replica has the newest value."
   source: "https://raft.github.io/raft.pdf"
 - id: FND-03-q2
   type: single
   prompt: "In Raft, why can there be at most one leader per term?"
   options:
-    A: "A node votes at most once per term and a winner needs a majority, so two winners would require an overlapping voter to vote twice"
+    A: "A node votes at most once per term and a winner needs a majority. So two winners would need an overlapping voter to vote twice"
     B: "Terms are randomly assigned so collisions are impossible"
     C: "The leader with the lowest node id always wins"
     D: "Followers cannot become candidates"
   answer: [A]
-  explanation: "One-vote-per-term + majority-to-win means two leaders in the same term would need two majorities, which must share a voter who would have voted twice — a contradiction."
+  explanation: "One vote per term and a majority to win mean this: two leaders in the same term would need two majorities. The two majorities must share a voter who would have voted twice. This is a contradiction."
   source: "https://raft.github.io/raft.pdf"
 - id: FND-03-q3
   type: single
-  prompt: "Kafka: acks=all with min.insync.replicas=1 on a partition with 3 replicas. What durability do you actually have?"
+  prompt: "Kafka: acks=all with min.insync.replicas=1 on a partition with 3 replicas. What durability do you really have?"
   options:
-    A: "Weak — a single broker failure after ack can lose acknowledged data"
+    A: "Weak — a single broker failure after the ack can lose acknowledged data"
     B: "Majority quorum durability"
     C: "The same as acks=0"
     D: "Exactly-once by construction"
   answer: [A]
-  explanation: "acks=all waits for the current ISR, but if min.insync.replicas=1 the ISR can be just the leader; losing it loses the data. You need M = floor(N/2)+1 for a majority."
+  explanation: "acks=all waits for the current ISR. But if min.insync.replicas=1, the ISR can be just the leader. If the leader is lost, the data is lost. You need M = floor(N/2)+1 for a majority."
   source: "https://kafka.apache.org/documentation/#replication"
 - id: FND-03-q4
   type: single
-  prompt: "Why does Athena effectively never 'lose' an S3 object you successfully PUT?"
+  prompt: "Why does Athena effectively never 'lose' an S3 object that you successfully PUT?"
   options:
-    A: "S3 replicates the object across devices/facilities and only acks the PUT once durably stored on enough of them (a quorum write)"
+    A: "S3 replicates the object across devices/facilities. It acks the PUT only when the object is durably stored on enough of them (a quorum write)"
     B: "Athena keeps a local cache of every object"
     C: "S3 stores a single copy on very reliable hardware"
     D: "Glue scans and rebuilds lost objects"
   answer: [A]
-  explanation: "S3 durability comes from redundant storage with quorum-acknowledged writes; the ack means the object is durably replicated."
+  explanation: "S3 durability comes from redundant storage with quorum-acknowledged writes. The ack means that the object is durably replicated."
   source: "https://docs.aws.amazon.com/AmazonS3/latest/userguide/DataDurability.html"
 - id: FND-03-q5
   type: single
@@ -51,7 +51,7 @@
     C: "It has already voted for someone else this term"
     D: "The term T is lower than its current term"
   answer: [A]
-  explanation: "Vote at most once per term, and only for a candidate whose log is at least as current — this preserves leader completeness and single-leader safety."
+  explanation: "A node votes at most once per term. It votes only for a candidate whose log is at least as current. This preserves leader completeness and single-leader safety."
   source: "https://raft.github.io/raft.pdf"
 - id: FND-03-q6
   type: multi
@@ -62,5 +62,5 @@
     C: "A 2-of-4 vote is a valid majority"
     D: "Majority overlap is what prevents two conflicting decisions"
   answer: [A, B, D]
-  explanation: "Majority = floor(N/2)+1 (so 3 of 4), and any two majorities intersect — that overlap blocks split-brain. 2-of-4 is not a strict majority."
+  explanation: "Majority = floor(N/2)+1 (so 3 of 4). Any two majorities intersect, and this overlap blocks split-brain. 2-of-4 is not a strict majority."
   source: "https://raft.github.io/raft.pdf"

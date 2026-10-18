@@ -18,7 +18,7 @@
     C: "Reset to zero"
     D: "Jump to wall-clock time"
   answer: [A]
-  explanation: "Watermarks are monotonic non-decreasing; a late small-timestamp event must not pull the watermark back, or already-closed windows would re-open."
+  explanation: "Watermarks are monotonic and non-decreasing. A late event with a small timestamp must not pull the watermark back. If it did, windows that are already closed would re-open."
   source: "https://nightlies.apache.org/flink/flink-docs-stable/docs/dev/datastream/event-time/generating_watermarks/"
 - id: FND-04-q3
   type: single
@@ -29,18 +29,18 @@
     C: "105s"
     D: "wall-clock time"
   answer: [A]
-  explanation: "W = maxEventTime - allowedLateness = 100 - 5 = 95. It lags the newest event by the grace period."
+  explanation: "W = maxEventTime - allowedLateness = 100 - 5 = 95. The watermark lags the newest event by the grace period."
   source: "https://nightlies.apache.org/flink/flink-docs-stable/docs/dev/datastream/event-time/generating_watermarks/"
 - id: FND-04-q4
   type: single
-  prompt: "An event with time t arrives beyond the watermark's grace period. The audit-safe handling is to:"
+  prompt: "An event with time t arrives beyond the watermark's grace period. The safe handling for an audit is to:"
   options:
     A: "Route it to a side output / dead-letter and reconcile, not silently drop it"
     B: "Silently discard it"
     C: "Rewind the watermark"
     D: "Count it in the next unrelated window"
   answer: [A]
-  explanation: "For auditable (e.g. SOX) totals, late events must be captured for reconciliation; silently dropping them breaks completeness."
+  explanation: "For auditable totals (for example SOX), you must capture late events for reconciliation. If you drop them silently, completeness breaks."
   source: "https://nightlies.apache.org/flink/flink-docs-stable/docs/concepts/time/"
 - id: FND-04-q5
   type: single
@@ -51,16 +51,16 @@
     C: "processing-time windows"
     D: "exactly-once delivery"
   answer: [A]
-  explanation: "Reprocessing a trailing window is exactly a coarse watermark with a 3-day lateness grace; the day you stop restating a period is the watermark advancing past it."
+  explanation: "Reprocessing a trailing window is exactly a coarse watermark with a 3-day lateness grace. The day you stop restating a period is the watermark advancing past it."
   source: "https://research.google/pubs/pub43864/"
 - id: FND-04-q6
   type: multi
-  prompt: "Why not just set allowedLateness very large 'to be safe'? (select all)"
+  prompt: "Why not set allowedLateness to a very large value 'to be safe'? (select all)"
   options:
-    A: "Every open window holds state, so large grace means large/unbounded state"
+    A: "Every open window holds state, so a large grace period means large or unbounded state"
     B: "Results are delayed until the watermark passes the window end"
     C: "It makes the watermark move backwards"
     D: "It changes event time into processing time"
   answer: [A, B]
-  explanation: "Large lateness inflates state and delays results. It does not reverse the watermark (still monotonic) nor change which clock you use."
+  explanation: "A large lateness makes the state bigger and delays results. It does not reverse the watermark (the watermark is still monotonic). It also does not change which clock you use."
   source: "https://www.oreilly.com/radar/the-world-beyond-batch-streaming-101/"

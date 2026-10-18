@@ -1,13 +1,13 @@
 # SPK-08 / 01 · Diagnose an OOM from a log excerpt
 
-In an exam or a 2 a.m. page you don't have the Spark UI — you have a log line. Turning a log into
-the right fix is the real skill. This exercise makes it machine-gradable: given a log excerpt
-string, return a structured diagnosis.
+In an exam or when an alert wakes you at 2 a.m., you don't have the Spark UI. You have a log line. The
+real skill is to turn a log into the right fix. This exercise makes that skill gradable by a machine.
+You get a log excerpt string, and you return a structured diagnosis.
 
 ## Task
 
-Implement `diagnose(log)` returning a dict with exactly these keys and values from the controlled
-vocabulary below:
+Implement `diagnose(log)`. It returns a dict with exactly these keys. The values come from the
+controlled vocabulary below:
 
 ```python
 {"location": <str>, "cause": <str>, "fix": <str>}
@@ -28,6 +28,6 @@ vocabulary below:
 
 ## How it is graded
 
-The test feeds several representative log excerpts and checks your returned `{location, cause, fix}`
-against the expected diagnosis for each. The excerpts are provided inline in the test, so your
-parser must read the log text, not hard-code one answer.
+The test gives your function several representative log excerpts. For each one, it checks your
+returned `{location, cause, fix}` against the expected diagnosis. The excerpts are inline in the test.
+So your parser must read the log text. Do not hard-code one answer.

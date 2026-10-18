@@ -1,8 +1,8 @@
 # Classify 5 real architectures with a deterministic rubric
 
-Classifying a data platform by its *storage and pipeline shape* — not the vendor's marketing label —
-is the core skill of STH-01. In this exercise you encode the rubric from the lesson as a
-**deterministic function** and run it over five real-world architectures.
+The core skill of STH-01 is to classify a data platform by its *storage and pipeline shape*. You do
+not use the vendor's marketing label. In this exercise you encode the rubric from the lesson as a
+**deterministic function**. Then you run it over five real-world architectures.
 
 Implement, in `solution.py`:
 
@@ -11,7 +11,7 @@ def classify(signals: dict) -> str:
     """Return exactly one of: 'lambda', 'kappa', 'lakehouse', 'streamhouse'."""
 ```
 
-`signals` is a dict of booleans describing the platform's shape:
+`signals` is a dict of booleans. They describe the shape of the platform:
 
 | key | meaning |
 |---|---|
@@ -29,16 +29,22 @@ def classify(signals: dict) -> str:
    (one copy serves *both* read paths) → **`streamhouse`**.
 3. Else if `transactional_lake_table` → **`lakehouse`**.
 4. Else if `log_is_system_of_record` → **`kappa`**.
-5. Otherwise raise `ValueError` (the shape is unclassifiable with these signals).
+5. Otherwise raise `ValueError` (these signals cannot classify the shape).
 
-Order matters: a platform can set several signals at once (a streamhouse also has a lake table
-underneath), so you must test the more specific shapes first. A platform that merely *uses* Kafka as
-an ingestion bus feeding batch loads does **not** set `log_is_system_of_record` and is not Kappa.
+The order matters. A platform can set several signals at once. For example, a streamhouse also has a
+lake table underneath. So you must test the more specific shapes first. A platform that only *uses*
+Kafka as an ingestion bus that feeds batch loads does **not** set `log_is_system_of_record`. It is
+not Kappa.
 
 ### What the tests do (G6 oracle)
 
-The test suite feeds `classify` the signal dicts for five real architectures (described from public
-engineering write-ups) and compares your output against an **independent reference rubric** computed
-a different way (a priority-scan vs. your branch logic). It also checks determinism (same input →
-same output across repeated calls), the `lambda`-beats-everything precedence, and that an
-unclassifiable shape raises `ValueError`. No JVM, no Docker — this exercise runs anywhere.
+The test suite gives `classify` the signal dicts for five real architectures. They come from public
+engineering write-ups. The tests compare your output with an **independent reference rubric**. The
+reference rubric is computed in a different way (a priority-scan instead of your branch logic). The
+tests also check these points:
+
+- The function is deterministic (the same input gives the same output across repeated calls).
+- The `lambda` signal takes precedence over all others.
+- An unclassifiable shape raises `ValueError`.
+
+This exercise needs no JVM and no Docker. It runs anywhere.

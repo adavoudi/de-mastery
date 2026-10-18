@@ -3,71 +3,73 @@
   prompt: "What is a Kafka topic partition, physically?"
   options:
     A: "A mutable table of the latest value per key."
-    B: "An append-only, immutable, ordered log of records, each with a monotonically increasing offset."
+    B: "An append-only, immutable, ordered log of records. Each record has an offset that always increases."
     C: "A queue where reading a message removes it."
     D: "A B-tree index over record keys."
   answer: [B]
   explanation: >-
-    A partition is an append-only log; offsets increase monotonically and never change, and reading
-    does not remove records. Compaction (keep latest per key) is an optional policy, not the base model.
+    A partition is an append-only log. Offsets always increase and never change. Reading does not
+    remove records. Compaction (keep the latest record per key) is an optional policy. It is not the
+    base model.
   source: "https://kafka.apache.org/documentation/#intro_concepts_and_terms"
 
 - id: KFK-01-q2
   type: single
-  prompt: "A consumer must start reading from the first record on or after 09:00 today, but it does not know the offset. What does it use?"
+  prompt: "A consumer must start at the first record on or after 09:00 today. It does not know the offset. What does it use?"
   options:
     A: "get_watermark_offsets to get the high offset and read backwards."
     B: "offsets_for_times, which returns the first offset whose timestamp is >= the requested time."
     C: "seek_to_beginning and filter in the application."
-    D: "There is no way; you must store a timestamp->offset map yourself."
+    D: "There is no way. You must store a timestamp->offset map yourself."
   answer: [B]
   explanation: >-
-    offsets_for_times maps a timestamp to the first offset at or after it (per partition), then you
-    seek there and read forward. Reading from the beginning and filtering works but rereads retained
-    history unnecessarily.
+    offsets_for_times maps a timestamp to the first offset at or after it (for each partition).
+    Then you seek to that offset and read forward. Reading from the beginning and filtering also
+    works. But it rereads retained history that you do not need.
   source: "https://kafka.apache.org/documentation/#intro_consumers"
 
 - id: KFK-01-q3
   type: single
-  prompt: "Ordering of records in Kafka is guaranteed:"
+  prompt: "Kafka guarantees the order of records:"
   options:
     A: "Across the whole topic, globally."
-    B: "Within a single partition only (records with the same key land in the same partition)."
+    B: "Within a single partition only (records with the same key go to the same partition)."
     C: "Only if there is exactly one consumer."
-    D: "Never; Kafka makes no ordering guarantee."
+    D: "Never. Kafka makes no ordering guarantee."
   answer: [B]
   explanation: >-
-    Order is guaranteed within a partition. The default partitioner routes a given key to one
-    partition, so per-key order is preserved; there is no cross-partition (hence no global) ordering.
+    Kafka guarantees order within a partition. The default partitioner sends a given key to one
+    partition, so per-key order is preserved. There is no cross-partition order, so there is no
+    global order.
   source: "https://kafka.apache.org/documentation/#intro_concepts_and_terms"
 
 - id: KFK-01-q4
   type: multi
   prompt: "Which statements about retention and compaction are correct? (choose all)"
   options:
-    A: "retention.ms / retention.bytes delete the oldest segments once the limit is passed."
+    A: "retention.ms / retention.bytes delete the oldest segments after the limit is passed."
     B: "cleanup.policy=compact keeps only the latest record per key."
-    C: "Replay is possible back to the earliest retained offset, not necessarily offset 0."
+    C: "You can replay back to the earliest retained offset, which is not always offset 0."
     D: "Compaction removes records as soon as a consumer reads them."
   answer: [A, B, C]
   explanation: >-
-    Time/size retention delete old segments; compaction keeps the latest value per key; you can only
-    replay as far back as the earliest retained offset. Reading never deletes records (D is false).
+    Time and size retention delete old segments. Compaction keeps the latest value per key. You can
+    replay only back to the earliest retained offset. Reading never deletes records, so D is false.
   source: "https://kafka.apache.org/documentation/#compaction"
 
 - id: KFK-01-q5
   type: single
-  prompt: "You want the CURRENT state 'latest value per key' derived from a topic. Which is the Kafka-native way to think about it?"
+  prompt: "You want the CURRENT state, the 'latest value per key', from a topic. Which is the Kafka-native way to think about it?"
   options:
-    A: "Kafka cannot represent state; copy everything to a database first."
-    B: "State is a fold (left-reduce) over the log; a compacted topic materializes 'latest per key'."
-    C: "Delete all but the newest record manually with an admin tool."
-    D: "Set acks=all so only the latest write survives."
+    A: "Kafka cannot represent state. Copy everything to a database first."
+    B: "State is a fold (left-reduce) over the log. A compacted topic materializes 'latest per key'."
+    C: "Delete all records except the newest one, by hand, with an admin tool."
+    D: "Set acks=all so that only the latest write survives."
   answer: [B]
   explanation: >-
-    State is a projection of events: fold the log to compute it. A compacted topic persists exactly
-    the latest record per key, which is how changelogs/__consumer_offsets work. acks is a durability
-    setting, unrelated.
+    State is a projection of events. You fold the log to compute it. A compacted topic stores
+    exactly the latest record per key. Changelogs and __consumer_offsets work this way. acks is a
+    durability setting and is unrelated.
   source: "https://developer.confluent.io/courses/apache-kafka/topics/"
 
 - id: KFK-01-q6
@@ -75,11 +77,11 @@
   prompt: "Which workload is the WRONG fit for Kafka?"
   options:
     A: "Decoupling an OLTP system from several analytics consumers that may replay history."
-    B: "A synchronous request/response API where the caller blocks for an answer."
-    C: "A durable event backbone multiple teams subscribe to independently."
-    D: "Buffering a high-throughput firehose for later batch loads."
+    B: "A synchronous request/response API where the caller blocks and waits for an answer."
+    C: "A durable event backbone that multiple teams subscribe to independently."
+    D: "Buffering a high-throughput stream of data for later batch loads."
   answer: [B]
   explanation: >-
-    Kafka decouples producers and consumers in time; synchronous request/response is the opposite
-    pattern and belongs to a service call/RPC, not a log.
+    Kafka decouples producers and consumers in time. Synchronous request/response is the opposite
+    pattern. It belongs to a service call or RPC, not to a log.
   source: "https://developer.confluent.io/courses/apache-kafka/"

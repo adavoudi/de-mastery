@@ -2,69 +2,65 @@
 
 ## Why it exists
 
-A Kafka topic is just bytes. Nothing stops a producer from changing the shape of
-its records at 2 a.m. and silently breaking every consumer downstream. In a
-warehouse you catch that at the next dbt run; in a streaming system a bad deploy
-corrupts live state and the error surfaces hours later, far from its cause.
+A Kafka topic is just bytes. Nothing stops a producer from changing the shape of its records at
+2 a.m. This silently breaks every consumer downstream. In a warehouse, you catch this problem at
+the next dbt run. In a streaming system, a bad deploy corrupts live state. The error appears hours
+later, far from its cause.
 
-A **schema registry** turns "a topic is bytes" into "a topic is a contract." Each
-message carries a tiny schema id; the registry stores the schemas and, crucially,
-**refuses to register a new version that would break the agreed compatibility
-rule**. The contract is enforced at *registration* time (a deploy/CI gate), not
-discovered at consume time. This is the same instinct as a dbt model contract or a
-conformed-dimension definition: agree the shape once, let a machine reject
-drift.
+A **schema registry** turns "a topic is bytes" into "a topic is a contract." Each message carries a
+small schema id. The registry stores the schemas. Most importantly, it **refuses to register a new
+version that would break the agreed compatibility rule**. The registry enforces the contract at
+*registration* time (a deploy or CI gate). You do not find the problem at consume time. You already
+have the same instinct in a dbt model contract or a conformed-dimension definition. You agree on
+the shape once, and a machine rejects drift.
 
 ## How it works
 
-- **Serialization formats:** Avro, Protobuf, or JSON Schema. Avro is the Kafka
-  default: a record is `[magic byte][4-byte schema id][Avro binary]`. The consumer
-  reads the id, fetches the *writer* schema from the registry, and resolves it
-  against its own *reader* schema. There is no schema inside each message, so the
-  payload stays small.
-- **Subjects.** A schema is registered under a *subject*. The default
-  `TopicNameStrategy` names it `<topic>-value` (and `<topic>-key`). Other
-  strategies (`RecordNameStrategy`, `TopicRecordNameStrategy`) let several event
-  types share a topic.
-- **Compatibility modes** govern what evolution the registry will accept:
-  - **BACKWARD** (default): a consumer on the *new* schema can read data written
-    with the *old* schema. You may **add a field with a default** or **remove a
-    field**. You may **not add a required field**. Upgrade **consumers first**.
-  - **FORWARD**: a consumer on the *old* schema can read data written with the
-    *new* schema. You may **add any field** or **remove an optional field**.
-    Upgrade **producers first**.
-  - **FULL**: both directions — effectively "only add/remove fields that have
-    defaults."
-  - **NONE**: no check (don't).
-  - `*_TRANSITIVE` variants check against *all* earlier versions, not just the last.
-- **Avro schema resolution** is the mechanism underneath: when the writer and
-  reader schemas differ, Avro matches fields by name, fills missing reader fields
-  from their **defaults**, and ignores writer-only fields. A new required field
-  (no default) has nothing to fill from old data → the read fails → BACKWARD-incompatible.
-- **Data contracts & rules** (recent registries) go further: field-level tags,
-  domain rules, and migration rules — the on-the-wire equivalent of dbt tests.
+- **Serialization formats:** Avro, Protobuf, or JSON Schema. Kafka itself has no default format. Avro is the default schema type in Confluent Schema Registry. A record is
+  `[magic byte][4-byte schema id][Avro binary]`. The consumer reads the id and fetches the *writer*
+  schema from the registry. Then it resolves the writer schema against its own *reader* schema.
+  There is no schema inside each message, so the payload stays small.
+- **Subjects.** The registry stores a schema under a *subject*. The default `TopicNameStrategy`
+  names the subject `<topic>-value` (and `<topic>-key`). Other strategies (`RecordNameStrategy`,
+  `TopicRecordNameStrategy`) let several event types share a topic.
+- **Compatibility modes** control which changes the registry accepts:
+  - **BACKWARD** (default): a consumer on the *new* schema can read data that a producer wrote with
+    the *old* schema. You may **add a field with a default** or **remove a field**. You may **not
+    add a required field**. Upgrade **consumers first**.
+  - **FORWARD**: a consumer on the *old* schema can read data that a producer wrote with the *new*
+    schema. You may **add any field** or **remove an optional field**. Upgrade **producers first**.
+  - **FULL**: both directions. In effect, you can add or remove only fields that have defaults.
+  - **NONE**: no check (do not use it).
+  - The `*_TRANSITIVE` variants check against *all* earlier versions, not just the last version.
+- **Avro schema resolution** is the mechanism underneath. When the writer schema and the reader
+  schema differ, Avro matches fields by name. It fills missing reader fields from their
+  **defaults**. It ignores fields that exist only in the writer schema. A new required field has no
+  default. So there is nothing to fill from old data, and the read fails. This change is
+  BACKWARD-incompatible.
+- **Data contracts & rules** (recent registries) go further. They add field-level tags, domain
+  rules, and migration rules. They are the on-the-wire equivalent of dbt tests.
 
 ## From your world
 
-- A registry subject with BACKWARD compatibility **is a dbt model contract**: the
-  column (field) list and types are pinned, additive-with-default changes are
-  allowed, and a breaking change is rejected before it ships.
-- Evolving the order event while old consumers keep running is the same problem as
-  changing a **conformed dimension** that many marts join to: you add attributes
-  with safe defaults, you never repurpose or drop a column other models depend on.
-- "Add a field with a default" ≈ adding a nullable column with a backfill default
-  in a Kimball dimension; "add a required field" ≈ a `NOT NULL` column with no
-  default on an existing table — it breaks every historical row.
+- A registry subject with BACKWARD compatibility **is a dbt model contract**. The column (field)
+  list and the types are fixed. Changes that add a field with a default are allowed. The registry
+  rejects a breaking change before it ships.
+- Suppose you evolve the order event while old consumers keep running. This is the same problem as
+  a change to a **conformed dimension** that many marts join to. You add attributes with safe
+  defaults. You never reuse a column for a new purpose, and you never drop a column that other
+  models depend on.
+- "Add a field with a default" is similar to adding a nullable column with a backfill default in a
+  Kimball dimension. "Add a required field" is similar to adding a `NOT NULL` column with no default
+  to an existing table. It breaks every historical row.
 
 ## When NOT to use it
 
-- Throwaway topics inside one team where producer and consumer deploy together and
-  nothing else reads them — a registry is overhead you'll ignore.
-- When your payload is already self-describing and large (e.g. you ship whole JSON
-  documents to a sink that infers schema) the id-indirection buys little.
-- As a substitute for actual data-quality checks: the registry guarantees the
-  *shape* parses, not that `amount >= 0`. Pair it with validation (or registry
-  *rules*) for semantics.
+- Throwaway topics inside one team, where the producer and the consumer deploy together and nothing
+  else reads the topic. A registry is overhead that you will ignore.
+- Your payload is already self-describing and large. For example, you send whole JSON documents to
+  a sink that infers the schema. In this case, the id indirection gives little.
+- As a substitute for real data-quality checks. The registry guarantees that the *shape* parses. It
+  does not guarantee that `amount >= 0`. Add validation (or registry *rules*) for semantics.
 
 ## Further reading
 

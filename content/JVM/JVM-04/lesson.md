@@ -2,18 +2,29 @@
 
 ## Why serialization is a data-engineering concern
 
-Every event that crosses a boundary — into a Kafka topic, between Flink operators, to a state
-backend, onto disk — is **serialized** to bytes and later **deserialized** back to objects. The
-format you choose decides three things you care about: how *small* and *fast* the bytes are, whether
-the schema can *evolve* without breaking old readers (KFK-06), and whether the stream engine can
-process records *efficiently*. Get it wrong in Flink and you silently fall back to **Kryo**, a
-generic reflective serializer that is correct but slow and fragile across schema changes — a
-notorious performance footgun. This module teaches the formats and how to tell, *before* you deploy,
-whether your type will serialize the fast way.
+Every event that crosses a boundary is **serialized** to bytes. Later, the system **deserializes**
+the bytes back to objects. These are examples of a boundary:
 
-You already live this in the lake: a Parquet/Avro column file carries a schema and is engine- and
-language-neutral; a Python `pickle` is opaque, version-brittle, and Python-only. Avro on the JVM is
-the Parquet-schema mindset applied to streaming records.
+- a Kafka topic
+- the link between Flink operators
+- a state backend
+- a disk
+
+The format that you choose decides three things that you care about:
+
+1. How *small* and *fast* the bytes are.
+2. Whether the schema can *evolve* without breaking old readers (KFK-06).
+3. Whether the stream engine can process records *efficiently*.
+
+Suppose you choose wrong in Flink. Then Flink silently falls back to **Kryo**. Kryo is a generic
+reflective serializer. It is correct, but it is slow and fragile across schema changes. It is a
+well-known cause of performance problems. This module teaches the formats. It also teaches how to
+tell, *before* you deploy, whether your type will serialize the fast way.
+
+You already know this from the lake. A Parquet or Avro column file carries a schema, and it is
+neutral to engines and languages. A Python `pickle` is opaque, it breaks across versions, and it
+works only in Python. Avro on the JVM applies the same thinking as the Parquet schema to streaming
+records.
 
 ## How the options compare
 
@@ -24,12 +35,12 @@ the Parquet-schema mindset applied to streaming records.
 | JSON (Jackson) | loose | yes | manual | configs, debugging, loose APIs |
 | **Avro** | **yes (explicit)** | **yes** | **first-class** | **Kafka records, Flink state, lake files** |
 
-Avro is the default for Kafka + Schema Registry (KFK-06) and a first-class Flink type, which is why
-this module centers on it.
+Avro is the default for Kafka with Schema Registry (KFK-06). It is also a first-class Flink type.
+For this reason, this module centers on Avro.
 
 ## How Avro works: SpecificRecord vs GenericRecord
 
-An Avro **schema** is JSON describing a record's fields and types:
+An Avro **schema** is JSON. It describes the fields and types of a record:
 
 ```json
 {"type":"record","name":"Order","namespace":"de.mastery",
@@ -40,15 +51,17 @@ An Avro **schema** is JSON describing a record's fields and types:
 
 There are two ways to work with Avro data in Java:
 
-- **GenericRecord** — a schema-driven map-like object: `record.put("currency","USD")`,
-  `record.get("id")`. No generated class; you carry the schema at runtime. Flexible (great for
-  generic pipelines and Connect), but field access is untyped (`Object`).
-- **SpecificRecord** — a *generated* Java class (from the schema via the Avro compiler/Gradle
-  plugin) with typed getters/setters: `order.getCurrency()`. Compile-time safety and the fastest
-  path. This is what you ship in production Kafka/Flink code.
+- **GenericRecord** — a schema-driven object that works like a map: `record.put("currency","USD")`,
+  `record.get("id")`. There is no generated class. You carry the schema at runtime. It is flexible
+  (good for generic pipelines and Connect). But field access is untyped (`Object`).
+- **SpecificRecord** — a *generated* Java class with typed getters and setters:
+  `order.getCurrency()`. The Avro compiler or the Gradle plugin generates the class from the
+  schema. You get compile-time safety and the fastest path. You ship this in production Kafka and
+  Flink code.
 
-Both serialize to **the same bytes** with the same schema — the choice is an API ergonomics/safety
-decision, not a wire-format one. A round-trip (encode → decode) must return equal data:
+Both serialize to **the same bytes** with the same schema. The choice is about the ergonomics and
+safety of the API. It is not a choice about the wire format. A round-trip (encode → decode) must
+return equal data:
 
 ```java
 // encode
@@ -64,34 +77,42 @@ var dec = DecoderFactory.get().binaryDecoder(bytes, null);
 GenericRecord back = reader.read(null, dec);   // back.equals(record)
 ```
 
-(Reader and writer schemas may *differ* for evolution — that's schema resolution, KFK-06. Here we
-round-trip with one schema.)
+The reader schema and the writer schema may *differ* for evolution. This is schema resolution
+(KFK-06). Here we round-trip with one schema.
 
 ## The Flink "Kryo fallback" and how to detect it without Flink
 
-Flink picks a serializer per type: Avro types use the Avro serializer; a well-formed **POJO** uses
-Flink's efficient POJO serializer; anything else falls back to **generic Kryo**. Kryo works but is
-slower, produces larger state, and can break on schema changes — so "did my type fall back to Kryo?"
-is a real production question. Flink's rule: a class is a POJO if it is **public, has a public
-no-argument constructor**, and every field is either **public** or has a **public getter/setter**
-pair (and the field types are themselves serializable). Miss any of these and Flink uses Kryo.
+Flink picks a serializer for each type:
 
-We don't have a Flink cluster here (that's Phase 4), so we detect the fallback **structurally and
-behaviourally**, which is deterministic and testable:
+- Avro types use the Avro serializer.
+- A well-formed **POJO** uses Flink's efficient POJO serializer.
+- Anything else falls back to **generic Kryo**.
 
-1. **Avro path check (behavioural):** the type actually round-trips through Avro binary encoding and
-   comes back equal — i.e. it *is* an Avro `SpecificRecord`/`GenericRecord`, not something that would
-   land on Java/Kryo generic serialization.
-2. **POJO-rule check (reflection):** for a plain data class, assert via reflection that it satisfies
-   Flink's POJO rules (public class, public no-arg ctor, each field public or with a public
-   getter/setter). If this holds, Flink would use the POJO serializer; if not, it would fall back to
-   Kryo.
+Kryo works, but it is slower. It produces larger state, and it can break on schema changes. So
+"did my type fall back to Kryo?" is a real production question. Flink has this rule: a class is a
+POJO if it is **public** and has a **public no-argument constructor**. Also, every field must be
+either **public** or have a **public getter/setter** pair (and the field types must be
+serializable). If any of these is missing, Flink uses Kryo.
 
-> **Design note (documented).** We assert "serialized via Avro, not Java/Kryo generic" by proving a
-> real Avro binary round-trip, *and* we expose a reflective `isFlinkPojo(Class)` check implementing
-> Flink's documented POJO rules. Together these catch the two ways a type ends up on Kryo (not an
-> Avro type, and not a valid POJO) without needing a Flink runtime. FLK (Phase 4) re-runs the same
-> types through the real `TypeInformation`/`PojoSerializer` to confirm.
+We do not have a Flink cluster here (that is Phase 4). So we detect the fallback **structurally and
+behaviourally**. This is deterministic and testable:
+
+1. **Avro path check (behavioural):** The type really round-trips through Avro binary encoding and
+   comes back equal. This means that it *is* an Avro `SpecificRecord`/`GenericRecord`. It is not
+   something that would land on Java/Kryo generic serialization.
+2. **POJO-rule check (reflection):** For a plain data class, assert with reflection that it follows
+   Flink's POJO rules. The rules are: public class, public no-arg constructor, and each field
+   public or with a public getter/setter. If this is true, Flink would use the POJO serializer.
+   If not, it would fall back to Kryo.
+
+> **Design note (documented).** We assert "serialized via Avro, not Java/Kryo generic" in two ways.
+> First, we prove a real Avro binary round-trip. Second, we expose a reflective `isFlinkPojo(Class)`
+> check that implements Flink's documented POJO rules for the class. Together these catch the two
+> most common ways that a type ends up on Kryo. Either it is not an Avro type, or it is not a valid
+> POJO. These checks do not catch every case. The POJO check does not examine field types. A valid
+> POJO can still have a field that Flink serializes with Kryo (for example, a field of a generic or
+> unsupported type). You do not need a Flink runtime. FLK (Phase 4) runs the same types again
+> through the real `TypeInformation`/`PojoSerializer` to confirm.
 
 ## From your world
 
@@ -105,14 +126,15 @@ behaviourally**, which is deterministic and testable:
 
 ## When NOT to use what
 
-- **Don't rely on Java `Serializable` or Kryo for durable or cross-language data.** No explicit
-  schema, brittle across versions, JVM-only. Use Avro (or Parquet at rest).
-- **Don't use JSON for high-throughput Kafka state.** It's verbose, untyped, and slow to parse; keep
-  it for configs and human-readable debugging.
+- **Don't use Java `Serializable` or Kryo for durable or cross-language data.** They have no
+  explicit schema. They break across versions. They work only on the JVM. Use Avro (or Parquet at
+  rest).
+- **Don't use JSON for high-throughput Kafka state.** It is verbose, it is untyped, and it is slow
+  to parse. Keep it for configs and human-readable debugging.
 - **Don't let a type fall back to Kryo in Flink by accident.** Make event classes Avro records or
-  valid POJOs; verify before deploying (this module).
-- **Don't mix reader/writer schemas carelessly.** Evolution has rules (KFK-06); an unmanaged change
-  breaks consumers.
+  valid POJOs. Verify them before you deploy (this module).
+- **Don't mix reader and writer schemas without care.** Evolution has rules (KFK-06). A change
+  without management breaks consumers.
 
 ## Further reading (official)
 

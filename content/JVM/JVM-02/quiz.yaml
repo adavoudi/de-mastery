@@ -9,7 +9,7 @@
   answer: [B]
   explanation: >-
     groupingBy with a summingDouble downstream collector is the stream analogue of GROUP BY currency
-    with SUM(amount). Option A doesn't group; D sums everything into one number; C is a type error.
+    with SUM(amount). Option A does not group. Option D sums everything into one number. Option C is a type error.
   source: "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/stream/Collectors.html"
 
 - id: JVM-02-q2
@@ -17,14 +17,14 @@
   prompt: "When does a stream pipeline actually execute its intermediate operations (filter, map)?"
   options:
     A: "Immediately as each intermediate op is called."
-    B: "Only when a terminal operation (collect, count, reduce, forEach) runs; intermediate ops are lazy."
+    B: "Only when a terminal operation (collect, count, reduce, forEach) runs. Intermediate ops are lazy."
     C: "On a background thread automatically."
-    D: "Never; you must call .execute()."
+    D: "Never. You must call .execute()."
   answer: [B]
   explanation: >-
-    Intermediate operations are lazy and return a new stream; the pipeline runs only when a terminal
-    operation is invoked. This mirrors Spark's transformation/action split and Python generator
-    laziness.
+    Intermediate operations are lazy and return a new stream. The pipeline runs only when you call a
+    terminal operation. This is the same as Spark's transformation/action split and the laziness of
+    a Python generator.
   source: "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/stream/package-summary.html"
 
 - id: JVM-02-q3
@@ -32,13 +32,13 @@
   prompt: "What is the difference between map and flatMap on a stream?"
   options:
     A: "No difference."
-    B: "map transforms each element 1-to-1; flatMap maps each element to a stream and flattens them (1-to-many, like SQL UNNEST)."
-    C: "flatMap filters out nulls; map does not."
-    D: "map is lazy; flatMap is eager."
+    B: "map transforms each element 1-to-1. flatMap maps each element to a stream and flattens the streams (1-to-many, like SQL UNNEST)."
+    C: "flatMap filters out nulls. map does not."
+    D: "map is lazy. flatMap is eager."
   answer: [B]
   explanation: >-
-    map is a 1:1 projection. flatMap maps each element to a stream and concatenates the results,
-    turning one element into zero or more — the UNNEST/explode operation.
+    map is a 1:1 projection. flatMap maps each element to a stream and joins the results. One element
+    becomes zero or more elements. This is the UNNEST/explode operation.
   source: "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/stream/Stream.html#flatMap(java.util.function.Function)"
 
 - id: JVM-02-q4
@@ -51,8 +51,9 @@
     D: "map.getOrDefault(key, 0) with no write-back"
   answer: [B]
   explanation: >-
-    merge(key, 1, Integer::sum) inserts 1 if absent, otherwise applies the remapping function to the
-    old and new values. Option A throws NullPointerException on the first occurrence; D never writes.
+    merge(key, 1, Integer::sum) inserts 1 if the key is absent. Otherwise it applies the remapping
+    function to the old and new values. Option A throws NullPointerException on the first
+    occurrence. Option D never writes.
   source: "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Map.html#merge(K,V,java.util.function.BiFunction)"
 
 - id: JVM-02-q5
@@ -65,8 +66,8 @@
     D: "Compile error."
   answer: [B]
   explanation: >-
-    List.of / Map.of / Set.of create immutable collections; mutating them throws
-    UnsupportedOperationException. Wrap in new ArrayList<>(...) when you need to modify.
+    List.of / Map.of / Set.of create immutable collections. If you change them, Java throws
+    UnsupportedOperationException. Wrap them in new ArrayList<>(...) when you need to modify them.
   source: "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html#of()"
 
 - id: JVM-02-q6
@@ -74,14 +75,14 @@
   prompt: "Why can a non-associative reduce function give a wrong answer on a parallel stream?"
   options:
     A: "Parallel streams drop elements."
-    B: "The stream splits the data and combines partial results in an unspecified order, so a non-associative combiner yields order-dependent, wrong results."
+    B: "The stream splits the data and combines partial results in an unspecified order. A non-associative combiner then gives order-dependent, wrong results."
     C: "Parallel streams require a database."
     D: "reduce is not allowed on parallel streams."
   answer: [B]
   explanation: >-
-    A parallel stream partitions the input and merges partials; correctness requires the combiner be
-    associative (and the identity be a true identity). This is the same associativity rule as
-    parallel aggregation in Spark/MapReduce.
+    A parallel stream splits the input into partitions and merges the partial results. For a correct
+    result, the combiner must be associative. The identity must also be a true identity. This is
+    the same associativity rule as parallel aggregation in Spark/MapReduce.
   source: "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/stream/Stream.html#reduce(T,java.util.function.BinaryOperator)"
 
 - id: JVM-02-q7
@@ -94,8 +95,8 @@
     D: "The first order."
   answer: [B]
   explanation: >-
-    max returns Optional<Order> because the stream may be empty; the comparator orders by amount.
-    Using Optional forces the caller to handle the empty case.
+    max returns Optional<Order> because the stream may be empty. The comparator orders by amount.
+    Optional forces the caller to handle the empty case.
   source: "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/stream/Stream.html#max(java.util.Comparator)"
 
 - id: JVM-02-q8
@@ -103,11 +104,11 @@
   prompt: "What is `Order::amount` as used in a stream?"
   options:
     A: "A field access that mutates the order."
-    B: "A method reference, shorthand for the lambda o -> o.amount()."
+    B: "A method reference, a short form of the lambda o -> o.amount()."
     C: "A static import."
     D: "A new Order instance."
   answer: [B]
   explanation: >-
-    Order::amount is a method reference equivalent to the lambda o -> o.amount(); it is passed where
-    a functional interface (e.g. Function or ToDoubleFunction) is expected.
+    Order::amount is a method reference. It is equivalent to the lambda o -> o.amount(). You pass it
+    where the code expects a functional interface (e.g. Function or ToDoubleFunction).
   source: "https://docs.oracle.com/javase/tutorial/java/javaOO/methodreferences.html"

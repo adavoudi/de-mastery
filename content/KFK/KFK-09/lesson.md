@@ -2,79 +2,84 @@
 
 ## Why it exists
 
-Topic and key design is the schema-modeling of streaming. Get it wrong and no
-amount of consumer code fixes it: you can't change a topic's partition count
-without reshuffling every key's ordering, and you can't retrofit a key choice that
-preserves per-entity order. These decisions are as consequential — and as hard to
-reverse — as choosing the grain of a fact table. For a multi-company (multi-tenant)
-commerce platform, three properties must hold *by construction*:
+Topic and key design is the schema modeling of streaming. If you get it wrong,
+consumer code cannot fix it. You cannot change the partition count of a topic
+without reshuffling the key order. You also cannot add a key choice later that
+keeps per-entity order. These decisions have large effects and are hard to
+reverse. They are like choosing the grain of a fact table.
+
+A multi-company (multi-tenant) commerce platform needs three properties. They must
+hold *by construction*:
 
 - **Per-entity ordering.** All events for the same business entity (an order, a
-  customer) must land on the **same partition**, because Kafka only guarantees
-  order *within a partition*. If an order's `created` and `updated` events split
-  across partitions, a consumer can see the update before the create.
-- **Tenant isolation.** One company's events must not depend on another's for
-  correctness, and ideally a noisy tenant shouldn't be able to reorder or starve
-  another's stream.
+  customer) must land on the **same partition**. Kafka guarantees order only
+  *within a partition*. Suppose the `created` and `updated` events of an order go
+  to different partitions. Then a consumer can see the update before the create.
+- **Tenant isolation.** The events of one company must not depend on the events of
+  another company for correctness. Ideally, a noisy tenant cannot reorder or
+  starve the stream of another tenant.
 - **No hot partition under skew.** Real tenants are skewed (one giant company, many
-  tiny ones). A key that sends a whole big tenant to one partition creates a hot
-  spot that caps throughput and lag for everyone on it.
+  tiny ones). Suppose a key sends a whole big tenant to one partition. That
+  partition becomes a hot spot. It limits throughput and increases lag for everyone
+  on that partition.
 
 ## How it works
 
 - **The key decides the partition.** The default partitioner computes
   `murmur2(key) % numPartitions` (null key → sticky/round-robin). So the key *is*
-  the ordering and co-location contract. Choosing the key is the single most
-  important design decision.
-- **Key for per-entity order.** Key by the **entity id** whose order you must
-  preserve (e.g. `order_id`). Every event for that entity hashes to one partition,
-  so they are totally ordered.
+  the contract for ordering and co-location. Choosing the key is the most important
+  design decision.
+- **Key for per-entity order.** Use the **entity id** whose order you must keep
+  (for example, `order_id`) as the key. Every event for that entity hashes to one
+  partition, so the events are totally ordered.
 - **Multi-tenancy choices.**
   - *Shared topic, keyed by entity:* one `orders` topic for all companies, keyed by
-    `order_id`. Simple, but a per-tenant hot entity can still hot-spot, and tenant
-    isolation is only logical.
-  - *Composite key `(company_id, entity_id)`:* preserves per-entity order and keeps
-    a tenant's entities together-ish, but keying by `company_id` alone would send a
-    whole big tenant to one partition — a hot partition. The fix is to hash the
-    **entity id** (high cardinality) into the partition while still carrying the
-    `company_id` for routing/filtering, so a big tenant's load spreads across
-    partitions yet each entity stays ordered.
-  - *Topic-per-tenant:* strong isolation, but explodes partition/topic counts and
-    doesn't scale to thousands of tenants.
-- **Event vs entity topics.** An **event topic** is append-only facts
-  (`order-placed`), retained by time — your fact stream. An **entity topic** is a
-  **compacted** changelog keyed by entity id, retaining the latest state per
-  key — your dimension/KTable source. Choose by whether consumers need history
-  (event) or current state (entity/compacted).
+    `order_id`. It is simple. But a hot entity in one tenant can still create a hot
+    spot. Tenant isolation is only logical.
+  - *Composite key `(company_id, entity_id)`:* it keeps per-entity order. It also
+    keeps the entities of a tenant together-ish. But a key of `company_id` alone
+    would send a whole big tenant to one partition. That is a hot partition. The
+    fix is to hash the **entity id** (high cardinality) to choose the partition.
+    You still carry the `company_id` for routing and filtering. Then the load of a
+    big tenant spreads across partitions, and each entity stays ordered.
+  - *Topic-per-tenant:* it gives strong isolation. But the number of partitions and
+    topics grows very large. It does not scale to thousands of tenants.
+- **Event vs entity topics.** An **event topic** holds append-only facts
+  (`order-placed`). Kafka retains it by time. It is your fact stream. An **entity
+  topic** is a **compacted** changelog keyed by entity id. It retains the latest
+  state per key. It is your dimension or KTable source. Choose by what consumers
+  need: history (event topic) or current state (entity/compacted topic).
 - **Compaction** keeps the last value per key forever (plus optional time
-  retention), which is why a compacted entity topic can rebuild a KTable from
+  retention). For this reason, a compacted entity topic can rebuild a KTable from
   scratch.
-- **Partition count** sets max consumer parallelism and is painful to increase
-  (it changes key→partition mapping, breaking existing per-key order). Size for
-  future throughput up front.
+- **Partition count** sets the maximum consumer parallelism. It is painful to
+  increase, because it changes the key-to-partition mapping. That breaks existing
+  per-key order. Size it up front for future throughput.
 
 ## From your world
 
-- Choosing the key is choosing the **fact grain**: `order_id` keying is "one
-  partition-ordered sequence per order," exactly like declaring the grain of a
-  fact table is "one row per order line."
-- The `company_id` dimension in a **multi-company mart** reappears here as the
-  tenant attribute you carry on every event and must not let bleed across tenants.
-- A compacted entity topic is a **conformed dimension** materialized on the log;
-  an event topic is the **fact** feed.
+- Choosing the key is choosing the **fact grain**. Keying by `order_id` means "one
+  partition-ordered sequence per order." Declaring the grain of a fact table means
+  "one row per order line." The two choices work the same way.
+- In a **multi-company mart**, you have a `company_id` dimension. Here it comes
+  back as the tenant attribute. You carry it on every event. You must not let it
+  bleed across tenants.
+- A compacted entity topic is a **conformed dimension** materialized on the log.
+  An event topic is the **fact** feed.
 - Avoiding a hot partition under tenant skew is the streaming version of avoiding a
-  skewed join key or a badly chosen distribution key in Redshift.
+  skewed join key. It is also like avoiding a badly chosen distribution key in
+  Redshift.
 
 ## When NOT to use (these designs)
 
-- **Don't key by `company_id` alone** when tenants are skewed — it guarantees a hot
+- **Don't key by `company_id` alone** when tenants are skewed. It guarantees a hot
   partition for the biggest tenant. Key by the high-cardinality entity id.
-- **Don't use a null key** for events that need per-entity order — round-robin
-  partitioning destroys ordering.
-- **Don't use topic-per-tenant** at large tenant counts — the partition/metadata
-  explosion hurts the whole cluster.
-- **Don't over-partition** "just in case": every partition has fixed overhead
-  (open files, replication, controller metadata), and you can't easily reduce the
+- **Don't use a null key** for events that need per-entity order. Round-robin
+  partitioning destroys the order.
+- **Don't use topic-per-tenant** at large tenant counts. The growth in partitions
+  and metadata hurts the whole cluster.
+- **Don't over-partition** "just in case." Every partition has a fixed overhead
+  (open files, replication, controller metadata). You also cannot easily reduce the
   count later.
 
 ## Further reading

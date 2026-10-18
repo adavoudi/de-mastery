@@ -10,9 +10,9 @@
     D: "Shuffle hash join on the fact side only."
   answer: [B]
   explanation: >-
-    Broadcasting the small side avoids shuffling the huge fact table; each executor hashes the
-    dimension in memory and the fact streams through. This is the Spark analogue of Redshift
-    DISTSTYLE ALL on a small dimension.
+    When you broadcast the small side, Spark does not shuffle the huge fact table. Each executor
+    hashes the dimension in memory, and the fact streams through. This is the Spark analogue of
+    Redshift DISTSTYLE ALL on a small dimension.
   source: "https://spark.apache.org/docs/4.0.0/sql-performance-tuning.html"
 
 - id: SPK-06-q2
@@ -25,8 +25,9 @@
     D: "It never appears in the plan."
   answer: [B]
   explanation: >-
-    Sort-merge shuffles both sides on the key (two Exchanges) and sorts each before merging. It is
-    the default for two large tables and scales to any size, unlike a broadcast join.
+    Sort-merge shuffles both sides on the key (two Exchanges). It sorts each side before it
+    merges them. It is the default for two large tables and it scales to any size, unlike a
+    broadcast join.
   source: "https://spark.apache.org/docs/4.0.0/sql-performance-tuning.html"
 
 - id: SPK-06-q3
@@ -40,16 +41,16 @@
     D: "The result is wrong."
   answer: [B]
   explanation: >-
-    Broadcasting requires collecting the side to the driver and shipping it to every executor.
-    Doing that with a large table OOMs the driver and floods the network. Broadcast only the small
-    side.
+    To broadcast a side, Spark must collect it on the driver and send it to every executor. With
+    a large table, this causes an OOM on the driver and floods the network. Broadcast only the
+    small side.
   source: "https://spark.apache.org/docs/4.0.0/api/python/reference/pyspark.sql/api/pyspark.sql.functions.broadcast.html"
 
 - id: SPK-06-q4
   type: single
   prompt: >-
-    You need a left join of orders to payments, keeping every order even if it has no payment.
-    Someone used an inner join. What is the bug?
+    You need a left join of orders to payments. You must keep every order, even if it has no
+    payment. Someone used an inner join. What is the bug?
   options:
     A: "No bug; inner and left are equivalent here."
     B: "Inner join drops orders that have no matching payment, so unpaid orders disappear from the result."
@@ -57,16 +58,16 @@
     D: "Inner join duplicates rows."
   answer: [B]
   explanation: >-
-    An inner join keeps only matching rows, dropping orders with no payment. A left join preserves
-    all left rows and fills unmatched right columns with NULL. Choosing inner when you need left is
-    a classic correctness bug.
+    An inner join keeps only matching rows, so it drops orders that have no payment. A left join
+    keeps all left rows and fills the unmatched right columns with NULL. If you choose inner when
+    you need left, you get a classic correctness bug.
   source: "https://spark.apache.org/docs/4.0.0/sql-ref-syntax-qry-select-join.html"
 
 - id: SPK-06-q5
   type: single
   prompt: >-
     One company_id value owns 80% of the fact rows, so one join task runs far longer than the
-    others. What is this and which fix does NOT change the result?
+    others. What is this, and which fix does NOT change the result?
   options:
     A: "Spill; raise executor memory."
     B: "Data skew; broadcast the small side, or salt the hot key on both sides and aggregate back, or enable AQE skew-join handling."
@@ -74,9 +75,9 @@
     D: "Skew; just use an inner join."
   answer: [B]
   explanation: >-
-    A dominant key value creates a straggler partition (skew). Broadcasting the small side removes
-    the shuffle; salting (applied symmetrically and reversed) spreads the hot key without changing
-    results; AQE can split the skewed partition at runtime.
+    A dominant key value creates a straggler partition (skew). When you broadcast the small side,
+    the shuffle goes away. Salting (applied symmetrically and then reversed) spreads the hot key
+    without a change to the results. AQE can split the skewed partition at runtime.
   source: "https://spark.apache.org/docs/4.0.0/sql-performance-tuning.html"
 
 - id: SPK-06-q6
@@ -89,9 +90,9 @@
     D: "To force a sort-merge join."
   answer: [B]
   explanation: >-
-    A broadcast variable distributes a read-only value to executors once instead of serialising it
-    into every task. A broadcast join uses the same mechanism for the small join side; the variable
-    is the general-purpose primitive. Counting is what an accumulator does.
+    A broadcast variable sends a read-only value to executors once. Without it, Spark serializes
+    the value into every task. A broadcast join uses the same mechanism for the small join side.
+    The variable is the general-purpose primitive. An accumulator does the counting.
   source: "https://spark.apache.org/docs/4.0.0/rdd-programming-guide.html#shared-variables"
 
 - id: SPK-06-q7
@@ -104,14 +105,15 @@
     D: "They are write-only on the driver."
   answer: [B]
   explanation: >-
-    Spark guarantees accumulator values only for updates inside actions; transformation retries can
-    double-count. Use accumulators for monitoring/metrics, not for values that must be exact.
+    Spark guarantees accumulator values only for updates inside actions. Retries of
+    transformations can double-count. Use accumulators for monitoring and metrics, not for values
+    that must be exact.
   source: "https://spark.apache.org/docs/4.0.0/rdd-programming-guide.html#accumulators"
 
 - id: SPK-06-q8
   type: single
   prompt: >-
-    In this multi-company dataset order_id is unique within a company but can repeat across
+    In this multi-company dataset, order_id is unique within a company but can repeat across
     companies. You join orders to order_items on order_id alone. What can go wrong?
   options:
     A: "Nothing; order_id is globally unique."
@@ -120,7 +122,7 @@
     D: "Spark raises an error."
   answer: [B]
   explanation: >-
-    Joining on a partial key lets rows from different companies collide, the Spark equivalent of an
-    intercompany double-count. Always join on the full business key when surrogate/natural keys can
-    repeat across entities.
+    If you join on a partial key, rows from different companies can collide. This is the Spark
+    equivalent of an intercompany double-count. Always join on the full business key when
+    surrogate or natural keys can repeat across entities.
   source: "https://spark.apache.org/docs/4.0.0/sql-ref-syntax-qry-select-join.html"

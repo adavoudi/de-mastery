@@ -2,57 +2,66 @@
 
 ## Why file layout is a first-class concern
 
-You already know from Athena and Iceberg that *how data is laid out on disk* decides query cost:
-partition on a column you always filter by, keep files big enough to amortise open/metadata cost
-but small enough to parallelise, and you win before the engine even starts. Spark controls two
-different "partition" concepts, and conflating them is the classic beginner mistake:
+You already know from Athena and Iceberg that *how data is laid out on disk* decides query cost.
+Follow these three rules, and you win before the engine starts:
 
-- **In-memory partitions** — how Spark splits a DataFrame across tasks *while computing*. Controlled
-  by `repartition`, `coalesce`, and `spark.sql.shuffle.partitions`.
-- **On-disk partitions** — the directory layout of the written output. Controlled by
-  `write.partitionBy("col")`, which creates `col=value/` folders (Hive-style), exactly like your
+- Partition on a column that you always filter by.
+- Keep files big enough to spread the cost of opening a file and reading its metadata.
+- Keep files small enough to read in parallel.
+
+Spark has two different "partition" concepts. A common mistake for beginners is to treat them as one concept.
+
+- **In-memory partitions** — how Spark splits a DataFrame across tasks *while it computes*. You control
+  them with `repartition`, `coalesce`, and `spark.sql.shuffle.partitions`.
+- **On-disk partitions** — the directory layout of the written output. You control them with
+  `write.partitionBy("col")`. It creates `col=value/` folders (Hive-style), exactly like your
   Athena/Iceberg partitions.
 
-The number of **output files** per write equals (roughly) the number of in-memory partitions at
-write time, multiplied across the on-disk partition folders. So the two concepts meet precisely at
-write time, and that is where the small-file problem is born or avoided.
+The number of **output files** per write is roughly equal to the number of in-memory partitions at
+write time, multiplied across the on-disk partition folders. So the two concepts meet exactly at
+write time. At that point, the small-file problem starts or is avoided.
 
 ## repartition vs coalesce
 
 - **`repartition(n)`** does a full shuffle to produce exactly `n` evenly-sized partitions (wide,
   adds an `Exchange`). Use it to *increase* parallelism or to rebalance skew.
-- **`coalesce(n)`** merges existing partitions *without a shuffle* (narrow, no `Exchange`), only
-  able to *reduce* the count. Use it to cut the file count cheaply after a filter has shrunk the
-  data — but it can create skew because it just concatenates existing partitions.
-- `repartition(n, col)` / `repartitionByRange` let you control the partitioning *expression*, which
+- **`coalesce(n)`** merges existing partitions *without a shuffle* (narrow, no `Exchange`). It can only
+  *reduce* the count. Use it to cut the file count cheaply after a filter has made the data smaller.
+  It can create skew, because it only joins existing partitions together.
+- `repartition(n, col)` and `repartitionByRange` let you control the partitioning *expression*. This
   matters for bucketing-like effects and for writing one file per key group.
 
-The key contrast: *to reduce files cheaply after a selective filter, use `coalesce`; to
+The key contrast: *to reduce files cheaply after a selective filter, use `coalesce`. To
 rebalance or grow partitions, use `repartition`.*
 
 ![coalesce merges neighbouring partitions with no shuffle and may stay uneven; repartition shuffles every partition into even ones](diagrams/repartition-vs-coalesce.svg)
 
 ## The small-file problem
 
-Thousands of tiny files cripple a query: each file costs a metadata lookup and an open, listing
-dominates, and readers can't align to row-group boundaries. The symptom in your Athena world is a
-query that spends most of its time in S3 listing. The fix is to **target a file size** (commonly
-~128 MB–1 GB) and derive the partition count from `total_bytes / target_size`, then
-`repartition`/`coalesce` to that count before writing. At the tiny lab scale you target a **file
-count** directly; the reasoning is identical.
+Thousands of tiny files make a query slow. Each file costs a metadata lookup and an open. Listing
+the files takes most of the time. Readers also cannot align to row-group boundaries. In your Athena
+world, the symptom is a query that spends most of its time in S3 listing.
 
-A trap: `coalesce(1)` to "get one file" forces *all* data through one task — fine for a 10 MB
-result, catastrophic for 100 GB. The right habit is to compute the count from the data size, not to
-hard-code 1.
+To fix this, follow these steps:
+
+1. **Target a file size** (commonly ~128 MB–1 GB).
+2. Calculate the partition count with `total_bytes / target_size`.
+3. Use `repartition` or `coalesce` to get that count before you write.
+
+In the tiny lab, you target a **file count** directly. The reasoning is the same.
+
+There is a trap. If you use `coalesce(1)` to "get one file", *all* data goes through one task. This is
+fine for a 10 MB result. It is catastrophic for 100 GB. The right habit is to calculate the count from
+the data size. Do not hard-code 1.
 
 ## Bucketing
 
 **Bucketing** pre-shuffles a table on a key into a fixed number of buckets *at write time*
-(`write.bucketBy(n, "key").sortBy("key").saveAsTable(...)`). Two bucketed tables joined on the
-bucket key can then be joined **without a shuffle at read time**, because matching keys are already
-colocated — the Spark analogue of choosing a Redshift `DISTKEY` so joins are local. The cost is
-paid once at write; every later join on that key avoids an `Exchange`. Bucketing requires a managed
-table (`saveAsTable`), not a bare path.
+(`write.bucketBy(n, "key").sortBy("key").saveAsTable(...)`). You can then join two bucketed tables on
+the bucket key **without a shuffle at read time**. This works because matching keys are already
+colocated (stored together). It is the Spark analogue of choosing a Redshift `DISTKEY` so that joins are
+local. You pay the cost once, at write time. Every later join on that key avoids an `Exchange`.
+Bucketing needs a managed table (`saveAsTable`), not a bare path.
 
 ## From your world
 
@@ -67,15 +76,15 @@ table (`saveAsTable`), not a bare path.
 
 ## When NOT to do these
 
-- **Don't `coalesce(1)` large data** to make one file — it serialises everything through one task.
-  Derive the count from size.
-- **Don't `partitionBy` a high-cardinality column** (e.g. `customer_id`) — you get millions of tiny
-  directories, the worst small-file explosion. Partition on low-cardinality, frequently-filtered
-  columns (date, company).
-- **Don't bucket unless the join key is stable and reused.** Bucketing pays a write-time cost and
-  locks the bucket count; it only wins if you repeatedly join on that key.
-- **Don't confuse `repartition` with `partitionBy`** — one is in-memory task layout, the other is
-  on-disk directory layout. They interact at write time but are not the same thing.
+- **Don't use `coalesce(1)` on large data** to make one file. It sends everything through one task.
+  Calculate the count from the size.
+- **Don't use `partitionBy` on a high-cardinality column** (for example `customer_id`). You get millions
+  of tiny directories. This is the worst small-file explosion. Partition on low-cardinality columns
+  that you filter on often (date, company).
+- **Don't bucket unless the join key is stable and reused.** Bucketing has a write-time cost and
+  fixes the bucket count. It only helps if you join on that key many times.
+- **Don't confuse `repartition` with `partitionBy`.** One is the in-memory task layout. The other is
+  the on-disk directory layout. They interact at write time, but they are not the same thing.
 
 ## Further reading
 

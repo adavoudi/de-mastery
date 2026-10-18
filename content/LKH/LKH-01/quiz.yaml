@@ -3,15 +3,15 @@
   prompt: >-
     What does the catalog (e.g. Glue) store for an Iceberg table, and what makes a commit atomic?
   options:
-    A: "All data file paths; a commit rewrites that list."
-    B: "A single pointer to the current metadata.json; a commit atomically swaps that pointer."
-    C: "The Parquet files themselves; a commit appends rows to them."
-    D: "The manifest list; a commit edits it in place."
+    A: "All data file paths. A commit rewrites that list."
+    B: "A single pointer to the current metadata.json. A commit atomically swaps that pointer."
+    C: "The Parquet files themselves. A commit appends rows to them."
+    D: "The manifest list. A commit edits it in place."
   answer: [B]
   explanation: >-
-    The catalog holds one atomic pointer per table — the path of the current metadata.json. A
-    commit creates a new metadata.json (new snapshot) and atomically swaps the catalog pointer to
-    it. Nothing is mutated in place.
+    The catalog holds one atomic pointer per table. It is the path of the current metadata.json. A
+    commit creates a new metadata.json (a new snapshot). Then it atomically swaps the catalog
+    pointer to the new file. Nothing changes in place.
   source: "https://iceberg.apache.org/spec/"
 
 - id: LKH-01-q2
@@ -24,9 +24,9 @@
     D: "metadata.json -> manifest -> manifest list -> data file"
   answer: [B]
   explanation: >-
-    metadata.json names the current snapshot, which points at one manifest list; the manifest list
-    points at manifests; each manifest lists data (and delete) files. Two index levels exist so a
-    planner can prune cheaply.
+    The metadata.json names the current snapshot. The snapshot points at one manifest list. The
+    manifest list points at manifests. Each manifest lists data files (and delete files). There are
+    two index levels so that a planner can prune at low cost.
   source: "https://iceberg.apache.org/spec/#table-metadata"
 
 - id: LKH-01-q3
@@ -40,31 +40,31 @@
   answer: [C]
   explanation: >-
     Each manifest carries per-file stats (record_count, lower_bounds/upper_bounds, null_counts).
-    The manifest list carries coarser per-manifest partition ranges. These enable file-level
-    pruning during scan planning without opening the data files.
+    The manifest list carries coarser partition ranges for each manifest. These stats allow
+    file-level pruning during scan planning. The planner does not open the data files.
   source: "https://iceberg.apache.org/spec/#manifests"
 
 - id: LKH-01-q4
   type: single
   prompt: >-
-    A table has 3 data files (each 2 rows). A manifest exists per append. How many manifests does
-    'number of data files = number of manifests' incorrectly assume?
+    A table has 3 data files (each 2 rows). A manifest exists per append. What is wrong with the
+    claim 'number of data files = number of manifests'?
   options:
-    A: "Nothing wrong; they are always equal."
-    B: "It conflates tree levels: one manifest can list many files, so the counts are unrelated in general."
+    A: "Nothing is wrong. They are always equal."
+    B: "It mixes tree levels. One manifest can list many files, so the counts are unrelated in general."
     C: "There are always more manifests than data files."
     D: "Manifests never contain data files."
   answer: [B]
   explanation: >-
-    One manifest lists many data files; after compaction a single manifest can reference thousands
-    of files. Equating the two counts is a classic metadata-reading error.
+    One manifest lists many data files. After compaction, a single manifest can reference thousands
+    of files. To treat the two counts as equal is a classic error when you read metadata.
   source: "https://iceberg.apache.org/spec/#manifests"
 
 - id: LKH-01-q5
   type: single
   prompt: >-
-    You filter 'WHERE country = \"US\"' on a table whose files are each single-country. Which
-    pyiceberg call tells you exactly how many data files a correct engine would read?
+    You filter 'WHERE country = \"US\"' on a table. Each file of the table holds one country only.
+    Which pyiceberg call tells you exactly how many data files a correct engine would read?
   options:
     A: "len(table.snapshots())"
     B: "table.scan().to_arrow().num_rows"
@@ -72,9 +72,9 @@
     D: "table.metadata_location"
   answer: [C]
   explanation: >-
-    plan_files() returns one FileScanTask per data file that survives pruning for the given filter.
-    Counting them is the measured answer to 'which files does this query read', using the manifests'
-    per-file min/max.
+    plan_files() returns one FileScanTask for each data file that survives pruning for the given
+    filter. When you count the tasks, you get the measured answer to 'which files does this query
+    read'. The planner uses the per-file min/max of the manifests.
   source: "https://py.iceberg.apache.org/api/#scanning"
 
 - id: LKH-01-q6
@@ -82,14 +82,14 @@
   prompt: "Why does each write create a new snapshot instead of modifying the current one?"
   options:
     A: "To waste storage."
-    B: "Immutability enables atomic commits and time travel: old snapshots keep pointing at their own metadata, and only the catalog pointer flips."
+    B: "Immutability enables atomic commits and time travel. Old snapshots keep pointing at their own metadata, and only the catalog pointer flips."
     C: "Because Parquet files are editable in place."
     D: "To avoid writing statistics."
   answer: [B]
   explanation: >-
-    Writes only add files and metadata; the current snapshot is never mutated. Old snapshots remain
-    valid and readable (time travel), and switching the current snapshot is a single atomic pointer
-    swap at the catalog.
+    Writes only add files and metadata. They never change the current snapshot. Old snapshots stay
+    valid and readable (time travel). To switch the current snapshot, the catalog does one atomic
+    pointer swap.
   source: "https://iceberg.apache.org/spec/#snapshots"
 
 - id: LKH-01-q7
@@ -99,10 +99,10 @@
     A: "The manifest list lets a planner skip whole manifests by partition range."
     B: "Per-file min/max in a manifest let a planner skip individual data files."
     C: "Pruning may skip a file that actually contains a matching row (it is allowed to be unsound)."
-    D: "If a file's min/max cannot exclude the predicate, the file is kept (scanned)."
+    D: "If the min/max of a file cannot exclude the predicate, the planner keeps the file (it is scanned)."
   answer: [A, B, D]
   explanation: >-
-    Pruning is sound: it may keep files that turn out not to match, but it must never drop a file
-    that could match. The two index levels (manifest list, then manifests) give coarse-then-fine
-    pruning. (C describes an unsound planner, which is a bug.)
+    Pruning is sound. It may keep files that do not match in the end. But it must never drop a file
+    that could match. The two index levels (first the manifest list, then the manifests) give coarse
+    pruning and then fine pruning. (C describes an unsound planner. That is a bug.)
   source: "https://iceberg.apache.org/spec/#scan-planning"

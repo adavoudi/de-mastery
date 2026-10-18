@@ -1,15 +1,16 @@
 # Predict which data files a filtered query reads
 
-Every "Athena scanned N GB" line is scan planning in action: Iceberg uses the manifests' per-file
-min/max to decide which Parquet files a filter can possibly touch, and reads only those. Here you
-reproduce that decision with PyIceberg — no engine, no Docker.
+Every "Athena scanned N GB" line is scan planning at work. Iceberg uses the per-file min/max of the
+manifests. It decides which Parquet files a filter can possibly touch, and it reads only those
+files. In this exercise, you reproduce that decision with PyIceberg. You use no engine and no
+Docker.
 
-You are given a loaded `table` whose data was written so each file covers a narrow value range (so
-pruning is predictable). Implement these in `solution.py`:
+You get a loaded `table`. Its data was written so that each file covers a narrow range of values.
+This makes pruning predictable. Implement these functions in `solution.py`:
 
 ## `files_for_equals(table, column, value) -> dict`
 
-Plan a scan filtered by `column == value` and return:
+Plan a scan that is filtered by `column == value`. Return this dict:
 
 | key | value |
 |---|---|
@@ -18,20 +19,21 @@ Plan a scan filtered by `column == value` and return:
 
 ## `files_for_at_least(table, column, value) -> dict`
 
-Same, for the predicate `column >= value`.
+Do the same for the predicate `column >= value`.
 
 ## `all_files(table) -> list[str]`
 
-The sorted list of **all** current data-file paths (an unfiltered plan), so a test can confirm your
-filtered plans are a subset and that pruning actually drops something.
+Return the sorted list of **all** current data-file paths (an unfiltered plan). A test uses this
+list to confirm two facts. Your filtered plans are a subset of it. Pruning actually drops
+something.
 
-Rules / traps:
-- Use Iceberg **scan planning** (`table.scan(row_filter=...).plan_files()`), not a full data read
-  then a Python filter. The whole point is to avoid opening pruned files.
-- Build the predicate as a PyIceberg expression (`EqualTo`, `GreaterThanOrEqual`) so the planner
+Rules and traps:
+- Use Iceberg **scan planning** (`table.scan(row_filter=...).plan_files()`). Do not read all the
+  data and then filter in Python. The goal is to avoid opening pruned files.
+- Build the predicate as a PyIceberg expression (`EqualTo`, `GreaterThanOrEqual`). Then the planner
   can push it into the manifests.
-- Return paths sorted so comparisons are order-independent.
+- Return sorted paths. Then the comparisons do not depend on order.
 
-The test knows, by construction, exactly which files hold which values, and also cross-checks your
-answer against an independent correct scan plan (the oracle). A solution that "reads everything"
-(no pruning) fails, because for these predicates strictly fewer files should be read.
+By construction, the test knows exactly which files hold which values. It also compares your answer
+with an independent correct scan plan (the oracle). A solution that "reads everything" (no
+pruning) fails. For these predicates, the scan must read strictly fewer files.

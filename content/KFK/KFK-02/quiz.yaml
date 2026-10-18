@@ -8,22 +8,24 @@
     D: "min.insync.replicas brokers have written the record."
   answer: [B]
   explanation: >-
-    acks=1 means the leader has persisted the record. If the leader then crashes before any follower
-    replicates it, the record is lost even though the producer was acked.
+    acks=1 means that the leader has persisted the record. Suppose the leader then crashes before
+    any follower replicates the record. Then the record is lost, even though the producer got an
+    ack.
   source: "https://kafka.apache.org/documentation/#producerconfigs_acks"
 
 - id: KFK-02-q2
   type: single
-  prompt: "Topic has RF=3 and min.insync.replicas=2. Two of the three brokers holding a partition are down (ISR=1). A producer sends with acks=all. What happens?"
+  prompt: "A topic has RF=3 and min.insync.replicas=2. Two of the three brokers that hold a partition are down (ISR=1). A producer sends with acks=all. What happens?"
   options:
-    A: "The write succeeds; one replica is enough."
+    A: "The write succeeds. One replica is enough."
     B: "The write is rejected with NOT_ENOUGH_REPLICAS."
     C: "The write succeeds but is marked uncommitted."
     D: "The producer blocks forever."
   answer: [B]
   explanation: >-
-    With acks=all the leader requires at least min.insync.replicas members in the ISR. ISR=1 < 2, so
-    the leader refuses the write rather than acknowledging something that lives on only one broker.
+    With acks=all, the leader requires at least min.insync.replicas members in the ISR. ISR=1 is
+    less than 2. So the leader refuses the write. It does not acknowledge a write that lives on only
+    one broker.
   source: "https://kafka.apache.org/documentation/#topicconfigs_min.insync.replicas"
 
 - id: KFK-02-q3
@@ -31,29 +33,30 @@
   prompt: "Why is RF=3, acks=all, min.insync.replicas=2 the recommended durable configuration?"
   options:
     A: "It gives the lowest possible latency."
-    B: "It tolerates one broker failure while still accepting writes, and refuses writes once a second failure would leave data on a single broker."
+    B: "It tolerates one broker failure and still accepts writes. It refuses writes after a second failure, because the data would then be on a single broker."
     C: "It guarantees exactly-once delivery by itself."
     D: "It disables replication to save disk."
   answer: [B]
   explanation: >-
-    One broker down: ISR 3->2 >= misr, writes continue on >=2 brokers. Second down: ISR 2->1 < misr,
-    writes refused — you never ack a write that would survive on only one disk. EOS is a separate
-    concern (KFK-05).
+    One broker down means the ISR goes from 3 to 2, which is >= misr. Writes continue on >=2
+    brokers. A second broker down means the ISR goes from 2 to 1, which is < misr. Kafka refuses
+    writes. So you never ack a write that would survive on only one disk. EOS is a separate topic
+    (KFK-05).
   source: "https://kafka.apache.org/documentation/#replication"
 
 - id: KFK-02-q4
   type: single
-  prompt: "What does enabling unclean.leader.election.enable=true risk?"
+  prompt: "What does unclean.leader.election.enable=true risk?"
   options:
-    A: "Nothing; it only speeds up elections."
+    A: "Nothing. It only speeds up elections."
     B: "Electing a replica that was NOT in the ISR, which can silently lose acknowledged records."
     C: "Permanently disabling the partition."
     D: "Doubling the replication factor."
   answer: [B]
   explanation: >-
     Unclean election promotes an out-of-sync replica to restore availability when all in-sync
-    replicas are gone, at the cost of losing records only the dead in-sync replicas had. Default off;
-    keep it off for completeness-critical data.
+    replicas are gone. The cost is that you lose the records that only the dead in-sync replicas
+    had. The default is off. Keep it off for completeness-critical data.
   source: "https://kafka.apache.org/documentation/#brokerconfigs_unclean.leader.election.enable"
 
 - id: KFK-02-q5
@@ -61,27 +64,28 @@
   prompt: "Which statements about the ISR are correct? (choose all)"
   options:
     A: "The leader is always a member of its own ISR."
-    B: "A follower that falls behind beyond replica.lag.time.max.ms drops out of the ISR and rejoins when caught up."
-    C: "A new leader is elected from the ISR under default (clean) election."
+    B: "A follower that falls behind by more than replica.lag.time.max.ms drops out of the ISR. It rejoins when it catches up."
+    C: "Under default (clean) election, Kafka elects a new leader from the ISR."
     D: "The ISR is fixed at topic creation and never changes."
   answer: [A, B, C]
   explanation: >-
-    The ISR is dynamic: it shrinks when replicas lag/die and grows when they catch up; the leader is
-    always in it; clean election chooses from it. It is not fixed (D is false).
+    The ISR is dynamic. It shrinks when replicas lag or die. It grows when they catch up. The
+    leader is always in the ISR. Clean election chooses from the ISR. The ISR is not fixed, so D is
+    false.
   source: "https://kafka.apache.org/documentation/#replication"
 
 - id: KFK-02-q6
   type: single
-  prompt: "On a single-broker dev cluster you set a topic to RF=1 and min.insync.replicas=2 and produce with acks=all. Result?"
+  prompt: "On a single-broker dev cluster, you set a topic to RF=1 and min.insync.replicas=2. You produce with acks=all. What is the result?"
   options:
     A: "Durable writes across restarts."
-    B: "Every write is rejected: ISR can be at most 1, which is < min.insync.replicas=2."
+    B: "Every write is rejected. The ISR can be at most 1, which is < min.insync.replicas=2."
     C: "Writes succeed but are compacted."
-    D: "The broker auto-increases the replication factor to 2."
+    D: "The broker automatically increases the replication factor to 2."
   answer: [B]
   explanation: >-
-    misr must be <= RF. With RF=1 the ISR is at most 1, below misr=2, so acks=all writes always fail.
-    Match min.insync.replicas to the replication factor (RF=3 -> misr=2).
+    misr must be <= RF. With RF=1, the ISR is at most 1. This is below misr=2, so acks=all writes
+    always fail. Set min.insync.replicas to match the replication factor (RF=3 -> misr=2).
   source: "https://kafka.apache.org/documentation/#topicconfigs_min.insync.replicas"
 
 - id: KFK-02-q7
@@ -94,6 +98,6 @@
     D: "The consumer group coordinator."
   answer: [B]
   explanation: >-
-    Kafka 4.x runs KRaft only; the controller quorum maintains cluster metadata (incl. leadership) in
-    a replicated log. ZooKeeper is gone.
+    Kafka 4.x runs KRaft only. The controller quorum keeps cluster metadata (including leadership)
+    in a replicated log. ZooKeeper is gone.
   source: "https://kafka.apache.org/documentation/#kraft"

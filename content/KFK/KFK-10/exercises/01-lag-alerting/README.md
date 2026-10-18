@@ -1,8 +1,8 @@
 # KFK-10 · Consumer-lag metrics and alerting for the copier
 
-You own a **transactional copier** app (provided in `app.py` as `copy_batch`, already working: it
-reads from a source topic and copies to a destination topic exactly-once). Production needs *eyes*
-on it. Add the observability layer.
+You own a **transactional copier** app. It is in `app.py` as `copy_batch`, and it already works. It
+reads from a source topic and copies to a destination topic exactly-once. In production, you need to
+watch it. Add the observability layer.
 
 Edit `app.py` and implement four functions.
 
@@ -16,31 +16,34 @@ Edit `app.py` and implement four functions.
 
 ## 2. `total_lag(lag) -> int` (pure)
 
-Sum of the per-partition lag.
+Return the sum of the per-partition lag.
 
 ## 3. `evaluate_alerts(lag_by_partition, warn_threshold, page_threshold) -> str` (pure)
 
-Return `"page"` if **any** partition's lag is `>= page_threshold`; else `"warn"` if **any** is
-`>= warn_threshold`; else `"ok"`. Highest severity wins; thresholds are **inclusive**.
+- Return `"page"` if **any** partition has lag `>= page_threshold`.
+- Otherwise, return `"warn"` if **any** partition has lag `>= warn_threshold`.
+- Otherwise, return `"ok"`.
+
+The highest severity wins. The thresholds are **inclusive**.
 
 ## 4. `measure_group_lag(bootstrap_servers, topic, group_id) -> dict[int, int]`
 
-Read the group's **committed** offsets and the partitions' **end** offsets from a live broker and
-return lag per partition. Do **not** join the group to consume — just read offsets (the same thing
-`kafka-consumer-groups.sh --describe` does). Reuse `compute_lag`.
+Read the **committed** offsets of the group and the **end** offsets of the partitions from a live
+broker. Return the lag per partition. Do **not** join the group to consume. Only read the offsets
+(`kafka-consumer-groups.sh --describe` does the same thing). Reuse `compute_lag`.
 
 ## Constraints
 
-- `compute_lag`, `total_lag` and `evaluate_alerts` must be **pure** (no Kafka, no I/O): they are
-  graded with plain dictionaries and an independent Python oracle.
-- `measure_group_lag` is graded against a **real native broker** (no Docker): the test produces N
-  records, runs the copier over some of them, and asserts the lag you report equals the true
-  remaining backlog.
+- `compute_lag`, `total_lag` and `evaluate_alerts` must be **pure** (no Kafka, no I/O). The tests use
+  plain dictionaries and an independent Python oracle to grade them.
+- The tests grade `measure_group_lag` against a **real native broker** (no Docker). The test produces
+  N records and runs the copier over some of them. Then it asserts that the lag you report equals the
+  true remaining backlog.
 
 ## How it is graded
 
-- Pure functions vs a Python oracle over many random partition/offset combinations (property-style),
-  including the no-committed-offset and all-caught-up edge cases.
-- `evaluate_alerts` boundaries: just-below, exactly-at, and above each threshold; warn-vs-page.
-- `measure_group_lag`: produce 10, copy 4, assert reported total lag == 6; produce more without
-  consuming, assert lag rises; fully drain, assert lag == 0.
+- The pure functions are compared with a Python oracle over many random partition/offset combinations
+  (property-style). This includes the edge cases of no committed offset and all caught up.
+- `evaluate_alerts` boundaries: just below, exactly at, and above each threshold. Also warn vs page.
+- `measure_group_lag`: produce 10, copy 4, and assert that the reported total lag == 6. Produce more
+  without consuming, and assert that lag rises. Drain fully, and assert that lag == 0.

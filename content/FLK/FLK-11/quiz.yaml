@@ -3,55 +3,55 @@
   prompt: "What is backpressure in Flink?"
   options:
     A: "A crash caused by too much data"
-    B: "Flow control: when an operator can't keep up, its buffers fill and the fullness propagates upstream, slowing the source to the rate of the slowest operator"
+    B: "Flow control. When an operator cannot keep up, its buffers fill and the full buffers spread upstream. The source slows down to the rate of the slowest operator"
     C: "A way to drop late events"
     D: "A checkpoint failure"
   answer: [B]
-  explanation: "Backpressure is Flink's built-in flow control; sustained backpressure points at the bottleneck operator."
+  explanation: "Backpressure is the built-in flow control of Flink. Sustained backpressure shows the bottleneck operator."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/ops/monitoring/back_pressure/"
 
 - id: FLK-11-q2
   type: single
-  prompt: "A heavy, NON-keyed map operator runs at parallelism 1 and backpressures the source while slots are free. What is the correct fix?"
+  prompt: "A heavy, NON-keyed map operator runs at parallelism 1 and backpressures the source. Slots are free. What is the correct fix?"
   options:
-    A: "Raise the map's parallelism and rebalance() records into it so the subtasks are evenly fed"
+    A: "Raise the parallelism of the map and call rebalance() on the records before it, so the subtasks get records evenly"
     B: "Add a keyBy on a constant"
     C: "Disable checkpointing"
     D: "Lower the source parallelism"
   answer: [A]
-  explanation: "More subtasks plus a redistributing edge (rebalance) spreads the load evenly. keyBy on a constant would funnel everything to one subtask — the opposite of what you want."
+  explanation: "More subtasks plus a redistributing edge (rebalance) spread the load evenly. keyBy on a constant would send everything to one subtask. This is the opposite of what you want."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/operators/overview/"
 
 - id: FLK-11-q3
   type: single
-  prompt: "You raise a downstream operator's parallelism to 4 but leave the edge FORWARD. Why doesn't throughput improve?"
+  prompt: "You raise the parallelism of a downstream operator to 4 but leave the edge FORWARD. Why does throughput not improve?"
   options:
-    A: "FORWARD is one-to-one at equal parallelism; it cannot feed 4 subtasks from 1, so work isn't redistributed"
+    A: "FORWARD is one-to-one at equal parallelism. It cannot feed 4 subtasks from 1, so it does not redistribute the work"
     B: "FORWARD drops records"
     C: "Parallelism 4 is invalid"
     D: "It does improve"
   answer: [A]
-  explanation: "FORWARD requires equal up/down parallelism and does no redistribution; to feed more subtasks you need a redistributing strategy (REBALANCE/RESCALE/HASH)."
+  explanation: "FORWARD needs equal upstream and downstream parallelism and does no redistribution. To feed more subtasks, you need a redistributing strategy (REBALANCE/RESCALE/HASH)."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/operators/overview/"
 
 - id: FLK-11-q4
   type: single
-  prompt: "When does raising parallelism NOT fix a bottleneck?"
+  prompt: "When does a higher parallelism NOT fix a bottleneck?"
   options:
-    A: "When the bottleneck is a hot key under keyBy (skew) — that key still goes to one subtask"
-    B: "Never; parallelism always helps"
+    A: "When the bottleneck is a hot key under keyBy (skew). That key still goes to one subtask"
+    B: "Never. Parallelism always helps"
     C: "Only on bounded sources"
     D: "Only when checkpointing is on"
   answer: [A]
-  explanation: "keyBy routes a key to one subtask regardless of parallelism, so a hot key stays a bottleneck. The fix is changing the key (salting), not more subtasks."
+  explanation: "keyBy sends a key to one subtask at any parallelism, so a hot key stays a bottleneck. The fix is to change the key (salting), not to add subtasks."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/operators/overview/"
 
 - id: FLK-11-q5
   type: single
-  prompt: "Which ship strategy gives round-robin, perfectly-even distribution to all downstream subtasks for a non-keyed operator?"
+  prompt: "Which ship strategy gives round-robin and perfectly even distribution to all downstream subtasks for a non-keyed operator?"
   options: {A: "FORWARD", B: "REBALANCE", C: "BROADCAST", D: "GLOBAL"}
   answer: [B]
-  explanation: "REBALANCE round-robins records across all downstream subtasks, evening out a skew-free load."
+  explanation: "REBALANCE sends records round-robin across all downstream subtasks. It evens out a load without skew."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/operators/overview/"
 
 - id: FLK-11-q6
@@ -59,11 +59,11 @@
   prompt: "How can you prove a throughput fix from the job graph alone, without timing?"
   options:
     A: "You cannot; only wall-clock proves it"
-    B: "The bottleneck operator's parallelism increased and the edge feeding it changed from FORWARD to a redistributing strategy (REBALANCE/RESCALE/HASH)"
+    B: "The parallelism of the bottleneck operator increased, and the edge that feeds it changed from FORWARD to a redistributing strategy (REBALANCE/RESCALE/HASH)"
     C: "The number of operators decreased"
     D: "The job name changed"
   answer: [B]
-  explanation: "A real fix shows up structurally: higher parallelism on the bottleneck and a redistributing edge feeding it. That is deterministic and robust to machine load."
+  explanation: "A real fix shows in the structure: higher parallelism on the bottleneck and a redistributing edge that feeds it. This is deterministic and machine load does not change it."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/execution/parallel/"
 
 - id: FLK-11-q7
@@ -71,21 +71,21 @@
   prompt: "Why is RESCALE sometimes preferred over REBALANCE?"
   options:
     A: "RESCALE drops duplicates"
-    B: "RESCALE round-robins to a local subset of subtasks, so it avoids a full network shuffle when scaling by an integer factor"
+    B: "RESCALE sends records round-robin to a local subset of subtasks, so it avoids a full network shuffle when you scale by an integer factor"
     C: "RESCALE guarantees ordering"
     D: "They are identical"
   answer: [B]
-  explanation: "RESCALE distributes to a subset of downstream subtasks (local where possible), cheaper than REBALANCE's all-to-all when the parallelism ratio is integral."
+  explanation: "RESCALE distributes records to a subset of downstream subtasks (local where possible). It costs less than the all-to-all distribution of REBALANCE when the parallelism ratio is an integer."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/operators/overview/"
 
 - id: FLK-11-q8
   type: multi
-  prompt: "Which are legitimate reasons raising parallelism may not help a backpressured job? Select all that apply."
+  prompt: "Which are legitimate reasons why a higher parallelism may not help a backpressured job? Select all that apply."
   options:
-    A: "The bottleneck is a hot key (skew), not under-parallelism"
+    A: "The bottleneck is a hot key (skew), not low parallelism"
     B: "A slow external sink is the real limit"
     C: "Higher parallelism multiplies state and checkpoint cost"
     D: "FORWARD always redistributes for you"
   answer: [A, B, C]
-  explanation: "Skew, a slow sink, and state/checkpoint cost all limit the benefit of raw parallelism. FORWARD does NOT redistribute, so D is false."
+  explanation: "Skew, a slow sink, and the cost of state and checkpoints all limit the benefit of raw parallelism. FORWARD does NOT redistribute, so D is false."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/execution/parallel/"

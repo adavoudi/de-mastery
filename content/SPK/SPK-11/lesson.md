@@ -2,31 +2,37 @@
 
 ## Why watermarks and state exist
 
-SPK-10 streams were *stateless*: each input row produced an output row and nothing had to be
-remembered between rows. The interesting streams aren't like that. A per-window count, a dedup, a
-stream-stream join, an SCD2 upsert — all of them must **remember** something across micro-batches:
-the running count for each window, the ids seen recently, the current version of each dimension row.
-That memory is **state**, kept in the state store inside the checkpoint.
+The streams in SPK-10 were *stateless*. Each input row produced an output row. Nothing had to be
+remembered between rows. The more interesting streams are not like that. These all must **remember**
+something across micro-batches:
 
-State can't grow forever. If you keep every window's count and every id you've ever seen, memory
-grows without bound and the job eventually dies. The mechanism that bounds state is the
-**watermark**: a moving threshold on **event time** that says *"I will not wait for data older than
-this."* Once event time has advanced past a window's end plus the watermark delay, the window is
-**finalized**, its result can be emitted (even in `append` mode), and its state is dropped. Data
-that arrives *later* than the watermark is **late** and is discarded.
+- a per-window count
+- a dedup
+- a stream-stream join
+- an SCD2 upsert
 
-This is exactly the problem you know from building **SCD2 dimensions over late-arriving facts**: how
-long do you keep a dimension "open" waiting for a correction, and what do you do with a change that
-shows up after you've already closed the version? The watermark is the streaming formalization of
-that "how long do we wait" decision.
+They remember the running count for each window, the ids that they saw recently, or the current version
+of each dimension row. That memory is **state**. Spark keeps it in the state store inside the checkpoint.
+
+State cannot grow forever. Suppose you keep the count of every window and every id that you ever saw.
+The memory grows without a limit, and the job eventually dies. The **watermark** bounds the state. It is
+a moving threshold on **event time**. It says *"I will not wait for data older than this."* When event
+time moves past the end of a window plus the watermark delay, the window is **finalized**. Spark can
+emit its result (even in `append` mode), and it drops the state of the window. Data that arrives
+*later* than the watermark is **late**, and Spark discards it.
+
+You know this problem from **SCD2 dimensions over late-arriving facts**. How long do you keep a dimension
+"open" and wait for a correction? What do you do with a change that arrives after you closed the
+version? The watermark is the streaming form of the decision "how long do we wait".
 
 ## Event time vs processing time
 
-**Event time** is when the thing happened (a column in the data: `event_ts`). **Processing time**
-is when Spark happened to see it. Correct streaming analytics use *event time*, because that's the
-only time that is stable under replay, reordering, and delay. If you window by processing time, the
-same input produces different results depending on when the job ran — a cardinal sin for anything
-that must be reproducible (think SOX). The watermark is defined on an **event-time** column:
+**Event time** is when the event happened (a column in the data: `event_ts`). **Processing time**
+is when Spark saw the event. Correct streaming analytics use *event time*. Event time is the only
+time that stays stable when data is replayed, reordered, or delayed. Suppose you make windows by
+processing time. Then the same input gives different results, depending on when the job ran. This is a
+serious error for anything that must be reproducible (think SOX). You define the watermark on an
+**event-time** column:
 
 ```python
 events.withWatermark("event_ts", "10 minutes") \
@@ -34,62 +40,64 @@ events.withWatermark("event_ts", "10 minutes") \
       .count()
 ```
 
-Here Spark tracks the max `event_ts` seen; the watermark trails it by 10 minutes. A 5-minute window
-`[00:00, 00:05)` is finalized once the watermark passes `00:05`, i.e. once an event with
-`event_ts >= 00:15` arrives. Events for that window arriving after that are dropped as late.
+Here, Spark tracks the maximum `event_ts` that it saw. The watermark is 10 minutes behind it. Spark
+finalizes a 5-minute window `[00:00, 00:05)` when the watermark passes `00:05`. This happens when an
+event with `event_ts >= 00:15` arrives. Spark drops events for that window that arrive after that, as late.
 
 ![A 5-minute window is finalized, emitted once and its state dropped when the watermark (max event time minus 10 min) passes its end; later events for it are late](diagrams/watermark-event-time.svg)
 
 ## Stateful aggregation and the output modes it unlocks
 
-With a watermark, a windowed aggregation can be written in **append** mode: each window is emitted
+With a watermark, you can write a windowed aggregation in **append** mode. Spark emits each window
 exactly once, when it finalizes. (Without a watermark, only `complete`/`update` are legal — SPK-10.)
-This is the clean, bounded way to produce "per 5-minute window per company, the event count",
-suitable for appending to a fact table.
+This is a clean and bounded way to produce "the event count per 5-minute window per company". You can
+append this result to a fact table.
 
-The key testable invariant (docs/TESTING.md): **once all input has arrived and the watermark has
-passed every window, the streaming result equals the batch result over the same in-window events.**
-Late events (beyond the watermark) are *not* in that batch answer — they were legitimately dropped.
+This is the key invariant that you can test (docs/TESTING.md). Suppose all input arrived and the
+watermark passed every window. Then **the streaming result equals the batch result over the same
+in-window events.** The batch answer does not include late events (beyond the watermark). Spark dropped them
+correctly.
 
 ## Streaming deduplication
 
-Duplicates are a fact of streaming life (at-least-once sources, retries). Two tools:
+Duplicates are a normal part of streaming (at-least-once sources, retries). There are two tools:
 
-- `dropDuplicates(["id"])` — remembers every id forever. Correct, but unbounded state.
-- `dropDuplicatesWithinWatermark(["id"])` — with a watermark on event time, only remembers ids
-  within the watermark horizon, then forgets them. Bounded state, at the cost that a duplicate
-  arriving *after* the horizon is no longer recognized (which is fine: that's the same "we don't
-  wait forever" contract). This is new in Spark 3.5+/4.x and is the production-correct dedup.
+- `dropDuplicates(["id"])` — remembers every id forever. It is correct, but the state is unbounded.
+- `dropDuplicatesWithinWatermark(["id"])` — needs a watermark on event time. It remembers ids only
+  within the watermark horizon, and then forgets them. The state is bounded. The cost is this: Spark
+  does not recognize a duplicate that arrives *after* the horizon. This is acceptable, because it is
+  the same contract "we don't wait forever". This function is new in Spark 3.5+/4.x. It is the
+  correct dedup for production.
 
 ## foreachBatch + Iceberg MERGE INTO: streaming SCD2
 
-The sink for a dimension upsert isn't a plain append — it's a **merge**. `foreachBatch` hands you
-each micro-batch as an ordinary (batch) DataFrame, so you can run any batch code, including an
-Iceberg `MERGE INTO`. The SCD2 pattern:
+The sink for a dimension upsert is not a plain append. It is a **merge**. `foreachBatch` gives you
+each micro-batch as an ordinary (batch) DataFrame. So you can run any batch code, including an
+Iceberg `MERGE INTO`. This is the SCD2 pattern:
 
-- Each incoming change for a natural key that **differs** from the current open version must:
-  1. **close** the current open row (set its `valid_to` to the change's effective time, so it is no
-     longer open), and
-  2. **insert** a new open row (new `valid_from`, `valid_to = NULL`, `is_current = true`).
+- Each incoming change for a natural key that **differs** from the current open version must do two things:
+  1. **Close** the current open row. Set its `valid_to` to the effective time of the change, so
+     that the row is no longer open.
+  2. **Insert** a new open row (new `valid_from`, `valid_to = NULL`, `is_current = true`).
 - An unchanged repeat must do nothing.
 
-Done naively, this is two MERGE passes (close, then insert) or one MERGE with careful matched/not-
-matched clauses. The invariants a correct SCD2 must satisfy — and the mutants in the exercise
-violate — are:
+A naive solution uses two MERGE passes (close, then insert). You can also use one MERGE with careful
+matched/not-matched clauses. A correct SCD2 must satisfy these invariants. The mutants in the exercise
+violate them:
 
 - **Exactly one open (`valid_to IS NULL`) row per natural key.** (A mutant that overwrites instead
-  of versioning, or forgets to close the old row, breaks this.)
-- **Versioning, not overwriting.** History is preserved: old versions remain with a closed
+  of versioning, or that does not close the old row, breaks this.)
+- **Versioning, not overwriting.** History is preserved. Old versions remain with a closed
   `valid_to`. (A mutant that overwrites loses history.)
-- **Correct effective dating.** The new version's `valid_from` equals the change time; the old
-  version's `valid_to` equals that same instant (no gaps, no overlaps).
+- **Correct effective dating.** The `valid_from` of the new version equals the change time. The
+  `valid_to` of the old version equals that same instant (no gaps, no overlaps).
 
-Operational notes for `foreachBatch`:
+These are the operational notes for `foreachBatch`:
 
-- The batch DataFrame is re-evaluated per action; call `.persist()` if you use it more than once.
-- Make the merge **idempotent** so a redone batch (recovery) doesn't double-apply. Keying the merge
-  on the natural key + effective time achieves this.
-- Use a **watermark** upstream so the state (and any dedup) stays bounded.
+- Spark re-evaluates the batch DataFrame for each action. Call `.persist()` if you use it more than once.
+- Make the merge **idempotent**, so that a redone batch (recovery) does not apply twice. Key the merge
+  on the natural key + effective time to achieve this.
+- Use a **watermark** upstream, so that the state (and any dedup) stays bounded.
 
 ## From your world
 
@@ -103,12 +111,13 @@ Operational notes for `foreachBatch`:
 
 ## When NOT to use these
 
-- **Don't window by processing time** for anything that must be reproducible — use event time.
-- **Don't use unbounded `dropDuplicates`** on a high-volume stream — the state grows forever; use
+- **Don't make windows by processing time** for anything that must be reproducible. Use event time.
+- **Don't use unbounded `dropDuplicates`** on a high-volume stream. The state grows forever. Use
   the watermarked form.
-- **Don't set a huge watermark delay** to "never lose late data" — you also never finalize windows
-  or free state. The delay encodes a real latency/completeness trade-off; pick it deliberately.
-- **Don't overwrite a dimension row in place** when you need history — that's SCD1; SCD2 versions.
+- **Don't set a huge watermark delay** to "never lose late data". If you do, Spark also never finalizes
+  windows and never frees state. The delay is a real trade-off between latency and completeness. Choose
+  it on purpose.
+- **Don't overwrite a dimension row in place** when you need history. That is SCD1. SCD2 keeps versions.
 
 ## Further reading
 

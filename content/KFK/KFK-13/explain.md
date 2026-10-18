@@ -1,20 +1,20 @@
 # KFK-13 · Explain it back (Feynman)
 
-**Prompt A.** "Define RPO and RTO, then explain why an active/passive MirrorMaker 2 design has a
-non-zero RPO equal to the replication lag, and what determines its RTO. Contrast with a stretched
-cluster. Tie it to a warehouse DR runbook you'd actually write."
+**Prompt A.** "Define RPO and RTO. Then explain why an active/passive MirrorMaker 2 design has a
+non-zero RPO that equals the replication lag, and what determines its RTO. Contrast it with a
+stretched cluster. Link it to a warehouse DR runbook that you would actually write."
 
 **Prompt B.** "A stakeholder wants 'zero data loss and instant failover, cheaply, across two
-regions'. Explain which parts of that are in tension and what you'd actually commit to, with
+regions'. Explain which parts of this request conflict. Explain what you would actually commit to, with
 numbers."
 
-## Rubric — a strong explanation hits these (5–7):
+## Rubric — a strong explanation covers these points (5–7):
 
-- [ ] RPO = tolerable data loss (time); RTO = tolerable downtime (time).
-- [ ] States MM2 is asynchronous, so RPO = replication lag (never 0).
-- [ ] Says RTO for active/passive is dominated by cutover automation.
+- [ ] RPO = tolerable data loss (time). RTO = tolerable downtime (time).
+- [ ] States that MM2 is asynchronous, so RPO = replication lag (never 0).
+- [ ] Says that cutover automation decides most of the RTO for active/passive.
 - [ ] Contrasts a stretched cluster: synchronous, RPO ≈ 0, higher latency, needs ≥3 failure domains.
-- [ ] Mentions offset translation so failed-over consumers resume correctly.
-- [ ] Notes the active/active topic-prefix loop prevention.
-- [ ] Frames the whole thing as a cost/complexity vs RPO/RTO trade (and that "0 RPO + instant +
-      cheap + 2 regions" is not simultaneously achievable).
+- [ ] Mentions offset translation, so that failed-over consumers resume correctly.
+- [ ] Notes that the topic prefix prevents loops in active/active.
+- [ ] Frames the whole topic as a trade of cost/complexity vs RPO/RTO. Notes that "0 RPO + instant
+      failover + cheap + 2 regions" is not possible at the same time.

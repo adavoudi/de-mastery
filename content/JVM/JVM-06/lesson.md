@@ -3,14 +3,18 @@
 ## Why this closes the track
 
 You can write Java, package it, serialize data, and reason about memory. The last productive skill
-is proving it works and fixing it when it doesn't: **JUnit 5** + **AssertJ** for unit tests,
-**Testcontainers** for integration tests against a real Kafka/Postgres, and the ability to **read a
-JVM stack trace** to find the actual cause of a failure. This is the Java version of your dbt tests
-plus a Spark pipeline integration test — and it's exactly what the real job expects.
+is to prove that your code works and to fix it when it does not. This module covers three tools:
+
+- **JUnit 5** + **AssertJ** for unit tests.
+- **Testcontainers** for integration tests against a real Kafka or Postgres.
+- The ability to **read a JVM stack trace** to find the actual cause of a failure.
+
+This is the Java version of your dbt tests plus a Spark pipeline integration test. The real job
+expects exactly this skill.
 
 ## How JUnit 5 and AssertJ work
 
-A test is a method annotated `@Test` in a class ending in `Test`:
+A test is a method annotated `@Test` in a class whose name ends in `Test`:
 
 ```java
 import org.junit.jupiter.api.Test;
@@ -33,22 +37,23 @@ class OrderTotalTest {
 ```
 
 - **JUnit 5** provides the lifecycle: `@Test`, `@BeforeEach`/`@AfterEach`, `@BeforeAll`,
-  `@ParameterizedTest`, `@DisplayName`. The platform runs tests with the JUnit Platform console
-  launcher (that's what grades every Java exercise in this track).
+  `@ParameterizedTest`, `@DisplayName`. The JUnit Platform console launcher runs the tests. This
+  launcher grades every Java exercise in this track.
 - **AssertJ** provides *fluent* assertions: `assertThat(x).isEqualTo(...)`,
   `.containsExactly(...)`, `.hasSize(...)`, `.isCloseTo(v, within(tol))`,
-  `assertThatThrownBy(...).isInstanceOf(...)`. They read like English and give rich failure
-  messages — the Java analogue of `pytest`'s plain `assert` plus good diffs. Use float **tolerance**
-  (`within`) for doubles, never `==`.
+  `assertThatThrownBy(...).isInstanceOf(...)`. They read like English and give detailed failure
+  messages. They are the Java analogue of the plain `assert` of `pytest` plus good diffs. Use a
+  float **tolerance** (`within`) for doubles. Never use `==`.
 
-Good unit tests follow the same rules as the rest of this platform (docs/TESTING.md): assert
-behaviour and invariants, use tolerances for floats, don't assert on timing or which API was called.
+Good unit tests follow the same rules as the rest of this platform (docs/TESTING.md). Assert
+behaviour and invariants. Use tolerances for floats. Do not assert on timing or on which API the
+code called.
 
 ## How Testcontainers works (integration tests)
 
-Unit tests are fast but a Kafka producer/consumer needs a *real* broker. **Testcontainers** spins up
-throwaway Docker containers (a Kafka broker, a Postgres) for the duration of a test and tears them
-down after:
+Unit tests are fast. But a Kafka producer or consumer needs a *real* broker. **Testcontainers**
+starts temporary Docker containers (a Kafka broker, a Postgres) for the duration of a test. It
+removes them after the test:
 
 ```java
 @Testcontainers
@@ -64,17 +69,17 @@ class ProducerIT {
 }
 ```
 
-Testcontainers is the standard for JVM integration tests. **But it needs Docker.** In this platform,
-every graded Kafka exercise must also work with **no Docker**, so we grade the producer/consumer
-round-trip against a **native broker** (the `kafka_broker` fixture starts a real Kafka JVM from the
-vendored tarball — no container), and keep any Docker/Testcontainers assertion as an *optional extra
-layer that skips cleanly when Docker is down*. That's the no-Docker rule in action: the native path
-is what proves your code; the container path is a bonus when a lab is up.
+Testcontainers is the standard for JVM integration tests. **But it needs Docker.** On this
+platform, every graded Kafka exercise must also work with **no Docker**. So we grade the
+producer/consumer round-trip against a **native broker**. The `kafka_broker` fixture starts a real
+Kafka JVM from the vendored tarball, with no container. Any Docker/Testcontainers assertion is an
+*optional extra layer*. It skips cleanly when Docker is down. This is the no-Docker rule in action.
+The native path proves your code. The container path is a bonus when a lab is up.
 
 ## How to read a JVM stack trace
 
-A Java exception prints the exception type, a message, and frames newest-first, with nested causes
-under `Caused by:`:
+A Java exception prints the exception type, a message, and the frames, with the newest frame
+first. It prints nested causes under `Caused by:`:
 
 ```
 java.lang.RuntimeException: pipeline failed
@@ -86,16 +91,19 @@ Caused by: java.lang.NumberFormatException: For input string: "N/A"
     ... 3 more
 ```
 
-Reading rules that save hours:
-- **The *root cause* is the last `Caused by:`** (here `NumberFormatException: For input string:
-  "N/A"`), not the top line. Start there.
-- **The first stack frame in *your* package** (`de.mastery...`) under the root cause is where to
-  look (`Parser.toLong(Parser.java:88)`) — JDK/library frames above it are usually not the bug.
-- `... N more` means "the same frames as the enclosing trace"; it's elision, not a different path.
-- A `NullPointerException` in Java 21 includes a *helpful message* naming what was null — read it.
+These reading rules save hours:
+- **The *root cause* is the last `Caused by:`.** Here it is `NumberFormatException: For input
+  string: "N/A"`. It is not the top line. Start there.
+- **Find the first stack frame in *your* package** (`de.mastery...`) under the root cause. Look
+  there (`Parser.toLong(Parser.java:88)`). The JDK and library frames above it are usually not the
+  bug.
+- `... N more` means "the same frames as the enclosing trace". It leaves out frames. It is not a
+  different path.
+- A `NullPointerException` in Java 21 includes a *helpful message* that names what was null. Read
+  it.
 
-So "find the bug" is a parse: take the deepest cause, then the top frame whose class is in your
-package. That's the exercise.
+So "find the bug" is a parse. Take the deepest cause. Then take the top frame whose class is in
+your package. That is the exercise.
 
 ## From your world
 
@@ -109,13 +117,14 @@ package. That's the exercise.
 
 ## When NOT to do what
 
-- **Don't integration-test what a unit test covers.** Spinning a broker for pure logic is slow and
-  flaky; unit-test the logic, integration-test only the wiring.
-- **Don't assert exact floating-point equality** — use `isCloseTo(v, within(tol))`.
-- **Don't read a stack trace top-down and fix the first line.** The top is usually a wrapper; the
+- **Don't integration-test what a unit test covers.** Starting a broker for pure logic is slow and
+  flaky. Unit-test the logic. Integration-test only the wiring.
+- **Don't assert exact floating-point equality.** Use `isCloseTo(v, within(tol))`.
+- **Don't read a stack trace top-down and fix the first line.** The top is usually a wrapper. The
   **root cause** and the first frame in *your* code are the targets.
-- **Don't rely on Docker for a graded test.** Native broker (or `TopologyTestDriver` for Streams,
-  KFK-08) first; Testcontainers as an optional extra that skips when Docker is unavailable.
+- **Don't rely on Docker for a graded test.** Use the native broker first (or `TopologyTestDriver`
+  for Streams, KFK-08). Use Testcontainers as an optional extra that skips when Docker is
+  unavailable.
 - **Don't `sleep()` in a test** to wait for Kafka. Poll for the expected records with a deadline.
 
 ## Further reading (official)

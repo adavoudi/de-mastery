@@ -1,7 +1,7 @@
 - id: SPK-01-q1
   type: single
   prompt: >-
-    An application's driver process crashes while a long job is running on the
+    The driver process of an application crashes while a long job runs on the
     executors. What happens to the application?
   options:
     A: "The executors elect a new driver and continue."
@@ -11,16 +11,16 @@
   answer: [B]
   explanation: >-
     The driver holds the SparkSession, the plan, and the scheduler. It coordinates
-    everything; there is no failover driver. If it dies, the application dies and its
-    executors are released. Executors can be lost and re-requested, but the driver is a
-    single point of control.
+    everything. There is no failover driver. If the driver dies, the application dies and
+    its executors are released. The application can lose executors and request new ones.
+    But the driver is the single point of control.
   source: "https://spark.apache.org/docs/4.2.0/cluster-overview.html"
 
 - id: SPK-01-q2
   type: single
   prompt: >-
     A stage must process a dataset of 8 partitions. The cluster has 2 executors, each
-    with 2 cores. Ignoring overhead, how many tasks run in parallel at peak?
+    with 2 cores. Ignore overhead. How many tasks run in parallel at peak?
   options:
     A: "8"
     B: "2"
@@ -29,15 +29,15 @@
   answer: [C]
   explanation: >-
     One task processes one partition. Peak parallelism is min(partitions, total cores).
-    Total cores = 2 executors x 2 cores = 4, and there are 8 partitions, so 4 tasks run
-    at once and the other 4 queue. More partitions than cores does not increase peak
-    parallelism; it just means tasks run in waves.
+    Total cores = 2 executors x 2 cores = 4. There are 8 partitions. So 4 tasks run
+    at the same time and the other 4 wait in a queue. More partitions than cores does not
+    increase peak parallelism. It only means that tasks run in waves.
   source: "https://spark.apache.org/docs/4.2.0/cluster-overview.html"
 
 - id: SPK-01-q3
   type: single
   prompt: >-
-    In which deploy mode does the driver run on a node inside the cluster rather than on
+    In which deploy mode does the driver run on a node inside the cluster, and not on
     the machine that submitted the application?
   options:
     A: "client"
@@ -46,10 +46,10 @@
     D: "standalone"
   answer: [B]
   explanation: >-
-    In cluster mode the driver is launched inside the cluster, so the submitting machine
-    can disconnect. In client mode the driver runs on the submitting machine. 'standalone'
-    is a cluster manager, not a deploy mode; 'local' collapses driver and executors into
-    one JVM.
+    In cluster mode, the cluster starts the driver inside the cluster. So the submitting
+    machine can disconnect. In client mode, the driver runs on the submitting machine.
+    'standalone' is a cluster manager, not a deploy mode. 'local' puts the driver and the
+    executors in one JVM.
   source: "https://spark.apache.org/docs/4.2.0/submitting-applications.html"
 
 - id: SPK-01-q4
@@ -62,9 +62,9 @@
     D: "It only works for streaming workloads."
   answer: [B]
   explanation: >-
-    Spark Connect decouples the client from the server. The client builds an unresolved
-    logical plan and ships it over gRPC; the server resolves, optimizes (Catalyst still
-    runs server-side), and executes it. A thin client means no local JVM is required and a
+    Spark Connect separates the client from the server. The client builds an unresolved
+    logical plan and sends it over gRPC. The server resolves, optimizes, and executes the
+    plan. Catalyst still runs on the server. A thin client does not need a local JVM. A
     client crash does not kill the job.
   source: "https://spark.apache.org/docs/4.2.0/spark-connect-overview.html"
 
@@ -78,33 +78,34 @@
     D: "Apache Flink"
   answer: [A, B, C]
   explanation: >-
-    Spark SQL/DataFrames, Structured Streaming, MLlib, GraphX, and the Pandas API all ride
-    on Spark Core (the RDD engine, scheduler, shuffle, memory manager). Flink is a separate
-    project, not a Spark module.
+    Spark SQL/DataFrames, Structured Streaming, MLlib, GraphX, and the Pandas API all use
+    Spark Core (the RDD engine, scheduler, shuffle, memory manager). Flink is a separate
+    project. It is not a Spark module.
   source: "https://spark.apache.org/docs/4.2.0/index.html"
 
 - id: SPK-01-q6
   type: single
   prompt: >-
-    You have 40 GB of Parquet in S3 and a transformation expressible entirely as SQL that
-    your Redshift warehouse already runs well. Which is the best reason to NOT reach for
+    You have 40 GB of Parquet in S3. A transformation that you can write entirely in SQL
+    already runs well in your Redshift warehouse. What is the best reason to NOT use
     Spark here?
   options:
     A: "Spark cannot read Parquet."
-    B: "At this size and with pure SQL, a warehouse (or DuckDB/Polars on one box) is simpler and typically faster; Spark's shuffle and JVM overhead is a tax you don't need."
+    B: "At this size and with pure SQL, a warehouse (or DuckDB/Polars on one box) is simpler and typically faster; Spark's shuffle and JVM overhead is a cost you don't need."
     C: "Spark cannot express SQL."
     D: "Spark requires the data to be under 1 GB."
   answer: [B]
   explanation: >-
-    Spark shines when data is too big for one machine or when you need one engine across
-    many stores / arbitrary logic. For ~40 GB of pure-SQL work a warehouse or a single-node
-    engine is simpler and often faster; Spark's distributed overhead is unjustified.
+    Spark is a good choice when the data is too big for one machine. It is also a good
+    choice when you need one engine across many stores or arbitrary logic. For ~40 GB of
+    pure-SQL work, a warehouse or a single-node engine is simpler and often faster. The
+    distributed overhead of Spark has no benefit here.
   source: "https://spark.apache.org/docs/4.2.0/cluster-overview.html"
 
 - id: SPK-01-q7
   type: single
   prompt: >-
-    Which analogy to a Redshift cluster is the most accurate for Spark's components?
+    Which analogy to a Redshift cluster is the most accurate for the components of Spark?
   options:
     A: "Driver = compute node; executor = leader node."
     B: "Driver = leader node (plans/coordinates); executors = compute nodes/slices (do the row-crunching)."
@@ -112,7 +113,7 @@
     D: "The cluster manager is the driver."
   answer: [B]
   explanation: >-
-    The driver plans and coordinates like the Redshift leader node; executors do the
-    parallel scanning/aggregating like compute nodes and their slices. The cluster manager
-    is a separate layer that allocates the machines.
+    The driver plans and coordinates, like the Redshift leader node. Executors do the
+    parallel scanning and aggregating, like compute nodes and their slices. The cluster
+    manager is a separate layer that allocates the machines.
   source: "https://spark.apache.org/docs/4.2.0/cluster-overview.html"

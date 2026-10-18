@@ -2,70 +2,81 @@
 
 ## Why it exists
 
-Producers and consumers let you move events; they don't help you *transform* a
-stream — join it, aggregate it, window it, keep state. You could build that
-yourself with a consumer + a database + manual offset handling + crash recovery,
-but you'd reinvent a hard distributed-systems problem. **Kafka Streams** is a Java
-library (not a cluster) that turns a topology of stream operations into a fault
--tolerant, exactly-once application whose **state lives in Kafka itself**
-(changelog topics), so a crashed instance recovers by replaying its changelog.
+Producers and consumers move events. They do not help you *transform* a stream.
+Transform means join it, aggregate it, window it, or keep state.
+
+You could build this yourself with a consumer, a database, manual offset handling,
+and crash recovery. But then you would rebuild a hard distributed-systems problem.
+
+**Kafka Streams** is a Java library (not a cluster). It turns a topology of stream
+operations into a fault-tolerant, exactly-once application. The **state lives in
+Kafka itself** (in changelog topics). When an instance crashes, a new instance
+recovers the state by replaying the changelog.
 
 For an analytics engineer, Kafka Streams is "dbt joins and aggregations, but
-continuous and incremental." The order↔customer join you'd write as a dbt model
-becomes a streaming enrichment that updates as either side changes.
+continuous and incremental." You can write the order-to-customer join as a dbt
+model. In Kafka Streams, it becomes a streaming enrichment. It updates when either
+side changes.
 
 ## How it works
 
-- **KStream vs KTable.** A `KStream` is an **append-only event stream** — each
-  record is an independent fact (an order placed). A `KTable` is a **changelog
-  view of the latest value per key** — a dimension (the current customer record).
-  A `GlobalKTable` is a fully-replicated table available on every instance, for
-  non-co-partitioned lookups.
+- **KStream vs KTable.** A `KStream` is an **append-only event stream**. Each
+  record is an independent fact (for example, an order placed). A `KTable` is a
+  **changelog view of the latest value per key**. It is a dimension (for example,
+  the current customer record). A `GlobalKTable` is a table that Kafka Streams
+  fully replicates to every instance. You use it for lookups on topics that are
+  not co-partitioned.
 - **Joins.**
-  - `KStream`–`KTable` (what you'll build): for each event, look up the current
-    table value for its key and emit an enriched event. The stream drives output;
-    a table update alone emits nothing. Requires **co-partitioning** (same key,
-    same partition count).
-  - `KStream`–`GlobalKTable`: lookup by a key *derived* from the stream record, no
-    co-partitioning needed.
-  - `KStream`–`KStream`: windowed, symmetric.
-- **State stores & changelogs.** Aggregations and joins keep local state in a
-  **state store** (RocksDB by default), backed by a compacted **changelog topic**.
-  That is how state survives a crash: the store is rebuilt from the changelog.
+  - `KStream`–`KTable` (the join you will build): for each event, look up the
+    current table value for its key and emit an enriched event. The stream drives
+    the output. A table update alone emits nothing. This join requires
+    **co-partitioning** (same key, same partition count).
+  - `KStream`–`GlobalKTable`: look up by a key *derived* from the stream record.
+    This join does not need co-partitioning.
+  - `KStream`–`KStream`: windowed and symmetric.
+- **State stores and changelogs.** Aggregations and joins keep local state in a
+  **state store** (RocksDB by default). A compacted **changelog topic** backs the
+  state store. This is how state survives a crash: Kafka Streams rebuilds the
+  store from the changelog.
 
 ![Each input partition gets its own task and state store, and every store writes to a matching changelog partition](diagrams/streams-task-state.svg)
 
 - **Windows.** Tumbling, hopping, sliding, and session windows group events by
-  **event time** for time-bounded aggregations (e.g. revenue per 1-minute window).
-- **EOS v2** (exactly-once semantics) ties consume → process → produce → state
-  update into one transaction, so a failure doesn't double-count.
+  **event time**. They give time-bounded aggregations (for example, revenue per
+  1-minute window).
+- **EOS v2** (exactly-once semantics) puts consume, process, produce, and state
+  update into one transaction. A failure does not double-count.
 - **Testing without a cluster.** `TopologyTestDriver` runs a whole topology
-  **in-process, with no broker and no RocksDB**: you pipe input records in and read
-  output records out, deterministically, in event time. This is the primary way
-  Kafka Streams logic is unit-tested (and how this exercise is graded).
+  **in-process, with no broker and no RocksDB**. You send input records in and
+  read output records out. The result is deterministic, in event time. This is the
+  main way to unit-test Kafka Streams logic. This exercise also uses it for
+  grading.
 
 ## From your world
 
-- A `KTable` of customers **is a conformed dimension**: one current row per key,
-  updated in place. A `KStream` of orders is the **fact stream** at order grain.
-- The `KStream`–`KTable` join is the fact-to-dimension lookup you write in a dbt
-  staging/mart model, except it fires per event and reflects the dimension's
-  latest value at the moment the event arrives.
+- A `KTable` of customers **is a conformed dimension**. It has one current row per
+  key, and updates change that row in place. A `KStream` of orders is the **fact
+  stream** at order grain.
+- The `KStream`–`KTable` join is the fact-to-dimension lookup that you write in a
+  dbt staging or mart model. The difference is that it runs for each event. It
+  uses the latest value of the dimension at the moment the event arrives.
 - Co-partitioning (same key, same partition count on both sides) is the streaming
-  version of making sure your join keys line up — a mismatch silently drops or
-  misroutes joins, like a bad grain in a Kimball model.
-- A windowed revenue aggregation is a continuously-maintained periodic snapshot
-  fact table.
+  version of making sure your join keys match. A mismatch silently drops or
+  misroutes joins. This is like a bad grain in a Kimball model.
+- A windowed revenue aggregation is a periodic snapshot fact table that Kafka
+  Streams maintains continuously.
 
 ## When NOT to use it
 
-- When a periodic batch join in the warehouse is sufficient — Kafka Streams adds
-  operational weight (state stores, changelogs, rebalancing) you don't need for a
-  nightly dimension.
-- Cross-language shops: Streams is JVM-only. If your team won't run Java services,
-  Flink SQL or ksqlDB may fit better.
-- Heavy multi-stream SQL-style analytics with complex joins — a SQL engine
-  (Flink SQL) is often more ergonomic than hand-built topologies.
+- Do not use it when a periodic batch join in the warehouse is enough. Kafka
+  Streams adds operational weight (state stores, changelogs, rebalancing). You do
+  not need this weight for a nightly dimension.
+- Do not use it in a team that works in several languages. Streams runs only on
+  the JVM. If your team does not run Java services, Flink SQL or ksqlDB may fit
+  better.
+- Do not use it for heavy SQL-style analytics over many streams with complex
+  joins. A SQL engine (Flink SQL) is often easier to use than hand-built
+  topologies.
 
 ## Further reading
 

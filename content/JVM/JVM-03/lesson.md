@@ -2,18 +2,23 @@
 
 ## Why a build tool and a fat jar
 
-To deploy a dbt project you ship the repo; to deploy a Python job you build a wheel or a container.
-To deploy a **Flink or Kafka Streams job** you ship a *jar* — and almost always a **fat jar** (also
-called an uber jar or shaded jar): a single jar that contains your code *and* all its dependency
-classes, so the cluster can run it with nothing else on the classpath. Getting this wrong is one of
-the most common "it runs locally but `ClassNotFoundException` on the cluster" failures in Flink/
-Kafka work, so it's worth doing by hand once.
+To deploy a dbt project, you ship the repo. To deploy a Python job, you build a wheel or a
+container. To deploy a **Flink or Kafka Streams job**, you ship a *jar*. Almost always it is a
+**fat jar** (also called an uber jar or shaded jar). A fat jar is a single jar that contains your
+code *and* the classes of all its dependencies. The cluster can run it with nothing else on the
+classpath.
 
-Java has two mainstream build tools. **Maven** uses XML (`pom.xml`) and a fixed lifecycle;
-**Gradle** uses a programmable build script. We use **Gradle with the Kotlin DSL**
-(`build.gradle.kts`) because it is what most new Flink/Kafka projects use and because the typed
-Kotlin DSL gives you IDE completion. You'll meet Maven's `pom.xml` in the wild, so the lesson shows
-the mapping, but the exercise is Gradle.
+If you get this wrong, you see a common failure in Flink and Kafka work: the job runs locally, but
+it throws `ClassNotFoundException` on the cluster. So build a fat jar by hand once.
+
+Java has two mainstream build tools:
+
+- **Maven** uses XML (`pom.xml`) and a fixed lifecycle.
+- **Gradle** uses a programmable build script.
+
+We use **Gradle with the Kotlin DSL** (`build.gradle.kts`). Most new Flink and Kafka projects use
+it. Also, the typed Kotlin DSL gives you IDE completion. You will see Maven's `pom.xml` in real
+projects, so the lesson shows the mapping. The exercise uses Gradle.
 
 ## How Gradle works (the parts you need)
 
@@ -37,25 +42,30 @@ dependencies {
 
 Key ideas:
 
-- **Configurations = dependency scopes.** `implementation` is on the compile and runtime classpath
-  and *goes into the fat jar*. `compileOnly` is compile-only — use it for libraries the runtime
-  already provides (Flink itself, the Kafka broker's classes) so you don't bundle a second copy and
-  cause version conflicts. `runtimeOnly` is runtime-only (e.g. a logging backend). `testImplementation`
-  is tests only. Choosing the right scope is the single most important fat-jar skill.
-- **Tasks** are the units of work (`compileJava`, `jar`, `test`). You can register your own, e.g. a
-  `fatJar` task.
-- **The default `jar` is thin** — it contains only *your* classes, not dependencies. Running it on
-  a bare JVM throws `NoClassDefFoundError` for the first dependency class touched. A **fat jar**
-  copies the dependency classes in.
+- **Configurations = dependency scopes.** Each scope has its own use:
+  - `implementation` is on the compile and runtime classpath. It *goes into the fat jar*.
+  - `compileOnly` is for compile time only. Use it for libraries that the runtime already provides
+    (Flink itself, the Kafka broker's classes). Then you do not bundle a second copy, and you avoid
+    version conflicts.
+  - `runtimeOnly` is for runtime only (for example a logging backend).
+  - `testImplementation` is for tests only.
+
+  Choosing the right scope is the most important fat-jar skill.
+- **Tasks** are the units of work (`compileJava`, `jar`, `test`). You can register your own task,
+  for example a `fatJar` task.
+- **The default `jar` is thin.** It contains only *your* classes, not the dependencies. If you run
+  it on a bare JVM, the JVM throws `NoClassDefFoundError` for the first dependency class that the
+  code uses. A **fat jar** copies the dependency classes in.
 
 ![Thin jar has only your classes and fails with NoClassDefFoundError; fat jar bundles implementation dependencies while compileOnly Flink stays out](diagrams/thin-vs-fat-jar.svg)
 
 ### Building a fat jar
 
-The production approach is the **Shadow plugin** (`com.gradleup.shadow`), which also *relocates*
-(renames) bundled packages to avoid version clashes — e.g. shading `com.google.guava` to
-`myapp.shaded.guava` so your Guava can't collide with Flink's. In this offline lab we build the fat
-jar with a plain `Jar` task so you see exactly what goes in; the concepts transfer directly:
+The production approach is the **Shadow plugin** (`com.gradleup.shadow`). It also *relocates*
+(renames) bundled packages to avoid version clashes. For example, it can shade `com.google.guava`
+to `myapp.shaded.guava`, so your Guava cannot collide with Flink's. In this offline lab, we build
+the fat jar with a plain `Jar` task. Then you see exactly what goes in. The concepts transfer
+directly:
 
 ```kotlin
 tasks.register<Jar>("fatJar") {
@@ -71,16 +81,19 @@ tasks.register<Jar>("fatJar") {
 }
 ```
 
-**Why the excludes matter (the no-conflict rule).** When you merge many jars:
-- Signed jars ship `META-INF/*.SF/.DSA/.RSA`. Copy them into a jar whose contents changed and the
-  JVM's jar verifier throws `SecurityException: Invalid signature file digest`. You must drop them.
+**Why the excludes matter (the no-conflict rule).** When you merge many jars, three things can
+happen:
+
+- Signed jars ship `META-INF/*.SF/.DSA/.RSA`. Suppose you copy them into a jar whose contents
+  changed. Then the JVM's jar verifier throws `SecurityException: Invalid signature file digest`.
+  You must drop these files.
 - Two dependencies may each contain the same file (`module-info.class`, `META-INF/services/...`,
-  `reference.conf`). Without a `duplicatesStrategy`, Gradle *fails the build*; with `EXCLUDE` you
-  keep the first (deterministic). Real services files should instead be *merged* (Shadow does this
-  with `mergeServiceFiles()`), which is why Shadow exists — but excluding signatures and setting a
-  duplicates strategy is the minimum for a jar that runs.
-- A correct fat jar has **exactly one** copy of each class — no duplicate entries — and a
-  `Main-Class` so `java -jar app-all.jar` works.
+  `reference.conf`). Without a `duplicatesStrategy`, Gradle *fails the build*. With `EXCLUDE`, you
+  keep the first file (this is deterministic). You should *merge* real services files instead.
+  Shadow does this with `mergeServiceFiles()`, and this is why Shadow exists. But for a jar that
+  runs, the minimum is to exclude signatures and to set a duplicates strategy.
+- A correct fat jar has **exactly one** copy of each class, with no duplicate entries. It also has
+  a `Main-Class`, so `java -jar app-all.jar` works.
 
 ## From your world
 
@@ -95,19 +108,20 @@ tasks.register<Jar>("fatJar") {
 
 ## When NOT to build a fat jar (or do it differently)
 
-- **Don't bundle the runtime.** Mark Flink/Spark/Kafka-provided libraries `compileOnly`
-  (`provided` in Maven). Bundling Flink into a Flink job jar causes classloader conflicts and
-  bloats the artifact — a classic cause of `LinkageError`/`NoSuchMethodError` on the cluster.
-- **Don't fat-jar a library.** Publish libraries thin with declared dependencies; only *application/
-  job* artifacts are fat.
-- **Don't ignore signature files or duplicate classes.** Those are the two bugs that make a fat jar
-  compile fine but fail at runtime.
-- **Prefer the Shadow plugin in production** for relocation and service-file merging; the manual
-  `Jar` task here is to learn the mechanics offline.
+- **Don't bundle the runtime.** Mark libraries that Flink, Spark or Kafka provide as `compileOnly`
+  (`provided` in Maven). Suppose you bundle Flink into a Flink job jar. Then you get classloader
+  conflicts, and the artifact becomes larger than it needs to be. This is a classic cause of
+  `LinkageError` and `NoSuchMethodError` on the cluster.
+- **Don't fat-jar a library.** Publish libraries as thin jars with declared dependencies. Only
+  *application/job* artifacts are fat.
+- **Don't ignore signature files or duplicate classes.** These two bugs make a fat jar compile
+  without errors but fail at runtime.
+- **Prefer the Shadow plugin in production.** It gives you relocation and service-file merging. The
+  manual `Jar` task here helps you learn the mechanics offline.
 
-> **FLK will reuse this.** The Flink lab in Phase 4 submits a job jar built exactly this way (your
-> code fat-bundled, Flink marked `compileOnly`), so the packaging skill you build here is the one
-> you'll use to run a real Flink job.
+> **FLK will reuse this.** The Flink lab in Phase 4 submits a job jar built exactly this way. Your
+> code is bundled in the fat jar, and Flink is marked `compileOnly`. The packaging skill that you
+> build here is the one you will use to run a real Flink job.
 
 ## Further reading (official)
 

@@ -1,9 +1,9 @@
 # STH-08 / 01 — Cost model for three freshness tiers on one mart
 
-Price the **same** revenue mart at three freshness tiers — `hours`, `minutes`, `seconds` — in
-four buckets: **compute**, **storage**, **operations**, and the **total**. The point is the
-*shape*: seconds > minutes > hours, driven by always-on compute and on-call. Your numbers are
-checked **within ±20%** of a reference model, so plain deterministic arithmetic is all you need.
+Price the **same** revenue mart at three freshness tiers: `hours`, `minutes` and `seconds`. Use four
+buckets: **compute**, **storage**, **operations** and the **total**. The point is the *shape*:
+seconds > minutes > hours. Always-on compute and on-call drive this shape. The tests check your
+numbers **within ±20%** of a reference model. So you only need plain deterministic arithmetic.
 
 ## What you implement (`solution.py`)
 
@@ -38,25 +38,25 @@ operations   = ops_hours_month * ops_hour_usd
 total        = compute + storage + operations
 ```
 
-- `compute` captures the always-on cluster (and the compaction work scales with the same
-  always-on fraction — it is compute, not storage).
+- `compute` captures the always-on cluster. The compaction work scales with the same always-on
+  fraction. It is compute, not storage.
 - `storage` is the retained bytes plus the small-file/snapshot overhead (`file_overhead`).
-- `operations` is the monitoring / on-call people cost.
-- Return a dict with float values for `compute`, `storage`, `operations`, `total`.
+- `operations` is the people cost of monitoring and on-call.
+- Return a dict with float values for `compute`, `storage`, `operations` and `total`.
 
 ## Constraints
 
-- Deterministic and pure: no I/O, no randomness, no wall-clock.
-- The three tier multipliers come from `TIERS`; the workload and prices are identical across
+- The function is deterministic and pure: no I/O, no randomness, no wall-clock.
+- The three tier multipliers come from `TIERS`. The workload and the prices are identical across
   tiers (same data, different freshness).
 
-## How you're graded (G1–G6)
+## How the tests grade you (G1–G6)
 
-- A **reference cost model** (independent implementation of the formulas above) is the oracle;
-  every component and the total must be **within ±20%** of it, for all three tiers and across
-  several workloads.
-- The **ordering** must hold: `total(seconds) > total(minutes) > total(hours)` and the same for
-  compute and operations.
+- A **reference cost model** is the oracle. It is an independent implementation of the formulas
+  above. Every component and the total must be **within ±20%** of it. This applies to all three
+  tiers and to several workloads.
+- The **ordering** must hold: `total(seconds) > total(minutes) > total(hours)`. The same ordering
+  must hold for compute and operations.
 - `total` must equal `compute + storage + operations` (no missing bucket).
-- Storage must respond to `retention_days` and `file_overhead`; compute must respond to the
-  tier's `always_on_fraction` (not be flat across tiers).
+- Storage must respond to `retention_days` and `file_overhead`. Compute must respond to the
+  `always_on_fraction` of the tier (it must not be flat across tiers).

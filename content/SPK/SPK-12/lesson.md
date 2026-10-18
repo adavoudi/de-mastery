@@ -2,45 +2,51 @@
 
 ## Why this module exists
 
-A Spark job that "ran" is not a Spark job that is "correct". The difference is tests. You already
-live this in dbt: `not_null`, `unique`, `relationships`, `accepted_values`, and bespoke singular
-tests run in CI on every PR, and a model doesn't ship until they pass. Spark pipelines deserve the
-same discipline, and this module is about building it: writing tests that **catch the bugs that
-matter**, laying out a project so it is testable and deployable, and configuring it for the runtime
-you'll actually run on (EMR Serverless, Databricks, Glue).
+A Spark job that "ran" is not always a Spark job that is "correct". Tests make the difference. You
+already do this in dbt. These tests run in CI on every PR: `not_null`, `unique`, `relationships`,
+`accepted_values`, and bespoke singular tests. A model does not ship until they pass. Spark pipelines
+need the same discipline. This module teaches you how to build it:
 
-The deepest idea here is the one this whole platform is built on (docs/TESTING.md): **a test is only
-as good as the wrong code it rejects.** A test suite that passes your correct pipeline but also
-passes a buggy one is worthless. So in this module *you* are graded the way our exercises are: your
-tests must pass a known-good pipeline **and fail every planted buggy one.**
+- Write tests that **catch the bugs that matter**.
+- Lay out a project so that you can test and deploy it.
+- Configure it for the runtime that you will really use (EMR Serverless, Databricks, Glue).
+
+The most important idea here is the idea that this whole platform uses (docs/TESTING.md): **a test is
+only as good as the wrong code that it rejects.** Suppose a test suite passes your correct pipeline and
+also passes a buggy pipeline. That suite has no value. So in this module, the platform grades *you* in the
+same way that it grades our exercises. Your tests must pass a known-good pipeline **and fail every
+planted buggy pipeline.**
 
 ## Testing Spark transformations
 
-- **Make transformations pure functions of DataFrames.** `def clean(orders: DataFrame) -> DataFrame`
-  is testable; a function that reads a hard-coded path and writes another is not. Inject inputs,
-  return outputs — the same reason dbt models are `ref()`-composed rather than side-effecting.
-- **Assert data, not incidentals.** Use `pyspark.testing.assertDataFrameEqual` (Spark 3.5+/4.x),
-  which compares rows with options for order and float tolerance. Assert row-level equality, schema
-  where it matters, and invariants (`sum(debits) == sum(credits)`, no NULL keys, one open SCD2 row
-  per key). Do **not** assert column order, which API was used, or exact floats without tolerance —
-  those make tests brittle and reject correct refactors (the "too strict" failure mode).
-- **Build small, deterministic inputs.** `spark.createDataFrame([...], schema)` with a handful of
-  rows that cover the edge cases (NULLs, duplicates, boundary dates) beats a giant fixture. Fix
-  seeds and partition counts so runs are reproducible.
-- **Use an oracle for non-trivial logic.** Compute the expected answer a second, independent way
-  (DuckDB, plain Python) and compare — two engines agreeing is strong evidence the expectation is
-  right (the "wrong expected output" failure mode).
-- **Assert plan properties for performance.** Parse `df.explain()`; assert "a `BroadcastHashJoin`
-  is present", "no `BatchEvalPython`", "at most one `Exchange`". Never assert wall-clock time except
+- **Make transformations pure functions of DataFrames.** You can test `def clean(orders: DataFrame) ->
+  DataFrame`. You cannot easily test a function that reads a hard-coded path and writes to another
+  path. Pass inputs in and return outputs. This is the same reason why dbt models are composed with
+  `ref()` and do not have side effects.
+- **Assert data, not incidental details.** Use `pyspark.testing.assertDataFrameEqual` (Spark
+  3.5+/4.x). It compares rows, and it has options for row order and float tolerance. Assert
+  row-level equality. Assert the schema where it matters. Assert invariants (`sum(debits) ==
+  sum(credits)`, no NULL keys, one open SCD2 row per key). Do **not** assert column order, which API
+  you used, or exact floats without tolerance. These assertions make tests brittle and reject correct
+  refactors (the "too strict" failure mode).
+- **Build small, deterministic inputs.** Use `spark.createDataFrame([...], schema)` with a few
+  rows that cover the edge cases (NULLs, duplicates, boundary dates). This is better than a giant
+  fixture. Fix the seeds and the partition counts, so that runs are reproducible.
+- **Use an oracle for logic that is not trivial.** Compute the expected answer in a second,
+  independent way (DuckDB, plain Python) and compare. If two engines agree, this is strong evidence
+  that the expectation is right (the "wrong expected output" failure mode).
+- **Assert plan properties for performance.** Parse `df.explain()`. Assert "a `BroadcastHashJoin`
+  is present", "no `BatchEvalPython`", "at most one `Exchange`". Never assert wall-clock time, except
   as a generous timeout.
 
 ## What makes a test suite *strong* (the mutation mindset)
 
-A good suite kills **mutants** — plausible wrong versions of the code. Before you trust your tests,
-ask: *if someone changed `sum` to `avg`, dropped the dedup, used an inner join instead of a left,
-or converted FX at the wrong date — would a test fail?* If not, you are missing a test. This is
-exactly how our platform validates its own exercises (gate G4). In this module you'll write a suite
-and we run it against planted bugs; the ones your suite misses are the tests you still owe.
+A good suite kills **mutants**. A mutant is a plausible wrong version of the code. Before you trust your
+tests, ask this question: *if someone changed `sum` to `avg`, removed the dedup, used an inner join
+instead of a left join, or converted FX at the wrong date, would a test fail?* If not, you are missing
+a test. Our platform validates its own exercises in exactly this way (gate G4). In this module, you
+write a suite, and we run it against planted bugs. The bugs that your suite misses show the tests that
+you still need to write.
 
 ## Project layout and packaging
 
@@ -58,26 +64,36 @@ my_pipeline/
   pyproject.toml       # pinned deps; entry point for the job
 ```
 
-Principles: pure transforms separated from I/O; config injected (so the same code runs locally and
-on the cluster); dependencies pinned; the entry point is a thin `main` that wires read → transform →
-write. This is the dbt discipline — models are logic, sources/targets are configured — applied to
-PySpark.
+These are the principles:
+
+- Keep pure transforms separate from I/O.
+- Inject the config, so that the same code runs locally and on the cluster.
+- Pin the dependencies.
+- Make the entry point a thin `main` that connects read → transform → write.
+
+This is the dbt discipline applied to PySpark. Models contain the logic. Sources and targets are
+configured.
 
 ## Configuration for the runtime (and the cost of getting it wrong)
 
-The same code runs on different managed runtimes, each with its own knobs:
+The same code runs on different managed runtimes. Each runtime has its own settings:
 
-- **EMR Serverless** — you pick application sizing (driver/executor vCPU, memory) and pay per
-  vCPU-second and GB-second while jobs run. Right-size and set `spark.dynamicAllocation` sensibly.
-- **Databricks** — jobs clusters, Photon, autoscaling; Unity Catalog governs tables.
-- **Glue** — DPUs, bookmarks for incrementality.
+- **EMR Serverless** — you choose the application size (driver/executor vCPU, memory). You pay per
+  vCPU-hour and GB-hour while jobs run, billed per second. Right-size the application and set
+  `spark.dynamicAllocation` sensibly.
+- **Databricks** — jobs clusters, Photon, autoscaling. Unity Catalog governs tables.
+- **Glue** — DPUs, and bookmarks for incremental processing.
 
-Key config that affects both correctness and cost: `spark.sql.shuffle.partitions` (too high = tiny
-files + overhead; too low = spill/skew), AQE (`spark.sql.adaptive.enabled`, usually on in prod),
-and memory fractions. The 💲 optional lab in this module runs SPK-07's partition-sizing job at 50 GB
-on **EMR Serverless** so you can see real cost — it is **optional and ungraded**, must be
-**tagged** `project=de-mastery`, and ships a **teardown script**. The exercise does *not* call
-AWS for you; it gives you a cost estimate, the commands, and the teardown so you choose whether to
+These settings affect both correctness and cost:
+
+- `spark.sql.shuffle.partitions` (too high = tiny files + overhead; too low = spill/skew)
+- AQE (`spark.sql.adaptive.enabled`, usually on in prod)
+- memory fractions
+
+The 💲 optional lab in this module runs the partition-sizing job of SPK-07 at 50 GB
+on **EMR Serverless**, so that you can see real cost. The lab is **optional and ungraded**. You must
+**tag** it `project=de-mastery`. It includes a **teardown script**. The exercise does *not* call
+AWS for you. It gives you a cost estimate, the commands, and the teardown. You choose whether to
 spend the money.
 
 ## From your world
@@ -92,12 +108,12 @@ spend the money.
 
 ## When NOT to over-invest
 
-- **Don't assert incidental details** (column order, specific API). You'll block legitimate
-  refactors — the "too strict" trap.
-- **Don't test Spark itself.** Trust that `groupBy` works; test *your* logic.
-- **Don't run huge data in unit tests.** Keep them seconds-fast with tiny inputs; save scale runs
-  for a separate, optional, cost-flagged job (the 💲 EMR run here).
-- **Don't hard-code paths/credentials** in code "to make the test pass" — inject config instead.
+- **Don't assert incidental details** (column order, specific API). You will block legitimate
+  refactors. This is the "too strict" trap.
+- **Don't test Spark itself.** Trust that `groupBy` works. Test *your* logic.
+- **Don't run huge data in unit tests.** Keep the tests fast (seconds) with tiny inputs. Keep scale runs
+  for a separate, optional job that is flagged for cost (the 💲 EMR run here).
+- **Don't hard-code paths or credentials** in code "to make the test pass". Inject config instead.
 
 ## Further reading
 

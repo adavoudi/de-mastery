@@ -1,7 +1,7 @@
 # Enrich orders with customers (KStream-KTable join)
 
 Build a Kafka Streams topology that enriches an **orders** fact stream with the
-**customers** dimension — the continuous version of a fact-to-dimension join.
+**customers** dimension. It is the continuous version of a fact-to-dimension join.
 
 ## Topics
 
@@ -21,26 +21,27 @@ Provide a public class `de.commerce.Enricher` with:
 public static Topology build()
 ```
 
-that returns a topology which:
+It must return a topology that does these steps:
 
 1. Reads `orders` as a **KStream** and `customers` as a **KTable**.
-2. Performs a **KStream-KTable join**: for each order, look up the current
-   customer name for that key and emit `"<name>|<amount>"`.
+2. Performs a **KStream-KTable join**. For each order, it looks up the current
+   customer name for that key and emits `"<name>|<amount>"`.
 3. Writes the result to the `enriched` topic.
 
-Join semantics to respect:
+Join semantics to follow:
 
 - The **stream drives** output. An order emits exactly one enriched record *if*
-  the customer key is already present in the table.
-- An order for a customer **not yet in the table** produces **no output** (an
-  inner KStream-KTable join). If that customer later appears, only *future* orders
-  are enriched — a past order is not retroactively emitted.
+  the customer key is already in the table.
+- An order for a customer who is **not yet in the table** produces **no output**
+  (an inner KStream-KTable join). If that customer appears later, only *future*
+  orders are enriched. The join does not emit a past order again.
 
 ## Grading
 
-Graded with `TopologyTestDriver` (no broker, no RocksDB, deterministic event
-time). The tests pipe customers and orders in a controlled order and assert the
-exact enriched output records — including that an order before its customer exists
-yields nothing, and that a customer update changes the enrichment of later orders.
+The tests use `TopologyTestDriver` (no broker, no RocksDB, deterministic event
+time). They send customers and orders in a controlled order. They assert the exact
+enriched output records. They check that an order before its customer exists
+yields nothing. They also check that a customer update changes the enrichment of
+later orders.
 
 This runs with no Docker (vendored JDK + kafka-streams-test-utils).

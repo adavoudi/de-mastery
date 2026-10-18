@@ -2,47 +2,51 @@
 
 ## Why Catalyst exists
 
-When you write a dbt model you describe *what* you want, and Redshift's planner decides *how* to
-get it: which join order, whether to use a hash or merge join, which predicates to push down to the
-scan. You trust `EXPLAIN` to show you that plan and you read it to find the slow part. Spark's
-**Catalyst** optimizer plays exactly that role for DataFrame and SQL queries. You hand it a
-declarative description; it rewrites it through a pipeline of plans and hands the physical plan to
-the execution engine.
+When you write a dbt model, you describe *what* you want. The Redshift planner decides *how* to
+get it. It decides the join order. It decides whether to use a hash join or a merge join. It
+decides which predicates to push down to the scan. You use `EXPLAIN` to see that plan, and you
+read it to find the slow part. The Spark **Catalyst** optimizer does exactly this job for
+DataFrame and SQL queries. You give it a declarative description. It rewrites the description
+through a pipeline of plans. Then it gives the physical plan to the execution engine.
 
-The reason this matters: in Spark the single biggest lever on a job's cost is not CPU, it is **how
-much data gets read and shuffled**. Catalyst's job is to minimise both — by reading fewer columns
-(column pruning), fewer rows (predicate pushdown), and doing fewer/cheaper shuffles. If you can
-read a physical plan, you can tell at a glance whether Catalyst got those wins or whether something
-in your code blocked them. That skill is the whole module.
+This matters for the following reason. In Spark, the biggest influence on the cost of a job is
+not CPU. It is **how much data Spark reads and shuffles**. Catalyst tries to reduce both. It
+reads fewer columns (column pruning). It reads fewer rows (predicate pushdown). It does fewer
+shuffles, or cheaper shuffles. If you can read a physical plan, you can quickly see two things.
+Did Catalyst get these gains? Or did something in your code block them? This skill is the whole
+module.
 
 ## How it works
 
-Catalyst runs a query through four stages, and `df.explain("extended")` shows all of them:
+Catalyst runs a query through four stages. `df.explain("extended")` shows all of them:
 
-1. **Parsed / unresolved logical plan** — the query as written, column and table references not yet
-   bound.
-2. **Analyzed logical plan** — references resolved against the catalog; types checked.
-3. **Optimized logical plan** — rule-based rewrites: constant folding, predicate pushdown toward
-   the source, column pruning, filter reordering, `null` propagation, boolean simplification. This
-   is where `WHERE` clauses migrate down next to the scan.
-4. **Physical plan** — one or more candidate physical plans; a cost model picks one. This is what
-   actually runs. `df.explain("formatted")` prints it as a numbered tree with a details section.
+1. **Parsed / unresolved logical plan** — the query as you wrote it. Column and table references
+   are not yet bound.
+2. **Analyzed logical plan** — Spark has resolved the references against the catalog and checked
+   the types.
+3. **Optimized logical plan** — rule-based rewrites. These include constant folding, predicate
+   pushdown toward the source, column pruning, filter reordering, `null` propagation, and boolean
+   simplification. Here the `WHERE` clauses move down next to the scan.
+4. **Physical plan** — Spark makes one or more candidate physical plans. A cost model picks one.
+   This plan is what actually runs. `df.explain("formatted")` prints it as a numbered tree with a
+   details section.
 
 ![Catalyst rewrites the logical plan, then picks one physical plan to run](diagrams/catalyst-pipeline.svg)
 
-Two properties you will read off the physical plan over and over:
+You will read two properties from the physical plan again and again:
 
-- **`PushedFilters`** — printed on the `FileScan`/`BatchScan` node. A non-empty list means Spark
-  pushed those predicates *into* the Parquet reader, so whole row groups are skipped using
-  footer statistics and never deserialized. An empty list on a filter you expected to push is a
-  red flag (often caused by wrapping the column in a non-pushable function, or a Python UDF).
-- **`ReadSchema`** — the set of columns the scan actually reads. If you only need two columns, a
-  narrow `ReadSchema` proves column pruning happened. Parquet is columnar (FND-01), so a narrow
-  read is a real I/O win, not a cosmetic one.
+- **`PushedFilters`** — Spark prints it on the `FileScan`/`BatchScan` node. A non-empty list
+  means that Spark pushed those predicates *into* the Parquet reader. Spark then skips whole row
+  groups by using footer statistics, and it never deserializes them. Suppose you expected to push
+  a filter, and the list is empty. This is a red flag. Often the cause is a function that wraps
+  the column and cannot be pushed, or a Python UDF.
+- **`ReadSchema`** — the set of columns that the scan actually reads. Suppose you need only two
+  columns. A narrow `ReadSchema` proves that column pruning happened. Parquet is columnar
+  (FND-01), so a narrow read is a real I/O gain, not only a cosmetic one.
 
-Spark exposes the modes through `explain(mode)` where mode is `"simple"`, `"extended"`,
-`"codegen"`, `"cost"`, or `"formatted"`. `"formatted"` is the one you read for structure;
-`"cost"` adds the optimizer's row/size estimates.
+Spark gives you these modes through `explain(mode)`: `"simple"`, `"extended"`, `"codegen"`,
+`"cost"`, or `"formatted"`. Read `"formatted"` to see the structure. `"cost"` adds the row and
+size estimates of the optimizer.
 
 ## From your world
 
@@ -54,21 +58,23 @@ Spark exposes the modes through `explain(mode)` where mode is `"simple"`, `"exte
 | Planner reorders joins / pushes `WHERE` early | optimized logical plan rewrites | rule-based, before physical |
 | `DISTSTYLE`/`SORTKEY` influence the plan | AQE + partitioning (SPK-07/08) | later modules |
 
-The mental model is identical to reading a Redshift `EXPLAIN`: find where the rows are, see what
-got filtered before the expensive step, confirm the scan is narrow.
+The mental model is the same as when you read a Redshift `EXPLAIN`. Find where the rows are.
+See what Spark filtered before the expensive step. Confirm that the scan is narrow.
 
 ## When NOT to lean on it
 
-- **Don't block pushdown with a Python UDF.** A `BatchEvalPython` or opaque UDF in a filter stops
-  Catalyst from pushing that predicate; keep filters in native column expressions (SPK-09).
-- **Don't assume a `.cache()` or an intermediate `collect()` makes it faster.** Materialising a
-  wide intermediate can read *more* data than letting Catalyst prune and push through the whole
-  pipeline. Read the plan before and after.
-- **Don't micro-tune the plan by hand** when the real fix is upstream (fewer columns selected, a
-  filter written against the partition column, a broadcast hint — SPK-06). Catalyst is good; your
-  job is to not get in its way.
-- **`explain` is not a benchmark.** It tells you the shape of the work, not the wall-clock. Use it
-  to reason about I/O and shuffles, not to claim one plan is "X ms faster".
+- **Do not block pushdown with a Python UDF.** Take a `BatchEvalPython` or an opaque UDF in a
+  filter. It stops Catalyst from pushing that predicate. Keep filters in native column
+  expressions (SPK-09).
+- **Do not assume that a `.cache()` or an intermediate `collect()` makes the job faster.** You
+  materialize a wide intermediate result. Then Spark can read *more* data than if Catalyst
+  prunes and pushes through the whole pipeline. Read the plan before and after.
+- **Do not tune the plan by hand in small ways** when the real fix is upstream. Examples of an
+  upstream fix: select fewer columns, write a filter against the partition column, or add a
+  broadcast hint (SPK-06). Catalyst is good. Your job is to not block it.
+- **`explain` is not a benchmark.** It tells you the shape of the work. It does not tell you the
+  wall-clock time. Use it to reason about I/O and shuffles. Do not use it to claim that one plan
+  is "X ms faster".
 
 ## Further reading
 

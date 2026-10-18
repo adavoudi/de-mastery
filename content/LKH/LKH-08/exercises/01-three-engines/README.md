@@ -1,8 +1,8 @@
 # Same query on Spark, DuckDB (and optionally Trino)
 
-One Iceberg table, `local.lkh08.sales`, partitioned by `region`, columns
-`(id INT, region STRING, cat STRING, amt DOUBLE)`. You will run the **same logical query** on two
-engines and prove they agree, then explain the plan.
+You have one Iceberg table, `local.lkh08.sales`. It is partitioned by `region`. Its columns are
+`(id INT, region STRING, cat STRING, amt DOUBLE)`. You run the **same logical query** on two
+engines and prove that they agree. Then you explain the plan.
 
 The query (fixed):
 
@@ -15,33 +15,33 @@ GROUP BY cat
 
 ## Part 1 — two engines, graded (no Docker)
 
-In `solution.py` implement:
+In `solution.py`, implement:
 
 - `run_spark(spark, table)` → run the query against the Iceberg `table` and return the result
-  (a Spark DataFrame with columns `cat`, `total`).
+  (a Spark DataFrame with the columns `cat`, `total`).
 - `run_duckdb(con, parquet_glob)` → run the **same** query with DuckDB over `parquet_glob`
-  (`read_parquet(parquet_glob, hive_partitioning=true)`), returning columns `cat`, `total`.
+  (`read_parquet(parquet_glob, hive_partitioning=true)`). Return the columns `cat`, `total`.
 
-The test writes the same rows to the Iceberg table *and* to a Hive-partitioned Parquet copy, then
-asserts your two results agree (independent engines ⇒ a trustworthy oracle).
+The test writes the same rows to the Iceberg table *and* to a Hive-partitioned Parquet copy. Then
+it asserts that your two results agree (independent engines ⇒ a trustworthy oracle).
 
 ## Part 2 — explain the plan, graded
 
-Fill `plan_facts.yaml` with facts you read from Spark's actual physical plan
-(`run_spark(...).explain("formatted")` or `df.explain(True)`). For this query on this
-partitioned-by-`region` table:
+Fill `plan_facts.yaml` with facts that you read from the actual physical plan of Spark
+(`run_spark(...).explain("formatted")` or `df.explain(True)`). The table is partitioned by
+`region`. For this query on this table, answer these questions:
 
 - `data_filter_pushed`: is the `amt > 50` predicate pushed into the scan (predicate pushdown)?
 - `partition_filter_pushed`: is the `region = 'r1'` predicate used to prune partitions (it appears
-  in the scan's pushed filters)?
+  in the pushed filters of the scan)?
 
-Set each to `true` or `false` to match what the plan **actually** shows. The test extracts the truth
-from the real plan (it parses the Iceberg `BatchScan` `filters=...`) and fails you if your claim
-disagrees — so look at the plan, don't guess.
+Set each key to `true` or `false` to match what the plan **actually** shows. The test extracts the
+truth from the real plan (it parses the `filters=...` of the Iceberg `BatchScan`). It fails you if
+your claim disagrees. So look at the plan and do not guess.
 
 ## Part 3 — Trino, optional (needs the `core` lab)
 
-If the `core` lab is running, a third test runs the same query on Trino and checks it agrees with
-Spark. **This part skips cleanly when the lab is down** — it is a bonus layer, not required for the
-grade. You may start it with `uv run de lab up core` (never run `de lab down`; other learners/agents
-may be using it).
+Suppose the `core` lab is running. Then a third test runs the same query on Trino and checks that
+it agrees with Spark. **This part skips cleanly when the lab is down.** It is a bonus layer. The
+grade does not require it. You may start the lab with `uv run de lab up core`. Never run
+`de lab down`, because other learners or agents may use the lab.

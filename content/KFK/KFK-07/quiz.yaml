@@ -7,7 +7,7 @@
     C: "A read-only replica event"
     D: "A rollback"
   answer: [B]
-  explanation: "op='r' is emitted for every existing row during the initial snapshot, before streaming begins. Downstream logic should treat it like an initial insert. c/u/d are create/update/delete."
+  explanation: "Debezium emits op='r' for every existing row during the initial snapshot, before streaming begins. Downstream logic should treat it like an initial insert. c/u/d are create/update/delete."
   source: "https://debezium.io/documentation/reference/3.0/connectors/postgresql.html#postgresql-events"
 
 - id: KFK-07-q2
@@ -19,7 +19,7 @@
     C: "The first message of a snapshot"
     D: "A heartbeat message on an idle connector"
   answer: [B]
-  explanation: "After a delete, Debezium emits a tombstone (key present, value null) so a log-compacted topic can physically drop the key. It carries no new state; SCD2 derivation skips it because the preceding op='d' already closed the row."
+  explanation: "After a delete, Debezium emits a tombstone (key present, value null). Then a log-compacted topic can physically drop the key. The tombstone carries no new state. SCD2 derivation skips it, because the preceding op='d' already closed the row."
   source: "https://debezium.io/documentation/reference/3.0/connectors/postgresql.html#postgresql-delete-events"
 
 - id: KFK-07-q3
@@ -29,33 +29,33 @@
     A: "A task hosts multiple connectors"
     B: "A connector splits its work into one or more tasks that move the data"
     C: "A connector and a task are the same thing"
-    D: "Tasks are only used by sink connectors"
+    D: "Only sink connectors use tasks"
   answer: [B]
-  explanation: "A connector is a configured integration; it divides the work into tasks (e.g. per table or per partition range) that the workers execute. tasks.max bounds how many run."
+  explanation: "A connector is a configured integration. It divides the work into tasks (for example per table or per partition range), and the workers run the tasks. tasks.max limits how many tasks run."
   source: "https://kafka.apache.org/documentation/#connect_concepts"
 
 - id: KFK-07-q4
   type: single
-  prompt: "Which Postgres setting must be enabled for Debezium logical CDC to work?"
+  prompt: "Which Postgres setting must you enable for Debezium logical CDC to work?"
   options:
     A: "wal_level=logical"
     B: "fsync=off"
     C: "hot_standby=on"
     D: "synchronous_commit=remote_apply"
   answer: [A]
-  explanation: "Logical decoding (which Debezium uses) requires wal_level=logical plus a replication slot. The slot retains WAL until consumed, so a stalled consumer can fill the disk — a key operational caveat."
+  explanation: "Logical decoding (which Debezium uses) requires wal_level=logical plus a replication slot. The slot retains WAL until the connector consumes it. So a stalled consumer can fill the disk. This is a key operational caveat."
   source: "https://debezium.io/documentation/reference/3.0/connectors/postgresql.html#setting-up-postgresql"
 
 - id: KFK-07-q5
   type: single
-  prompt: "For an UPDATE event when deriving SCD2, what is the correct action?"
+  prompt: "You derive SCD2 and you get an UPDATE event. What is the correct action?"
   options:
     A: "Overwrite the current row in place"
     B: "Close the current version (set valid_to) and open a new one from the after image"
-    C: "Only insert a new row, leaving the old one open"
+    C: "Only insert a new row and leave the old one open"
     D: "Delete the old row and insert the new one with no validity window"
   answer: [B]
-  explanation: "SCD2 keeps history: an update closes the prior version (valid_to = change ts, is_current=false) and opens a new current version from the after image. Overwriting loses history; leaving the old row open gives two current versions."
+  explanation: "SCD2 keeps history. An update closes the earlier version (valid_to = change ts, is_current=false). It opens a new current version from the after image. Overwriting loses history. If you leave the old row open, you get two current versions."
   source: "https://debezium.io/documentation/reference/3.0/connectors/postgresql.html#postgresql-update-events"
 
 - id: KFK-07-q6
@@ -63,33 +63,33 @@
   prompt: "What problem does the outbox pattern solve?"
   options:
     A: "It compresses change events"
-    B: "It decouples the public event schema from internal table shapes, written atomically with the business transaction"
+    B: "It decouples the public event schema from internal table shapes, and the service writes it atomically with the business transaction"
     C: "It replaces the need for a replication slot"
     D: "It guarantees exactly-once delivery to all consumers"
   answer: [B]
-  explanation: "Services write domain events to an outbox table in the SAME transaction as the business change; Debezium streams the outbox. Consumers get a stable, curated event contract instead of raw internal tables, and the write is atomic with the state change."
+  explanation: "Services write domain events to an outbox table in the SAME transaction as the business change. Debezium streams the outbox. Consumers get a stable, curated event contract instead of raw internal tables. The write is atomic with the state change."
   source: "https://debezium.io/documentation/reference/3.0/transformations/outbox-event-router.html"
 
 - id: KFK-07-q7
   type: single
   prompt: "What is the purpose of a dead-letter queue (DLQ) in Kafka Connect?"
   options:
-    A: "To store the connector's offsets"
-    B: "To capture records that fail conversion/processing so one bad record doesn't halt the pipeline"
+    A: "To store the offsets of the connector"
+    B: "To capture records that fail conversion or processing, so that one bad record does not halt the pipeline"
     C: "To hold tombstones until compaction"
     D: "To buffer records during a rebalance"
   answer: [B]
-  explanation: "A DLQ routes records that fail (e.g. deserialization) to a separate topic, letting the connector keep running. You then inspect/replay the DLQ instead of blocking the whole task on a poison record."
+  explanation: "A DLQ routes records that fail (for example, at deserialization) to a separate topic. The connector keeps running. Then you inspect or replay the DLQ. You do not block the whole task on a poison record."
   source: "https://kafka.apache.org/documentation/#connect_errorreporting"
 
 - id: KFK-07-q8
   type: multi
-  prompt: "Which fields appear in a Debezium Postgres change event value? Select all that apply."
+  prompt: "Which fields appear in the value of a Debezium Postgres change event? Select all that apply."
   options:
     A: "op (the operation code)"
     B: "before (row image before the change)"
     C: "after (row image after the change)"
     D: "source (LSN, commit ts_ms, table metadata)"
   answer: [A, B, C, D]
-  explanation: "The envelope carries op, before, after and source. before is null for inserts/reads; after is null for deletes; source holds the LSN, commit timestamp and table identity used to order and audit events."
+  explanation: "The envelope carries op, before, after and source. before is null for inserts/reads. after is null for deletes. source holds the LSN, the commit timestamp and the table identity. You use them to order and audit events."
   source: "https://debezium.io/documentation/reference/3.0/connectors/postgresql.html#postgresql-events"

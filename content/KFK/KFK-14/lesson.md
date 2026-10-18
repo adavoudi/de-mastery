@@ -2,54 +2,80 @@
 
 ## Why this module exists
 
-Running Kafka in production is a sequence of incidents, and the engineers who are good at it all do
-the same thing: **read the symptom, name the cause, apply the smallest fix, verify health is
-restored.** That is a runbook — exactly what you already keep for a warehouse or data mart. This
-module turns the six most common Kafka incidents into that loop, as `diagnose(...)` + `fix(...)`
-functions you can run and test, so the muscle memory is real rather than a slide you half-remember
-at 3 a.m.
+Running Kafka in production is a sequence of incidents. The engineers who are good at it all do the
+same thing: **read the symptom, name the cause, apply the smallest fix, and verify that health is
+restored.** This is a runbook. You already keep a runbook for a warehouse or data mart. This module
+turns the six most common Kafka incidents into that loop. Each incident is a `diagnose(...)` and a
+`fix(...)` function that you can run and test. Then the skill becomes a habit. It is not a slide that
+you half-remember at 3 a.m.
 
-The uniting idea is **health is measurable**: under-replicated partitions, ISR size, consumer lag,
-retention, listener reachability and reassignment throttle are all things an operator can *query*
-with `AdminClient` / the CLI and *assert on*. A fix is only a fix if the metric returns to healthy.
+The main idea is that **health is measurable**. An operator can *query* these values with
+`AdminClient` or the CLI and *assert on* them:
+- under-replicated partitions
+- ISR size
+- consumer lag
+- retention
+- listener reachability
+- reassignment throttle
+
+A fix is only a fix if the metric returns to healthy.
 
 ## The six incidents and how you reason about them
 
-**1. Under-replicated partitions (URP) after a broker loss.** A broker dies; every partition it
-hosted a replica for now has fewer in-sync replicas than its replication factor. Symptom: URP > 0
-(`kafka-topics.sh --describe --under-replicated-partitions`, or `isr` shorter than `replicas` in the
-metadata). Cause: a replica is offline. Fix: bring the broker back (it rejoins and re-syncs) or
-reassign the replica to a live broker. Health = URP back to 0.
+**1. Under-replicated partitions (URP) after a broker loss.**
+- What happens: a broker dies. Every partition that had a replica on it now has fewer in-sync
+  replicas than its replication factor.
+- Symptom: URP > 0 (`kafka-topics.sh --describe --under-replicated-partitions`, or `isr` shorter than
+  `replicas` in the metadata).
+- Cause: a replica is offline.
+- Fix: bring the broker back (it rejoins and syncs again), or reassign the replica to a live broker.
+- Health: URP is back to 0.
 
-**2. `min.insync.replicas` violation.** A topic has `min.insync.replicas=N`, but fewer than `N`
-replicas are in the ISR (e.g. after losing brokers). With `acks=all`, producers now get
-`NOT_ENOUGH_REPLICAS` — writes are rejected to protect durability. Symptom: produce fails with that
-error even though a leader exists. Cause: ISR < min.insync.replicas. Fix: restore replicas (preferred)
-or, as a deliberate availability trade-off, lower `min.insync.replicas` to what the ISR can meet.
+**2. `min.insync.replicas` violation.**
+- What happens: a topic has `min.insync.replicas=N`, but fewer than `N` replicas are in the ISR (for
+  example, after you lose brokers). With `acks=all`, producers now get `NOT_ENOUGH_REPLICAS`. Kafka
+  rejects writes to protect durability.
+- Symptom: the produce fails with that error, even though a leader exists.
+- Cause: ISR < min.insync.replicas.
+- Fix: restore the replicas (preferred). Or lower `min.insync.replicas` to a value that the ISR can
+  meet. This is a deliberate trade for availability.
 
-**3. Stuck / lagging consumer group.** Lag keeps rising and never drains (a poison record, a dead
-member, or offsets reset wrong). Symptom: `end_offset - committed_offset` large and not decreasing.
-Cause: the group isn't making progress. Fix depends on root cause — here, when the group is simply
-positioned wrong, reset its offsets (`kafka-consumer-groups.sh --reset-offsets`) to a sane point so
-it can catch up. Health = lag drops.
+**3. Stuck / lagging consumer group.**
+- What happens: lag keeps rising and never drains. The cause can be a poison record, a dead member, or
+  offsets that were reset in a wrong way.
+- Symptom: `end_offset - committed_offset` is large and not decreasing.
+- Cause: the group is not making progress. The fix depends on the root cause. Here, the group is
+  simply at a wrong position.
+- Fix: reset its offsets (`kafka-consumer-groups.sh --reset-offsets`) to a sane point, so it can
+  catch up.
+- Health: lag drops.
 
-**4. Retention misconfiguration.** A topic's `retention.ms` (or `retention.bytes`) is set far too
-low, so data is deleted almost immediately and consumers that fall behind lose records. Symptom:
-retention below a sane floor; data vanishing. Cause: a bad topic config. Fix: set `retention.ms`
-to a correct value with `kafka-configs.sh --alter`. Health = retention at/above the floor.
+**4. Retention misconfiguration.**
+- What happens: the `retention.ms` (or `retention.bytes`) of a topic is far too low. Kafka deletes
+  data almost immediately, and consumers that fall behind lose records.
+- Symptom: retention is below a sane floor, and data disappears.
+- Cause: a bad topic config.
+- Fix: set `retention.ms` to a correct value with `kafka-configs.sh --alter`.
+- Health: retention is at or above the floor.
 
-**5. Wrong `advertised.listeners`.** A broker advertises an address clients can't actually reach
-(e.g. an internal hostname, or the bind address `0.0.0.0`), so clients get the metadata but then
-fail to connect to the returned endpoint. Symptom: bootstrap works but produce/consume times out
-with connection errors to a bogus host. Cause: `advertised.listeners` ≠ a client-reachable address.
-Fix: set `advertised.listeners` to the reachable host:port. (You diagnose this from the broker
-config, because a live broker with broken advertised listeners can't be reached at all.)
+**5. Wrong `advertised.listeners`.**
+- What happens: a broker advertises an address that clients cannot reach (for example, an internal
+  hostname, or the bind address `0.0.0.0`). Clients get the metadata, but then they cannot connect to
+  the endpoint that Kafka returned.
+- Symptom: bootstrap works, but produce and consume time out with connection errors to a bogus host.
+- Cause: `advertised.listeners` is not an address that clients can reach.
+- Fix: set `advertised.listeners` to the reachable host:port.
+- Note: you diagnose this from the broker config, because you cannot reach a live broker that has
+  broken advertised listeners.
 
-**6. Throttled reassignment that never finishes.** A partition reassignment was started with a
-replication **throttle** set too low, so the move is bandwidth-starved and `--verify` stays "in
-progress" forever. Symptom: reassignment in progress long after it should be done; the throttle
-rate is tiny. Cause: `leader.replication.throttled.rate` / `follower...` too low (or left set).
-Fix: raise or remove the throttle so the move completes. Health = reassignment verifies complete.
+**6. Throttled reassignment that never finishes.**
+- What happens: someone started a partition reassignment with a replication **throttle** that is too
+  low. The move is starved of bandwidth, and `--verify` stays "in progress" forever.
+- Symptom: the reassignment is in progress long after it should be done, and the throttle rate is
+  tiny.
+- Cause: `leader.replication.throttled.rate` / `follower...` is too low (or someone left it set).
+- Fix: raise or remove the throttle, so the move completes.
+- Health: `--verify` reports that the reassignment is complete.
 
 ![Triage the six incidents: match the symptom, run the check, and the likely cause follows](diagrams/incident-triage.svg)
 
@@ -66,14 +92,14 @@ Fix: raise or remove the throttle so the move completes. Health = reassignment v
 
 ## When NOT to / pitfalls
 
-- **Don't lower `min.insync.replicas` as a reflex.** It trades durability for availability; prefer
-  restoring replicas. Lower it only as a conscious, temporary decision.
-- **Don't reset consumer offsets to `earliest` blindly** — you may reprocess huge volumes. Reset to
-  the smallest point that unblocks the group.
-- **Don't "fix" URP by deleting the topic.** The replica just needs a live broker; deletion is data
+- **Don't lower `min.insync.replicas` as a reflex.** It trades durability for availability. Prefer to
+  restore the replicas. Lower it only as a conscious, temporary decision.
+- **Don't reset consumer offsets to `earliest` blindly.** You may reprocess huge volumes. Reset to the
+  smallest point that unblocks the group.
+- **Don't "fix" URP by deleting the topic.** The replica only needs a live broker. Deletion is data
   loss.
-- **Don't leave a reassignment throttle set after it completes** — it will throttle future
-  replication too (`--verify` removes it when done).
+- **Don't leave a reassignment throttle set after the reassignment completes.** It will also throttle
+  future replication (`--verify` removes it when the move is done).
 
 ## Further reading
 

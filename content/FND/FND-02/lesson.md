@@ -2,67 +2,89 @@
 
 ## Why it exists
 
-Once data lives on many machines, the single most important decision is **which machine holds
-which row**. That mapping — the **partitioning scheme** — determines whether a join or aggregation
-can run *locally* (each node works on its own data and nobody talks) or must **shuffle** (every
-node sends rows to every other node across the network). Shuffles are the dominant cost in
-distributed data processing. Partitioning exists to avoid them.
+Suppose your data lives on many machines. Then the most important decision is **which machine
+holds which row**. This mapping is the **partitioning scheme**. It decides whether a join or an
+aggregation can run in one of two ways:
 
-Every engine you will learn is making the same bet: *co-locate the rows that need to be combined,
-and the expensive network step disappears.* Spark's partitioner, Kafka's partition key, Iceberg's
-sort/partition spec and Redshift's DISTKEY are four spellings of one idea.
+- *Locally*: each node works on its own data and no node talks to another node.
+- With a **shuffle**: every node sends rows to every other node across the network.
+
+Shuffles are the largest cost in distributed data processing. Partitioning exists to avoid them.
+
+Every engine that you will learn makes the same bet. The bet is this: *put the rows that you
+need to combine in the same place, and the expensive network step disappears.* Four names
+describe this one idea:
+
+- Spark's partitioner
+- Kafka's partition key
+- Iceberg's sort/partition spec
+- Redshift's DISTKEY
 
 ## How it works
 
-**Hash partitioning.** Assign row → `hash(key) % P` for `P` partitions. Rows with the same key
-always land in the same partition, so a `GROUP BY key` or a join on `key` is local. Hashing
-spreads *distinct* keys evenly, but it does **nothing** about a single hot key: if 40% of rows
-have `customer_id = 0` (a common NULL-substitute), 40% land in one partition. That is **skew**.
+**Hash partitioning.** Assign each row to partition `hash(key) % P`, where `P` is the number of
+partitions. Rows with the same key always go to the same partition. So a `GROUP BY key` or a join
+on `key` is local.
 
-**Range partitioning.** Sort the key space into `P` contiguous ranges (e.g. by sampling the data
-to pick boundaries) and assign row → the range its key falls in. Great for range scans and ordered
-output; sensitive to boundary choice. Bad boundaries cause skew just like a hot hash key.
+Hashing spreads *distinct* keys evenly. But it does **nothing** about a single hot key. Suppose
+40% of rows have `customer_id = 0` (a common substitute for NULL). Then 40% of rows go to one
+partition. This is **skew**.
 
-**Why shuffles are expensive.** A shuffle writes every record to a local spill file keyed by its
-target partition (the *map* side), then every target partition pulls its slice from every source
-(the *reduce* side). Cost scales with the data moved and the number of connections
-(`O(mappers × reducers)`). It serializes, hits disk, and crosses the network — the three slowest
-things a data system does. Fewer and smaller shuffles is most of performance tuning.
+**Range partitioning.** Sort the key space into `P` contiguous ranges. For example, sample the
+data to pick the boundaries. Then assign each row to the range that contains its key. This works
+well for range scans and ordered output. But it is sensitive to the choice of boundaries. Bad
+boundaries cause skew, in the same way as a hot hash key.
 
-**Detecting skew.** You rarely see skew in the plan; you see it in the **partition size
-distribution**. One partition 10× the median means one task runs 10× longer and the whole stage
-waits on it (a *straggler*). The practical signal: compute per-partition row counts (or bytes) and
-look at `max / mean`. A ratio near 1.0 is balanced; a large ratio means a hot key, and the fix is
-*salting* (append a random suffix to the hot key to spread it, then re-aggregate) or a different
-key.
+**Why shuffles are expensive.** A shuffle has two sides:
+
+1. The *map* side writes every record to a local spill file. The file is keyed by the target
+   partition of the record.
+2. The *reduce* side works next. Every target partition pulls its slice from every source.
+
+The cost grows with the data moved and with the number of connections (`O(mappers × reducers)`).
+A shuffle serializes data, uses the disk, and crosses the network. These are the three slowest
+things that a data system does. Most performance tuning means fewer and smaller shuffles.
+
+**Detecting skew.** You rarely see skew in the plan. You see it in the **partition size
+distribution**. Suppose one partition is 10× the median. Then one task runs 10× longer, and the
+whole stage waits for it (a *straggler*).
+
+The practical signal is this: compute the row count (or bytes) of each partition. Then look at
+`max / mean`. A ratio near 1.0 is balanced. A large ratio means a hot key. There are two fixes:
+
+- *Salting*: append a random suffix to the hot key to spread it, then re-aggregate.
+- Use a different key.
 
 ![Rows fan out from map partitions to reduce partitions by hash; the hot-key partition swells into the straggler](diagrams/shuffle-skew.svg)
 
 ## From your world
 
-This is **DISTKEY / DISTSTYLE** by another name. In Redshift:
-- `DISTSTYLE KEY` on `customer_id` is hash partitioning on `customer_id`. Join two tables both
-  distributed on `customer_id` and Redshift does a *collocated* join — no redistribution.
-- `DISTSTYLE EVEN` is round-robin: balanced, but **every** join redistributes, because matching
-  keys aren't co-located.
-- `DISTSTYLE ALL` broadcasts a small dimension to every node — the same trick as a Spark broadcast
-  join (which you'll meet in SPK), avoiding the shuffle for small tables.
+This is **DISTKEY / DISTSTYLE** with other names. In Redshift:
+- `DISTSTYLE KEY` on `customer_id` is hash partitioning on `customer_id`. Suppose you join two
+  tables that are both distributed on `customer_id`. Then Redshift does a *collocated* join, with
+  no redistribution.
+- `DISTSTYLE EVEN` is round-robin. It is balanced, but **every** join redistributes, because
+  matching keys are not in the same place.
+- `DISTSTYLE ALL` broadcasts a small dimension to every node. This is the same technique as a
+  Spark broadcast join (which you will meet in SPK). It avoids the shuffle for small tables.
 
-In your SOX commerce mart, picking `company_id` as a distribution key would be a classic skew
-trap: three companies, wildly different volumes — one slice does most of the work. `customer_id`
-or `order_id` spreads far better. The skew-detection exercise here is exactly the check you'd run
-before trusting a DISTKEY choice.
+In your SOX commerce mart, `company_id` as a distribution key would be a classic skew trap. There
+are three companies with very different volumes, so one slice does most of the work. `customer_id`
+or `order_id` spreads the rows much better. The skew-detection exercise in this module is the
+check that you would run before you trust a DISTKEY choice.
 
 ## When NOT to use it
 
-- **Don't hash-partition on a low-cardinality or skewed key** (a boolean, a status flag,
-  `company_id` with 3 values). You get a handful of giant partitions. Use a high-cardinality key
-  or salt the hot values.
-- **Don't range-partition without sampling** the real data for boundaries — guessed boundaries
+- **Do not hash-partition on a low-cardinality or skewed key** (a boolean, a status flag,
+  `company_id` with 3 values). You get a few giant partitions. Use a high-cardinality key, or
+  salt the hot values.
+- **Do not range-partition without sampling** the real data for boundaries. Guessed boundaries
   create skew and defeat the purpose.
-- **Don't re-partition "just in case."** Each repartition is a full shuffle. Only shuffle when a
-  downstream join/aggregation needs the co-location, and ideally shuffle **once** and reuse.
-- **Don't partition a small table at all** — broadcast it instead (DISTSTYLE ALL / broadcast join).
+- **Do not re-partition "just in case."** Each repartition is a full shuffle. Shuffle only when
+  a later join or aggregation needs the rows in the same place. Ideally, shuffle **once** and
+  reuse the result.
+- **Do not partition a small table at all.** Broadcast it instead (DISTSTYLE ALL / broadcast
+  join).
 
 ## Further reading
 

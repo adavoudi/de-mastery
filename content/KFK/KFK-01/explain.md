@@ -1,12 +1,12 @@
 # KFK-01 · Explain it back (Feynman)
 
-**Prompt A.** "Explain why a Kafka partition is a log and not a queue, and how 'the current state'
-relates to 'the events'. Use the Iceberg-snapshot analogy: what plays the role of a snapshot id,
-and what plays the role of time travel?"
+**Prompt A.** "Explain why a Kafka partition is a log and not a queue. Explain how 'the current
+state' relates to 'the events'. Use the Iceberg-snapshot analogy. What plays the role of a snapshot
+id? What plays the role of time travel?"
 
-**Prompt B.** "A new analytics team wants to build a table from a topic that has been running for a
-year. Explain exactly how they rebuild it from scratch, including how they'd start 'from 09:00 last
-Monday' instead of the very beginning, and what could stop them from going back that far."
+**Prompt B.** "A new analytics team wants to build a table from a topic. The topic is one year old. Explain exactly how they rebuild the table from scratch. Include how they start 'from 09:00
+last Monday' and not from the very beginning. Also explain what can stop them from going back that
+far."
 
 ## Rubric — a strong explanation hits these (5–7):
 

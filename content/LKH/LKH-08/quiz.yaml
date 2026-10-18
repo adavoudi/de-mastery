@@ -1,8 +1,8 @@
 - id: LKH-08-q1
   type: single
   prompt: >-
-    A query on a lakehouse table is slow. In the Spark physical plan you see the filter as a separate
-    Filter node ABOVE the scan, and the scan has no pushed predicate. What does this indicate?
+    A query on a lakehouse table is slow. In the Spark physical plan, you see the filter as a
+    separate Filter node ABOVE the scan. The scan has no pushed predicate. What does this indicate?
   options:
     A: "The engine pushed the filter down optimally"
     B: "The engine is reading all rows and filtering in memory — no predicate pushdown"
@@ -10,9 +10,10 @@
     D: "Partition pruning succeeded"
   answer: [B]
   explanation: >-
-    If the predicate is not recorded in the scan (no PushedFilters / no filters= on the Iceberg
-    BatchScan) and appears only as a Filter node, the engine read everything and filtered late. The
-    fix is to enable/allow pushdown (and prune partitions) so fewer bytes are read.
+    Suppose the scan does not record the predicate (no PushedFilters, no filters= on the Iceberg
+    BatchScan). Suppose the predicate appears only as a Filter node. Then the engine read
+    everything and filtered late. The fix is to enable or allow pushdown (and to prune partitions),
+    so that the engine reads fewer bytes.
   source: "https://spark.apache.org/docs/4.0.0/sql-performance-tuning.html"
 
 - id: LKH-08-q2
@@ -20,14 +21,15 @@
   prompt: "What is the difference between partition pruning and predicate pushdown?"
   options:
     A: "They are the same thing"
-    B: "Partition pruning skips whole partitions using a predicate on the partition column before reading files; predicate pushdown skips files/row-groups within read partitions using column statistics"
+    B: "Partition pruning skips whole partitions with a predicate on the partition column before it reads files. Predicate pushdown skips files/row-groups inside the partitions that it reads, with column statistics"
     C: "Pruning happens after pushdown"
     D: "Pushdown only works on Delta"
   answer: [B]
   explanation: >-
-    Pruning is coarse and first: it eliminates entire partitions by a partition-column predicate.
-    Pushdown pushes the predicate into the scan so file/row-group min-max stats skip chunks within the
-    partitions still read. Both reduce bytes scanned; they operate at different granularities.
+    Pruning is coarse and comes first. It eliminates entire partitions with a partition-column
+    predicate. Pushdown pushes the predicate into the scan. Then file and row-group min-max stats
+    skip chunks inside the partitions that the engine still reads. Both reduce bytes scanned. They
+    work at different granularities.
   source: "https://iceberg.apache.org/docs/1.10.0/spark-queries/"
 
 - id: LKH-08-q3
@@ -35,14 +37,14 @@
   prompt: "Why does an Iceberg sort order (LKH-05) improve file skipping for a filter on the sorted column?"
   options:
     A: "It compresses the data more"
-    B: "Clustering rows by the column gives each data file tight min/max bounds, so files whose range can't match the predicate are skipped"
+    B: "Clustering rows by the column gives each data file tight min/max bounds, so the engine skips files whose range cannot match the predicate"
     C: "It builds a B-tree index"
     D: "It converts the table to Delta"
   answer: [B]
   explanation: >-
-    Sorting clusters similar values together, so each file's min/max on that column is narrow. A
-    predicate can then exclude files whose [min,max] cannot contain matching rows — the same
-    statistics-driven skipping as Redshift zone maps / SORTKEY.
+    Sorting puts similar values together. So the min/max of each file on that column is narrow.
+    Then a predicate can exclude the files whose [min,max] cannot contain matching rows. This is
+    the same skipping with statistics as Redshift zone maps / SORTKEY.
   source: "https://iceberg.apache.org/docs/1.10.0/spark-queries/"
 
 - id: LKH-08-q4
@@ -55,9 +57,9 @@
     D: "Holding delete vectors only"
   answer: [B]
   explanation: >-
-    Puffin files hold auxiliary statistics such as distinct-count sketches. Cost-based optimizers in
-    Trino/Spark read them to choose join order and strategy. Without stats the optimizer guesses —
-    the same reason ANALYZE mattered on Redshift.
+    Puffin files hold auxiliary statistics such as distinct-count sketches. Cost-based optimizers
+    in Trino and Spark read them to choose the join order and strategy. Without stats, the
+    optimizer guesses. This is the same reason that ANALYZE mattered on Redshift.
   source: "https://iceberg.apache.org/puffin-spec/"
 
 - id: LKH-08-q5
@@ -65,42 +67,43 @@
   prompt: "For a sub-second interactive BI query over a modest dataset that fits on one node, which is usually the WRONG tool and why?"
   options:
     A: "DuckDB, because it is single-node"
-    B: "Spark, because its job startup and shuffle overhead lose to Trino/DuckDB on small latency-sensitive queries"
+    B: "Spark, because its job startup and shuffle overhead are worse than Trino/DuckDB on small latency-sensitive queries"
     C: "Trino, because it cannot read Iceberg"
     D: "Athena, because it needs a cluster"
   answer: [B]
   explanation: >-
-    Spark excels at large ETL/streaming/ML but carries startup and shuffle overhead that hurts
-    sub-second interactive queries. Trino/Athena (MPP SQL) or DuckDB (in-process, vectorized) are
-    better fits for small, latency-sensitive BI on the same table.
+    Spark is excellent for large ETL, streaming and ML. But it has startup and shuffle overhead that
+    hurts sub-second interactive queries. Trino/Athena (MPP SQL) or DuckDB (in-process, vectorized)
+    fit better for small, latency-sensitive BI on the same table.
   source: "https://trino.io/docs/current/connector/iceberg.html"
 
 - id: LKH-08-q6
   type: single
   prompt: "Athena is best described as:"
   options:
-    A: "A proprietary format competing with Iceberg"
+    A: "A proprietary format that competes with Iceberg"
     B: "A serverless MPP SQL engine (Presto/Trino lineage) that queries open table formats on S3 with no cluster to manage"
     C: "A storage layer like S3"
     D: "A catalog like Glue"
   answer: [B]
   explanation: >-
-    Athena is Trino/Presto-as-a-service: you run SQL over Iceberg/Parquet on S3 without operating a
-    cluster, billed by bytes scanned — which is exactly why pushdown and pruning matter for cost.
+    Athena is Trino/Presto-as-a-service. You run SQL over Iceberg/Parquet on S3 and you do not
+    operate a cluster. Athena bills by bytes scanned. This is exactly why pushdown and pruning
+    matter for cost.
   source: "https://trino.io/docs/current/connector/iceberg.html"
 
 - id: LKH-08-q7
   type: single
-  prompt: "Two engines (Spark and DuckDB) run the same WHERE/GROUP BY on the same table and return different totals. Most likely cause?"
+  prompt: "Two engines (Spark and DuckDB) run the same WHERE/GROUP BY on the same table and return different totals. What is the most likely cause?"
   options:
-    A: "Open table formats guarantee engines disagree"
-    B: "A logic difference in one query (filter, null handling, or type coercion) — on the same committed snapshot both engines must agree"
+    A: "Open table formats guarantee that engines disagree"
+    B: "A logic difference in one query (filter, null handling, or type coercion). On the same committed snapshot, both engines must agree"
     C: "DuckDB cannot aggregate"
     D: "Spark rounds all doubles"
   answer: [B]
   explanation: >-
     On the same committed table snapshot, two correct engines must produce the same result for the
-    same logical query; a discrepancy points to a difference in the queries themselves (predicate,
-    NULL semantics, casting), not the format. This agreement is exactly why a second engine makes a
-    good oracle.
+    same logical query. A discrepancy points to a difference in the queries themselves (predicate,
+    NULL semantics, casting). It does not point to the format. This agreement is exactly why a
+    second engine makes a good oracle.
   source: "https://duckdb.org/docs/stable/core_extensions/iceberg/overview.html"

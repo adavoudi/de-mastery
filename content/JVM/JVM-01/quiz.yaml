@@ -2,7 +2,7 @@
   type: single
   prompt: >-
     You have `String a = "USD";` and another `String b` built at runtime that also holds "USD".
-    Which test reliably checks they represent the same text?
+    Which test reliably checks that they hold the same text?
   options:
     A: "a == b, because strings are values in Java"
     B: "a.equals(b), because == compares object references, not contents"
@@ -10,9 +10,9 @@
     D: "Objects.hashCode(a) == Objects.hashCode(b) is sufficient"
   answer: [B]
   explanation: >-
-    `==` on objects compares identity (same reference). Two equal-looking strings built differently
-    may be distinct objects, so `==` can be false. Use `.equals()` for value equality. Equal
-    hashCodes are necessary but not sufficient (collisions exist).
+    `==` on objects compares identity (the same reference). Two strings can look equal and still be
+    different objects if they are built in different ways. Then `==` can be false. Use `.equals()`
+    for value equality. Equal hashCodes are necessary but not sufficient (collisions exist).
   source: "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)"
 
 - id: JVM-01-q2
@@ -25,16 +25,16 @@
     D: "A Python-style namedtuple that is iterable."
   answer: [B]
   explanation: >-
-    A record is an immutable carrier of data: Java generates the constructor, component accessors
-    (named like the components, e.g. currency()), plus value-based equals/hashCode and a readable
-    toString. It is the Java analogue of a frozen dataclass.
+    A record is an immutable carrier of data. Java generates the constructor and the component
+    accessors (named like the components, for example currency()). Java also generates value-based
+    equals/hashCode and a readable toString. It is the Java analogue of a frozen dataclass.
   source: "https://docs.oracle.com/en/java/javase/21/language/records.html"
 
 - id: JVM-01-q3
   type: single
   prompt: >-
-    A method may fail to find a value. Which return type best expresses "possibly absent" so callers
-    must handle it, rather than risking a NullPointerException?
+    A method may not find a value. Which return type best expresses "possibly absent"? Callers must
+    handle it. You want to avoid the risk of a NullPointerException.
   options:
     A: "Return null and document it in a comment."
     B: "Throw an exception when absent."
@@ -42,8 +42,8 @@
     D: "Return an empty String as a sentinel."
   answer: [C]
   explanation: >-
-    Optional<T> encodes absence in the type so the caller is nudged to handle it (orElse, map,
-    ifPresent). Returning null invites NullPointerException; magic sentinels are error-prone.
+    Optional<T> shows absence in the type, so the caller is pushed to handle it (orElse, map,
+    ifPresent). Returning null invites NullPointerException. Magic sentinel values cause errors.
   source: "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Optional.html"
 
 - id: JVM-01-q4
@@ -51,57 +51,57 @@
   prompt: "Which statement about checked vs unchecked exceptions in Java is correct?"
   options:
     A: "All exceptions must be declared with throws."
-    B: "Checked exceptions (e.g. IOException) must be caught or declared; unchecked (RuntimeException subclasses) need not be."
-    C: "Unchecked exceptions must be caught or declared; checked ones need not be."
+    B: "Checked exceptions (e.g. IOException) must be caught or declared. Unchecked exceptions (RuntimeException subclasses) need not be."
+    C: "Unchecked exceptions must be caught or declared. Checked exceptions need not be."
     D: "Java has no checked exceptions, exactly like Python."
   answer: [B]
   explanation: >-
-    Checked exceptions extend Exception (not RuntimeException) and the compiler forces you to catch
-    or declare them. Unchecked ones (RuntimeException and subclasses like IllegalArgumentException)
-    do not require declaration. Python has no checked-exception concept.
+    Checked exceptions extend Exception (not RuntimeException). The compiler forces you to catch or
+    declare them. Unchecked exceptions (RuntimeException and subclasses like IllegalArgumentException)
+    do not require a declaration. Python has no checked-exception concept.
   source: "https://docs.oracle.com/javase/tutorial/essential/exceptions/catchOrDeclare.html"
 
 - id: JVM-01-q5
   type: single
   prompt: "What is `x -> x * 2` in Java?"
   options:
-    A: "A syntax error; Java has no lambdas."
+    A: "A syntax error. Java has no lambdas."
     B: "A lambda that implements a functional (single-abstract-method) interface, e.g. Function<Integer,Integer>."
     C: "A generic type parameter."
     D: "A ternary expression."
   answer: [B]
   explanation: >-
-    A lambda is concise syntax for an instance of a functional interface (exactly one abstract
-    method), such as Function, Predicate or Comparator. It is the compiled analogue of a Python
-    lambda.
+    A lambda is a short syntax for an instance of a functional interface (an interface with exactly
+    one abstract method), such as Function, Predicate or Comparator. It is the compiled analogue of
+    a Python lambda.
   source: "https://docs.oracle.com/javase/tutorial/java/javaOO/lambdaexpressions.html"
 
 - id: JVM-01-q6
   type: single
   prompt: >-
-    A file declares `package de.mastery;` and `public class Money`. Where must the source file live
-    relative to the source root?
+    A file declares `package de.mastery;` and `public class Money`. Where must the source file be
+    in relation to the source root?
   options:
-    A: "Anywhere; Java ignores folder layout."
+    A: "Anywhere. Java ignores folder layout."
     B: "In de/mastery/Money.java under the source root, matching the package to the directory path."
     C: "In a folder named Money/."
     D: "In the same folder as the build tool's config only."
   answer: [B]
   explanation: >-
-    The directory structure under the source root must mirror the package: package de.mastery means
+    The directory structure under the source root must match the package. Package de.mastery means
     the file is de/mastery/Money.java. Build tools and the compiler rely on this convention.
   source: "https://docs.oracle.com/javase/tutorial/java/package/managingfiles.html"
 
 - id: JVM-01-q7
   type: single
-  prompt: "Why does `if (someList)` not compile in Java the way `if some_list:` works in Python?"
+  prompt: "Why does `if (someList)` not compile in Java, when `if some_list:` works in Python?"
   options:
-    A: "Java requires an explicit boolean condition; there is no truthiness, so you write if (!list.isEmpty())."
+    A: "Java requires an explicit boolean condition. There is no truthiness, so you write if (!list.isEmpty())."
     B: "Lists are always truthy in Java."
     C: "You must cast the list to int first."
     D: "It compiles but always evaluates to false."
   answer: [A]
   explanation: >-
-    Java has no truthiness: an if condition must be a boolean. Test emptiness explicitly, e.g.
-    if (!list.isEmpty()). Relying on Python-style truthiness is a common porting bug.
+    Java has no truthiness. An if condition must be a boolean. Test emptiness explicitly, for example
+    if (!list.isEmpty()). Python-style truthiness is a common bug when you port code.
   source: "https://docs.oracle.com/javase/specs/jls/se21/html/jls-14.html#jls-14.9"

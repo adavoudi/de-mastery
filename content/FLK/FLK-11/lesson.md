@@ -2,76 +2,75 @@
 
 ## Why backpressure is the first thing you look at
 
-A Flink job is a chain of operators connected by bounded buffers. When one operator can't keep up,
-its input buffers fill, and the fullness propagates **upstream** — the source slows down to match
-the slowest operator. That is **backpressure**: Flink's built-in flow control. It is not a bug; it
-is how the system stays stable without dropping data. But sustained backpressure means a
-**bottleneck**: one operator (or one *subtask* of one operator) is the limiting stage, and the whole
+A Flink job is a chain of operators. Bounded buffers connect the operators. Suppose one operator cannot keep up.
+Then its input buffers fill, and the full buffers spread **upstream**. The source slows down to match
+the slowest operator. This is **backpressure**. It is the built-in flow control of Flink. It is not a bug.
+It is how the system stays stable without dropping data. But sustained backpressure means a
+**bottleneck**. One operator (or one *subtask* of one operator) is the limiting stage, and the whole
 job runs at its speed.
 
-This is exactly the Spark skew story in streaming clothes. In Spark, one straggler task holds up the
-stage; in Flink, one busy subtask backpressures the source. The fix is the same shape: **spread the
-work across more parallel subtasks, and redistribute records so the work is balanced.**
+This is the same problem as Spark skew, but in streaming. In Spark, one straggler task holds up the
+stage. In Flink, one busy subtask backpressures the source. The fix has the same form: **spread the
+work across more parallel subtasks, and redistribute records so that the work is balanced.**
 
 ## How to find and fix it
 
 ### 1. Locate the bottleneck
 
-In the Flink Web UI (or REST `/jobs/<id>/vertices/<v>/backpressure`), the **busy** / backpressured
-vertex is the bottleneck. Upstream of it everything is backpressured (red); downstream is idle.
-The bottleneck is where you spend your tuning.
+Use the Flink Web UI (or REST `/jobs/<id>/vertices/<v>/backpressure`). The **busy** or backpressured
+vertex is the bottleneck. Everything upstream of it is backpressured (red). Everything downstream is idle.
+You tune the bottleneck.
 
 ![Full buffers propagate upstream from the bottleneck operator to the source](diagrams/backpressure-chain.svg)
 
 ### 2. Raise the parallelism of the bottleneck operator
 
-If a heavy operator runs at parallelism 1 while slots are free, it processes records on a single
-subtask. Raising its parallelism (`.setParallelism(n)`, or the job default) lets `n` subtasks share
-the load — the single biggest lever, just like adding Spark tasks to a stage.
+Suppose a heavy operator runs at parallelism 1 while slots are free. Then it processes records on a single
+subtask. Raise its parallelism (`.setParallelism(n)`, or the job default). Then `n` subtasks share
+the load. This is the biggest lever. It is like the addition of Spark tasks to a stage.
 
-### 3. Redistribute records so the parallel subtasks are actually fed
+### 3. Redistribute records so the parallel subtasks get records
 
-Parallelism alone isn't enough: the records must be **spread** across the subtasks. The edge feeding
-the heavy operator decides this via its **ship strategy**:
+Parallelism alone is not enough. The records must be **spread** across the subtasks. The edge that feeds
+the heavy operator decides this with its **ship strategy**:
 
-- `FORWARD` — one-to-one, same parallelism, no redistribution (the chained default). Raising
-  downstream parallelism while keeping FORWARD doesn't balance work.
-- `REBALANCE` — round-robin across all downstream subtasks. The go-to fix for a **skew-free**
-  bottleneck: perfectly even distribution.
-- `RESCALE` — round-robin to a *subset* of local subtasks (cheaper network, good when scaling by an
-  integer factor).
-- `HASH` (`keyBy`) — partition by key. Needed when the operator is keyed, but it **reintroduces
-  skew** if a few keys dominate (a hot key sends all its records to one subtask).
+- `FORWARD` — one-to-one, same parallelism, no redistribution (the default for chained operators). Suppose you raise
+  the downstream parallelism but keep FORWARD. Then the work is not balanced.
+- `REBALANCE` — round-robin across all downstream subtasks. This is the standard fix for a **skew-free**
+  bottleneck. The distribution is perfectly even.
+- `RESCALE` — round-robin to a *subset* of local subtasks. It uses less network. It works well when you scale by an
+  integer factor.
+- `HASH` (`keyBy`) — partition by key. You need it when the operator is keyed. But it **brings back
+  skew** if a few keys dominate. A hot key sends all its records to one subtask.
 
-For a non-keyed heavy map, `rebalance()` before the map (and a higher map parallelism) turns a
-single busy subtask into `n` evenly-loaded ones. For a keyed operator with a hot key, you fix skew
-by changing the key (e.g. salting), the streaming analogue of SPK-06's salted aggregation.
+Take a heavy map that is not keyed. Use `rebalance()` before the map and a higher map parallelism. Then
+a single busy subtask becomes `n` subtasks with an even load. Take a keyed operator with a hot key.
+You fix skew by changing the key (for example, salting). This is the streaming analogue of the salted aggregation in SPK-06.
 
 ![Hot key lands on one subtask while rebalance spreads the same records evenly](diagrams/skew-vs-rebalance.svg)
 
-### 4. The plan changes — and that's how you prove the fix
+### 4. The plan changes — and this proves the fix
 
-When you raise parallelism and insert a redistributing edge, the **job graph changes**: the heavy
-operator's parallelism goes up and the edge feeding it is no longer `FORWARD` but `REBALANCE` /
-`RESCALE` / `HASH`. You can read this straight off `StreamExecutionEnvironment.getExecutionPlan()`
-(the JSON `nodes[].parallelism` and `predecessors[].ship_strategy`). A real throughput fix is
-**visible in the plan**, not just the clock — which is why this module grades the plan, not a
-stopwatch.
+You raise the parallelism and insert a redistributing edge. Then the **job graph changes**. The parallelism of the heavy
+operator goes up. The edge that feeds it is no longer `FORWARD`. It is `REBALANCE` / `RESCALE` / `HASH`.
+You can read this directly from `StreamExecutionEnvironment.getExecutionPlan()`
+(the JSON `nodes[].parallelism` and `predecessors[].ship_strategy`). You can see a real throughput fix in the
+plan, not only on the clock. This is why this module grades the plan and not a stopwatch.
 
 ## What the test asserts (robust by design)
 
-Wall-clock throughput on a shared, loaded machine is noisy, so the test grades the two things a
+Wall-clock throughput on a shared machine with a heavy load is noisy. So the test grades the two things that a
 genuine fix guarantees:
 
-1. **The plan changed in the right direction.** The bottleneck operator's parallelism **increased**,
-   and the edge feeding it uses a **redistributing** ship strategy (`REBALANCE` / `RESCALE` / `HASH`)
-   instead of `FORWARD`. This is deterministic — no timing.
-2. **Correctness is preserved.** The job's output still equals the baseline (and the DuckDB oracle);
-   you can't "optimize" by changing the answer.
+1. **The plan changed in the right direction.** The parallelism of the bottleneck operator **increased**.
+   The edge that feeds it uses a **redistributing** ship strategy (`REBALANCE` / `RESCALE` / `HASH`)
+   and not `FORWARD`. This is deterministic and does not depend on timing.
+2. **Correctness is preserved.** The output of the job still equals the baseline (and the DuckDB oracle).
+   You cannot "optimize" by changing the answer.
 
-Together these are the operational definition of "throughput improves": more subtasks doing balanced
-work on the bottleneck, same result. (Where a wall-clock check is used at all, it is a generous,
-averaged, relative bound — never a hard latency limit — so it stays stable under load, per
+Together these are the operational definition of "throughput improves": more subtasks do balanced
+work on the bottleneck, and the result is the same. (Where the test uses a wall-clock check at all, it is a generous,
+averaged, relative bound. It is never a hard latency limit. So it stays stable under load, per
 TESTING.md.)
 
 ## From your world
@@ -80,20 +79,20 @@ TESTING.md.)
 |---|---|---|
 | Straggler task holds up a stage | one busy subtask backpressures the source | find it in the UI |
 | `repartition(n)` to add tasks | raise the operator parallelism + `rebalance()` | spread the load |
-| Salting a skewed join key | change/sault the `keyBy` key | fixes hot-key skew |
+| Salting a skewed join key | change/salt the `keyBy` key | fixes hot-key skew |
 | AQE skew-join handling | manual rebalance / rescale (no AQE in Flink) | you choose the strategy |
 | Shuffle = Exchange in the plan | redistributing edge in the job graph | read it off the plan |
 
 ## When NOT to just raise parallelism
 
-- **The bottleneck is skew, not under-parallelism.** More subtasks won't help a single hot key —
-  `keyBy` sends that key to one subtask regardless. Fix the key (salting) instead.
-- **The sink or an external system is the limit.** If a slow database sink backpressures the job,
-  more map parallelism won't help; scale or batch the sink.
-- **State explosion.** Higher parallelism multiplies state instances and checkpoint cost; watch
-  RocksDB/ForSt and checkpoint duration. Rescaling a stateful job needs a savepoint (FLK-12).
-- **Tiny jobs.** Parallelism has scheduling overhead; for small streams FORWARD-chained operators are
-  cheaper.
+- **The bottleneck is skew, not low parallelism.** More subtasks do not help a single hot key.
+  `keyBy` sends that key to one subtask in all cases. Fix the key (salting) instead.
+- **The sink or an external system is the limit.** Suppose a slow database sink backpressures the job.
+  More map parallelism does not help. Scale the sink or batch the writes to the sink.
+- **State explosion.** Higher parallelism multiplies the state instances and the checkpoint cost. Watch
+  RocksDB/ForSt and the checkpoint duration. To rescale a stateful job, you need a savepoint (FLK-12).
+- **Tiny jobs.** Parallelism has scheduling overhead. For small streams, FORWARD-chained operators
+  cost less.
 
 ## Further reading
 

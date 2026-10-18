@@ -2,78 +2,102 @@
 
 ## Why it exists
 
-Distributed data systems exist to beat two hard limits of a single machine: it runs out of
-**capacity** (RAM, disk, cores) and it runs out of **time** before the deadline. The moment
-your data or your SLA no longer fits one box, you are forced to spread the work across many
-boxes connected by a network. Everything hard about Spark, Kafka and Flink — partitioning,
-shuffles, replication, consensus, watermarks, exactly-once — is a consequence of that one
-decision: *the data lives in more than one place, and the network between those places is slow
-and unreliable.*
+A single machine has two hard limits. It runs out of **capacity** (RAM, disk, cores). It also
+runs out of **time** before the deadline. Distributed data systems exist to get past these limits.
 
-So the first engineering question is not "which framework?" It is **"do I need to distribute at
-all?"** A surprising amount of "big data" is a few hundred gigabytes that a single modern server
-with DuckDB or Polars will crunch in seconds — with none of the operational tax of a cluster.
+Sometimes your data or your SLA no longer fits one box. Then you must spread the work across
+many boxes that connect through a network. Everything hard about Spark, Kafka and Flink comes
+from that one decision. This includes partitioning, shuffles, replication, consensus,
+watermarks and exactly-once. The reason is this: *the data lives in more than one place, and the
+network between those places is slow and unreliable.*
+
+So the first engineering question is not "which framework?" The first question is **"do I need
+to distribute at all?"** Much "big data" is only a few hundred gigabytes. A single modern server
+with DuckDB or Polars can process this in seconds. It has none of the operational cost of a
+cluster.
 
 ## How it works
 
-**Scale up vs. scale out.** Scaling *up* means buying a bigger machine (more cores, more RAM,
-NVMe). Scaling *out* means adding more machines. Scale-up is simpler: no network shuffle, no
-partitioning strategy, one process to reason about. It hits a ceiling — you cannot buy an
-infinitely large box, and price grows super-linearly at the top end. Scale-out has no ceiling,
-but every join or aggregation that needs data from more than one node pays for a **shuffle**:
-data crosses the network, which is orders of magnitude slower than RAM.
+**Scale up vs. scale out.** Scaling *up* means you buy a bigger machine (more cores, more RAM,
+NVMe). Scaling *out* means you add more machines.
 
-**Amdahl's law** is the ceiling on how much parallelism can ever help. If a fraction `p` of the
-work is parallelizable and `(1 - p)` is inherently serial, then with `n` workers the best
-speedup is:
+Scale-up is simpler. It has no network shuffle and no partitioning strategy. You reason about
+only one process. But it has a ceiling. You cannot buy an infinitely large box. The price also
+grows super-linearly at the top end.
+
+Scale-out has no ceiling. But some joins and aggregations need data from more than one node.
+Each of these pays for a **shuffle**. In a shuffle, data crosses the network. The network is
+orders of magnitude slower than RAM.
+
+**Amdahl's law** gives the limit on how much parallelism can help. Let `p` be the fraction of
+the work that you can run in parallel. Then `(1 - p)` is the part that is serial by nature. With
+`n` workers, the best speedup is:
 
 ```
 speedup(n) = 1 / ((1 - p) + p / n)
 ```
 
-As `n → ∞`, speedup is capped at `1 / (1 - p)`. If 10% of your job is serial (`p = 0.9`), you can
-never go faster than 10×, no matter how many machines you rent. The serial part — reading a file
-header, a final global sort, a single-threaded UDF — becomes the wall. **Gustafson's law** is the
-optimistic counterweight: in practice we grow the problem to fill the machines, so bigger
-datasets keep more of the work parallel. Both are true; they answer different questions ("fixed
-work, more workers" vs. "more workers, bigger work").
+As `n → ∞`, the speedup has a cap of `1 / (1 - p)`. Suppose 10% of your job is serial
+(`p = 0.9`). Then you can never go faster than 10×, however many machines you rent. The serial
+part becomes the wall. Examples are reading a file header, a final global sort, or a
+single-threaded UDF.
+
+**Gustafson's law** is the optimistic counterpart. In practice, we make the problem bigger so
+that it fills the machines. So bigger datasets keep more of the work parallel. Both laws are
+true. They answer different questions:
+
+- Amdahl: fixed work, more workers.
+- Gustafson: more workers, bigger work.
 
 ![With p = 0.9, speedup climbs fast at first, then flattens toward the 10x cap](diagrams/amdahl-speedup.svg)
 
-**The real cost model.** For a scan-heavy aggregation the dominant term is usually *bytes read*,
-not CPU. Columnar formats + predicate/column pruning cut bytes read by 10–100×, which often beats
-adding nodes. This is why a measured 10 GB aggregation on a laptop-class DuckDB can match a small
-Spark cluster: DuckDB reads only the columns and row groups it needs, in one process, with no
-shuffle.
+**The real cost model.** Take an aggregation that scans a lot of data. The largest cost is
+usually the *bytes read*, not the CPU. Columnar formats, with predicate pruning and column
+pruning, cut the bytes read by 10–100×. This often helps more than adding nodes.
+
+This is why a measured 10 GB aggregation on a laptop-class DuckDB can match a small Spark
+cluster. DuckDB reads only the columns and row groups that it needs. It does this in one
+process, with no shuffle.
 
 ## From your world
 
-Redshift already taught you this architecture. A Redshift cluster has a **leader node** (plans
-the query, does the final serial merge) and **compute nodes** (scan and aggregate slices in
-parallel). The leader is Amdahl's `(1 - p)`: a query that ends in one giant `ORDER BY` with no
-`LIMIT` funnels everything through the leader and stops scaling. That is the same reason a Spark
-job with a final `collect()` to the driver, or a single-reducer `count distinct`, stops speeding
-up when you add executors.
+Redshift already taught you this architecture. A Redshift cluster has two kinds of node:
 
-**DISTKEY** is the partitioning decision we study next (FND-02): choose it well and joins stay
-*local* (no network); choose it badly and every join is a shuffle. And when a Yelp mart table is
-"only" 20–80 GB — a monthly commerce fact, say — the honest answer is often *don't distribute*:
-`CREATE TABLE ... AS SELECT` in DuckDB or a single Athena query reads far fewer bytes than
-standing up a cluster, and finishes before the cluster would have launched its executors.
+- The **leader node** plans the query. It also does the final serial merge.
+- The **compute nodes** scan and aggregate slices in parallel.
+
+The leader node is Amdahl's `(1 - p)`. Suppose a query ends in one giant `ORDER BY` with no
+`LIMIT`. All the data goes through the leader, and the query stops scaling. The same thing
+happens in two other cases. One is a Spark job with a final `collect()` to the driver. The other
+is a single-reducer `count distinct`. In both cases, more executors do not make the job faster.
+
+**DISTKEY** is the partitioning decision that we study next (FND-02). If you choose it well,
+joins stay *local* (no network). If you choose it badly, every join is a shuffle.
+
+Now think about a Yelp mart table that is "only" 20–80 GB, for example a monthly commerce fact.
+Often the honest answer is: *do not distribute*. A `CREATE TABLE ... AS SELECT` in DuckDB reads
+far fewer bytes than a cluster setup. A single Athena query does the same. Both finish before
+the cluster would have launched its executors.
 
 ## When NOT to use it
 
-- **Data fits in RAM (or close).** Up to ~100 GB on a 32–128 GB box, DuckDB/Polars/pandas usually
-  win on wall-clock *and* cost. No shuffle, no JVM warmup, no cluster to babysit.
-- **The job is embarrassingly serial.** If Amdahl's `(1 - p)` dominates (a tight sequential
-  dependency, a single-threaded library), more machines add coordination cost for ~zero speedup.
-- **Latency of a single small query matters more than throughput.** Cluster scheduling and task
-  launch overhead can exceed the whole single-box runtime.
-- **You cannot yet state the bytes.** If you have not estimated input size and bytes scanned
-  (FND-07), you cannot justify a cluster. "It feels big" is not a sizing argument.
+- **Data fits in RAM (or almost fits).** A typical case is up to ~100 GB of data on one machine
+  with 32–128 GB of RAM. (DuckDB can spill to disk when the data is larger than RAM.) Here,
+  DuckDB, Polars and pandas usually win on wall-clock time *and* cost. They have no shuffle and no
+  JVM warmup. They have no cluster to look after.
+- **The job is serial by nature.** Suppose Amdahl's `(1 - p)` dominates. An example is a tight
+  sequential dependency or a single-threaded library. More machines add coordination cost for
+  almost zero speedup.
+- **The latency of a single small query matters more than throughput.** Cluster scheduling and
+  task launch overhead can be larger than the whole single-box runtime.
+- **You cannot yet state the bytes.** Suppose you did not estimate the input size and the bytes
+  scanned (FND-07). Then you cannot justify a cluster. "It feels big" is not a sizing argument.
 
-Distribute when the working set genuinely exceeds one machine, when throughput at scale beats a
-bigger box on cost, or when you need fault tolerance across machines (FND-03).
+Distribute in these cases:
+
+- The working set truly exceeds one machine.
+- Throughput at scale is cheaper than a bigger box.
+- You need fault tolerance across machines (FND-03).
 
 ## Further reading
 

@@ -1,7 +1,7 @@
 - id: LKH-05-q1
   type: single
   prompt: >-
-    A streaming job commits to an Iceberg table every few seconds, producing tens of thousands of
+    A streaming job commits to an Iceberg table every few seconds. It produces tens of thousands of
     tiny data files. Queries have become slow. Which maintenance operation directly fixes this?
   options:
     A: "expire_snapshots — it deletes the small files"
@@ -10,33 +10,34 @@
     D: "VACUUM — Iceberg has no equivalent"
   answer: [B]
   explanation: >-
-    rewrite_data_files (compaction) rewrites many small files into fewer right-sized ones and
-    commits a new snapshot. expire_snapshots only deletes files referenced solely by expired
-    snapshots; it does not combine live small files. This is the small-files problem.
+    rewrite_data_files (compaction) rewrites many small files into fewer files of the right size.
+    It commits a new snapshot. expire_snapshots only deletes files that only expired snapshots
+    reference. It does not combine live small files. This is the small-files problem.
   source: "https://iceberg.apache.org/docs/1.10.0/spark-procedures/#rewrite_data_files"
 
 - id: LKH-05-q2
   type: single
   prompt: >-
-    You run expire_snapshots with retain_last => 5 but no older_than, and are surprised that disk
-    usage barely drops. Why?
+    You run expire_snapshots with retain_last => 5 but no older_than. Disk usage barely drops, and
+    this surprises you. Why?
   options:
     A: "retain_last is ignored unless you also pass a table name"
-    B: "expire_snapshots also honors a default max_snapshot_age (≈5 days), so recent snapshots are protected regardless of retain_last"
+    B: "expire_snapshots also uses a default max_snapshot_age (≈5 days), so recent snapshots are protected whatever the value of retain_last"
     C: "Snapshots cannot be expired in Spark, only in Flink"
     D: "The table has no snapshots"
   answer: [B]
   explanation: >-
-    expire_snapshots keeps any snapshot newer than max_snapshot_age_ms (default ~5 days) even beyond
-    retain_last. To reclaim recent snapshots in a maintenance run you must pass older_than with a
-    cutoff. retain_last is a floor on how many to keep, not a command to drop the rest.
+    expire_snapshots keeps any snapshot that is newer than max_snapshot_age_ms (default ~5 days),
+    even beyond retain_last. To reclaim recent snapshots in a maintenance run, you must pass
+    older_than with a cutoff. retain_last is a floor on how many snapshots to keep. It is not a
+    command to drop the rest.
   source: "https://iceberg.apache.org/docs/1.10.0/spark-procedures/#expire_snapshots"
 
 - id: LKH-05-q3
   type: single
   prompt: >-
-    Which Iceberg feature is the closest analogue of a Redshift SORTKEY — clustering rows so that a
-    predicate can skip whole data files via their min/max statistics?
+    Which Iceberg feature is the closest equivalent of a Redshift SORTKEY? It clusters rows, so
+    that a predicate can skip whole data files with their min/max statistics.
   options:
     A: "A high-cardinality partition column"
     B: "WRITE ORDERED BY (a table sort order), honored by compaction"
@@ -44,9 +45,9 @@
     D: "remove_orphan_files"
   answer: [B]
   explanation: >-
-    A sort order clusters rows by a column; each data file then has tight min/max bounds on that
-    column, so file pruning can skip files that cannot match. That is exactly what a SORTKEY buys
-    you on Redshift. Partitioning is a different (coarser) mechanism and must stay low-cardinality.
+    A sort order clusters rows by a column. Each data file then has tight min/max bounds on that
+    column. So file pruning can skip files that cannot match. A SORTKEY gives you exactly this on
+    Redshift. Partitioning is a different (coarser) mechanism. It must stay low-cardinality.
   source: "https://iceberg.apache.org/docs/1.10.0/spark-ddl/#alter-table--write-ordered-by"
 
 - id: LKH-05-q4
@@ -55,22 +56,23 @@
     A teammate partitions a 10-billion-row events table by order_id "so the data is spread out".
     What goes wrong?
   options:
-    A: "Nothing; high-cardinality partitioning is a best practice"
+    A: "Nothing. High-cardinality partitioning is a best practice"
     B: "It creates roughly one tiny file per order_id — the small-files problem by construction — and an enormous metadata/manifest footprint"
     C: "Iceberg rejects more than 1000 partitions"
     D: "Queries become case-sensitive"
   answer: [B]
   explanation: >-
-    Partitioning on a high-cardinality raw column produces a partition (and at least one small file)
-    per distinct value, exploding file and manifest counts and crushing planning. Partition on a
-    low-cardinality transform (days(ts), bucket(N,key)); use sort order for high-cardinality columns.
+    Partitioning on a high-cardinality raw column produces a partition (and at least one small
+    file) for each distinct value. The numbers of files and manifests explode, and planning becomes
+    very slow. Partition on a low-cardinality transform (days(ts), bucket(N,key)). Use the sort
+    order for high-cardinality columns.
   source: "https://iceberg.apache.org/docs/1.10.0/partitioning/"
 
 - id: LKH-05-q5
   type: single
   prompt: >-
-    With Iceberg hidden partitioning on days(event_ts), how should an analyst filter to one day,
-    and why?
+    A table uses Iceberg hidden partitioning on days(event_ts). How should an analyst filter to one
+    day, and why?
   options:
     A: "WHERE dt = '2026-01-01' using a physical partition string column they must add"
     B: "WHERE event_ts >= TIMESTAMP '2026-01-01' AND event_ts < TIMESTAMP '2026-01-02' — Iceberg applies the days() transform and prunes partitions automatically"
@@ -78,16 +80,16 @@
     D: "WHERE days(event_ts) = 1"
   answer: [B]
   explanation: >-
-    Hidden partitioning records the transform in metadata, so the analyst filters the raw column and
-    Iceberg derives the partition predicate and prunes. No physical partition column leaks into the
-    query — the Hive mistake that hidden partitioning removes.
+    Hidden partitioning records the transform in metadata. So the analyst filters the raw column,
+    and Iceberg derives the partition predicate and prunes. No physical partition column leaks into
+    the query. That is the Hive mistake that hidden partitioning removes.
   source: "https://iceberg.apache.org/docs/1.10.0/partitioning/"
 
 - id: LKH-05-q6
   type: single
   prompt: >-
-    You need to change an append-only table from unpartitioned to partitioned by days(ts) without a
-    full table rewrite. What does Iceberg let you do?
+    You need to change an append-only table from unpartitioned to partitioned by days(ts). You want
+    no full table rewrite. What does Iceberg let you do?
   options:
     A: "Nothing — you must recreate and reload the table"
     B: "Partition evolution: ALTER TABLE ... ADD PARTITION FIELD days(ts); old data keeps its spec, new data uses the new one"
@@ -95,16 +97,16 @@
     D: "Drop and re-add every data file manually"
   answer: [B]
   explanation: >-
-    Because the partition spec lives in metadata (not the data file paths), Iceberg supports
-    partition evolution. Existing files keep their original spec; new writes use the new spec. No
-    rewrite of historical data is required — unlike Hive, where the path encodes the partitioning.
+    The partition spec lives in metadata (not in the data file paths). So Iceberg supports
+    partition evolution. Existing files keep their original spec. New writes use the new spec.
+    Iceberg does not need to rewrite historical data. In Hive, the path encodes the partitioning.
   source: "https://iceberg.apache.org/docs/1.10.0/partitioning/#partition-evolution"
 
 - id: LKH-05-q7
   type: single
   prompt: >-
-    expire_snapshots deleted the data files of old snapshots, but some files from an aborted write
-    still linger and no snapshot references them. Which operation removes those?
+    expire_snapshots deleted the data files of old snapshots. But some files from an aborted write
+    still remain, and no snapshot references them. Which operation removes those files?
   options:
     A: "rewrite_data_files"
     B: "expire_snapshots again with retain_last => 0"
@@ -112,8 +114,8 @@
     D: "DROP TABLE"
   answer: [C]
   explanation: >-
-    expire_snapshots only touches files reachable from the snapshots it expires; files that no
-    snapshot ever referenced (orphans from aborted writes) are left behind. remove_orphan_files
-    scans the directory and deletes them, using a conservative older_than to avoid racing in-flight
-    commits.
+    expire_snapshots only touches files that are reachable from the snapshots that it expires. It
+    leaves behind the files that no snapshot ever referenced (orphans from aborted writes).
+    remove_orphan_files scans the directory and deletes them. It uses a conservative older_than, so
+    it does not race with in-flight commits.
   source: "https://iceberg.apache.org/docs/1.10.0/spark-procedures/#remove_orphan_files"

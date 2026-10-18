@@ -2,51 +2,60 @@
 
 ## Why commits are the hard part
 
-In LKH-01 you saw that a commit is "just" an atomic swap of the catalog's single pointer to a new
-`metadata.json`. That sounds trivial until two writers try to commit at the same time — two
-overlapping dbt runs, a backfill racing the hourly job, a streaming sink and a compaction job. If
-both read the table at version *N*, each builds a new metadata on top of *N*, and both blindly
-install their result, **one write is silently lost**: whoever swaps the pointer second erases the
-first writer's snapshot from the current line. Lost updates are the quiet data-corruption bug that
-table formats exist to prevent.
+In LKH-01 you saw that a commit is "just" an atomic swap. The swap moves the single pointer of the
+catalog to a new `metadata.json`. This sounds simple. It becomes hard when two writers try to
+commit at the same time. For example:
+
+- two dbt runs that overlap
+- a backfill that races the hourly job
+- a streaming sink and a compaction job
+
+Imagine that both writers read the table at version *N*. Each writer builds new metadata on top of
+*N*. Both writers blindly install their result. Then **one write is silently lost**. The writer
+that swaps the pointer second erases the snapshot of the first writer from the current line. A lost
+update is a quiet data-corruption bug. Table formats exist to prevent it.
 
 ![Two writers read version N; A wins the compare-and-swap, B gets a conflict, refreshes and retries on N+1](diagrams/commit-cas-retry.svg)
 
-Iceberg's answer is **optimistic concurrency control (OCC)**. There are no locks held across the
-work. Each writer optimistically does its work against the snapshot it read, then, at commit time,
-performs an **atomic compare-and-swap**: "install my new metadata *only if* the table is still at
-the version I started from." If the table moved underneath it (someone else committed first), the
-swap fails and the writer is told so with a conflict error. Optimism pays off when conflicts are
-rare, which they usually are.
+Iceberg solves this with **optimistic concurrency control (OCC)**. No writer holds a lock during
+the work. Each writer does its work against the snapshot that it read. It assumes that nobody
+changes the table in the meantime. At commit time, the writer performs an **atomic
+compare-and-swap**: "install my new metadata *only if* the table is still at the version I started
+from." Sometimes someone else committed first, and the table moved. Then the swap fails, and the
+writer gets a conflict error. Optimism works well when conflicts are rare. They are usually rare.
 
 ## How a commit actually works
 
 1. **Read** the current `metadata.json` (version *N*, the base snapshot).
-2. **Do the work** against that base: write data files, build the new manifests and manifest list,
-   assemble metadata version *N+1* whose parent is *N*.
-3. **Commit = compare-and-swap** at the catalog: atomically move the pointer from *N* to *N+1*
-   **only if** it is still *N*. The mechanism depends on the catalog (LKH-03): a Glue/DynamoDB
-   conditional update, a REST catalog's conditional commit, or an object-store *put-if-absent* on
-   the next metadata filename.
-4. **On conflict** (the pointer was no longer *N*): the catalog rejects the swap and the client
-   raises a conflict (`CommitFailedException` in PyIceberg). Your *N+1* now sits on a stale base.
+2. **Do the work** against that base. Write the data files. Build the new manifests and the new
+   manifest list. Assemble metadata version *N+1*, whose parent is *N*.
+3. **Commit = compare-and-swap** at the catalog. Atomically move the pointer from *N* to *N+1*
+   **only if** the pointer is still *N*. The mechanism depends on the catalog (LKH-03). It can be
+   a Glue/DynamoDB conditional update, a conditional commit of a REST catalog, or an object-store
+   *put-if-absent* on the next metadata filename.
+4. **On conflict** (the pointer was no longer *N*): the catalog rejects the swap. The client raises
+   a conflict (`CommitFailedException` in PyIceberg). Your *N+1* now sits on a stale base.
 
-The fix is **refresh and re-apply**: reload the table to pick up the winner's new state, recompute
-your change against *that* fresh base, and try the compare-and-swap again — with bounded retries.
-Because the operation is recomputed on fresh data each time, no update is lost: the final state is
-*as if the two writers had run one after another* (serial equivalence).
+The fix is **refresh and re-apply**. Follow these steps:
 
-Two subtleties:
+1. Reload the table to get the new state of the winner.
+2. Recompute your change against that fresh base.
+3. Try the compare-and-swap again. Use a bounded number of retries.
 
-- **Not every overlap is a true conflict.** Two pure appends to different files commute: Iceberg
-  can often re-apply an append onto the new base automatically without you recomputing anything.
-  The conflicts that *must* be re-applied by hand are **read-modify-write** operations (overwrite a
-  row by a value you read, delete-then-insert) — because the value you based your change on may
-  have changed.
-- **Isolation levels.** Iceberg supports *serializable* and *snapshot* isolation. Under
-  serializable isolation a conflicting concurrent change to rows your operation depended on is
-  rejected; under snapshot isolation some commuting changes are allowed through. The default for
-  overwrites/merges is `serializable`.
+Each time, the operation is recomputed on fresh data. So no update is lost. The final state is *as
+if the two writers had run one after another* (serial equivalence).
+
+Two details:
+
+- **Not every overlap is a true conflict.** Two pure appends to different files commute. Iceberg
+  can often re-apply an append onto the new base automatically. You do not need to recompute
+  anything. The conflicts that you *must* re-apply by hand are **read-modify-write** operations.
+  Examples are an overwrite of a row by a value that you read, and delete-then-insert. In these
+  cases, the value that your change used may have changed.
+- **Isolation levels.** Iceberg supports *serializable* and *snapshot* isolation. Under serializable
+  isolation, Iceberg rejects a conflicting concurrent change to rows that your operation depended
+  on. Under snapshot isolation, Iceberg allows some commuting changes. The default for overwrites
+  and merges is `serializable`.
 
 ## From your world
 
@@ -59,14 +68,15 @@ Two subtleties:
 
 ## When NOT to rely on OCC the naive way
 
-- **Don't blind-retry.** Re-submitting the *same* precomputed metadata after a conflict either
-  conflicts again or, worse, installs a value computed from a stale read → the lost update you were
-  trying to avoid. Always `refresh()` and recompute first.
-- **Don't catch the conflict and swallow it.** `except CommitFailedException: pass` turns a loud,
-  recoverable conflict into a silent lost write. Catch it only to refresh-and-retry.
-- **Don't use OCC for high-contention, tiny, hot updates.** If hundreds of writers hammer the same
-  rows every second, optimism degrades into a retry storm; that is a KV-store / OLTP workload, not
-  a lakehouse table (the track's "when not to use it").
+- **Do not blind-retry.** Do not re-submit the *same* precomputed metadata after a conflict. It
+  conflicts again. Or, worse, it installs a value that came from a stale read. This is the lost
+  update that you wanted to avoid. Always `refresh()` and recompute first.
+- **Do not catch the conflict and swallow it.** `except CommitFailedException: pass` changes a
+  loud, recoverable conflict into a silent lost write. Catch the exception only to refresh and
+  retry.
+- **Do not use OCC for high-contention, tiny, hot updates.** Imagine hundreds of writers that
+  update the same rows every second. Then optimism turns into a retry storm. That is a key-value
+  store or OLTP workload. It is not a lakehouse table (the "when not to use it" case of the track).
 
 ## Further reading
 

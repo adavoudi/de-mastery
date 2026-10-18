@@ -9,15 +9,15 @@
     D: "Only at runtime, never in planning"
   answer: [C]
   explanation: >-
-    Pushdown, pruning, filter reordering and constant folding are rule-based rewrites applied to
-    the analyzed plan to produce the optimized logical plan. The physical plan then carries the
-    results (e.g. PushedFilters on the scan).
+    Pushdown, pruning, filter reordering and constant folding are rule-based rewrites. Catalyst
+    applies them to the analyzed plan to produce the optimized logical plan. The physical plan
+    then carries the results (for example, PushedFilters on the scan).
   source: "https://spark.apache.org/docs/4.0.0/sql-programming-guide.html"
 
 - id: SPK-05-q2
   type: single
   prompt: >-
-    You read a Parquet file, filter on currency = 'USD', and the FileScan node shows
+    You read a Parquet file and filter on currency = 'USD'. The FileScan node shows
     PushedFilters: []. What is the most likely cause?
   options:
     A: "Parquet never supports pushdown."
@@ -26,16 +26,16 @@
     D: "shuffle.partitions is too low."
   answer: [B]
   explanation: >-
-    A native column predicate on a Parquet source normally appears in PushedFilters. An empty list
-    on an expected filter usually means a Python UDF or a non-pushable function wraps the column,
-    making the predicate opaque to Catalyst.
+    A native column predicate on a Parquet source normally appears in PushedFilters. Suppose the
+    list is empty for a filter that you expected. Usually a Python UDF or a non-pushable function
+    wraps the column. This makes the predicate opaque to Catalyst.
   source: "https://spark.apache.org/docs/4.0.0/sql-data-sources-parquet.html"
 
 - id: SPK-05-q3
   type: single
   prompt: >-
     A query selects only order_id and currency from a 7-column Parquet table. In the formatted
-    plan, what proves column pruning worked?
+    plan, what proves that column pruning worked?
   options:
     A: "Exchange count is 0"
     B: "The FileScan ReadSchema lists only order_id and currency, not all 7 columns"
@@ -43,8 +43,8 @@
     D: "The plan contains BroadcastHashJoin"
   answer: [B]
   explanation: >-
-    Column pruning is visible as a narrow ReadSchema on the scan node: only the referenced columns
-    are read. Because Parquet is columnar, this is a real I/O reduction, not cosmetic.
+    You see column pruning as a narrow ReadSchema on the scan node. Spark reads only the
+    referenced columns. Parquet is columnar, so this is a real I/O reduction, not a cosmetic one.
   source: "https://spark.apache.org/docs/4.0.0/sql-performance-tuning.html"
 
 - id: SPK-05-q4
@@ -58,8 +58,8 @@
   answer: [C]
   explanation: >-
     'formatted' prints the physical operators as a compact numbered tree plus a details block
-    (ReadSchema, PushedFilters, output). 'cost' adds row/size estimates; 'codegen' dumps generated
-    Java; 'simple' is one line per operator.
+    (ReadSchema, PushedFilters, output). 'cost' adds row and size estimates. 'codegen' dumps the
+    generated Java. 'simple' prints one line for each operator.
   source: "https://spark.apache.org/docs/4.0.0/api/python/reference/pyspark.sql/api/pyspark.sql.DataFrame.explain.html"
 
 - id: SPK-05-q5
@@ -74,16 +74,16 @@
     D: "It disables Catalyst."
   answer: [B]
   explanation: >-
-    Pushed predicates let the Parquet reader skip entire row groups using column min/max stats in
-    the footer, so those bytes are never read or decoded. This is the same idea as Redshift zone
-    maps skipping blocks.
+    Pushed predicates let the Parquet reader skip whole row groups. It uses the column min/max
+    stats in the footer. So Spark never reads or decodes those bytes. This is the same idea as
+    Redshift zone maps that skip blocks.
   source: "https://spark.apache.org/docs/4.0.0/sql-data-sources-parquet.html"
 
 - id: SPK-05-q6
   type: single
   prompt: >-
-    You filter orders then join to a small products table. Catalyst moves the filter below the
-    join in the optimized logical plan. What is this rewrite called and why does it help?
+    You filter orders and then join to a small products table. Catalyst moves the filter below
+    the join in the optimized logical plan. What is this rewrite called, and why does it help?
   options:
     A: "Broadcast — it caches the small side."
     B: "Predicate (filter) pushdown / filter reordering — fewer rows enter the join, so the shuffle/join is cheaper."
@@ -91,9 +91,9 @@
     D: "Whole-stage codegen — it fuses operators."
   answer: [B]
   explanation: >-
-    Pushing the filter below the join shrinks the join inputs. Catalyst applies this as a
-    rule-based rewrite in the optimized logical plan, exactly like a warehouse planner pushing a
-    WHERE clause before a join.
+    When the filter moves below the join, the join inputs become smaller. Catalyst applies this
+    as a rule-based rewrite in the optimized logical plan. A warehouse planner does the same when
+    it pushes a WHERE clause before a join.
   source: "https://spark.apache.org/docs/4.0.0/sql-performance-tuning.html"
 
 - id: SPK-05-q7
@@ -106,7 +106,7 @@
     D: "It is only available in Spark SQL, not the DataFrame API."
   answer: [B]
   explanation: >-
-    explain is a planning-only operation: it shows the parsed/analyzed/optimized/physical plans
-    without running the query. No data is read until an action triggers execution of the physical
+    explain only plans. It shows the parsed, analyzed, optimized, and physical plans without it
+    running the query. Spark reads no data until an action triggers execution of the physical
     plan.
   source: "https://spark.apache.org/docs/4.0.0/api/python/reference/pyspark.sql/api/pyspark.sql.DataFrame.explain.html"

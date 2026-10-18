@@ -7,19 +7,19 @@
     C: "Across a consumer group"
     D: "Across the whole cluster"
   answer: [B]
-  explanation: "Ordering is guaranteed only within a partition. To keep all events for one entity ordered, they must share a partition — which is why the key choice (key -> partition) is the ordering contract."
+  explanation: "Kafka guarantees order only within a partition. To keep all events for one entity in order, they must share a partition. For this reason, the key choice (key -> partition) is the ordering contract."
   source: "https://kafka.apache.org/documentation/#intro_concepts_and_terms"
 
 - id: KFK-09-q2
   type: single
-  prompt: "The default producer partitioner maps a non-null key to a partition how?"
+  prompt: "How does the default producer partitioner map a non-null key to a partition?"
   options:
     A: "Round-robin regardless of key"
     B: "murmur2(key) modulo the number of partitions"
     C: "By the key's insertion order"
     D: "By the broker with the least load"
   answer: [B]
-  explanation: "The default partitioner uses murmur2(key) % numPartitions for non-null keys, so the same key always goes to the same partition (given a fixed partition count). A null key is distributed round-robin/sticky."
+  explanation: "For non-null keys, the default partitioner uses murmur2(key) % numPartitions. The same key always goes to the same partition (if the partition count stays fixed). The partitioner distributes a null key round-robin/sticky."
   source: "https://kafka.apache.org/documentation/#producerconfigs_partitioner.class"
 
 - id: KFK-09-q3
@@ -27,47 +27,47 @@
   prompt: "In a skewed multi-tenant platform, why is keying every event by company_id a poor choice?"
   options:
     A: "It breaks per-entity ordering"
-    B: "It sends a large tenant's entire traffic to one partition, creating a hot partition"
+    B: "It sends the entire traffic of a large tenant to one partition, which creates a hot partition"
     C: "It prevents log compaction"
     D: "It requires a GlobalKTable"
   answer: [B]
-  explanation: "company_id is low-cardinality and skewed: the biggest tenant's events all hash to one partition, capping its throughput and lag. Key by the high-cardinality entity id so a big tenant's load spreads across partitions while each entity stays ordered."
+  explanation: "company_id has low cardinality and is skewed. All events of the biggest tenant hash to one partition, which limits its throughput and lag. Key by the high-cardinality entity id. Then the load of a big tenant spreads across partitions, and each entity stays ordered."
   source: "https://kafka.apache.org/documentation/#intro_concepts_and_terms"
 
 - id: KFK-09-q4
   type: single
-  prompt: "You need the LATEST state per customer, rebuildable from the topic. Which topic design fits?"
+  prompt: "You need the LATEST state per customer, and you must be able to rebuild it from the topic. Which topic design fits?"
   options:
     A: "An event topic retained by time"
     B: "A compacted entity topic keyed by customer id"
     C: "A null-keyed topic with many partitions"
     D: "Topic-per-customer"
   answer: [B]
-  explanation: "Log compaction retains the most recent value per key, so a compacted topic keyed by customer id is a changelog of current state that a KTable/consumer can rebuild from the beginning. Time-retained event topics keep history, not a clean latest-state view."
+  explanation: "Log compaction retains the most recent value per key. A compacted topic keyed by customer id is therefore a changelog of current state. A KTable or consumer can rebuild it from the beginning. Time-retained event topics keep history. They do not give a clean view of the latest state."
   source: "https://kafka.apache.org/documentation/#compaction"
 
 - id: KFK-09-q5
   type: single
-  prompt: "Why is increasing a topic's partition count a disruptive change?"
+  prompt: "Why is increasing the partition count of a topic a disruptive change?"
   options:
     A: "It deletes existing data"
     B: "It changes the key-to-partition mapping, so existing keys may move partitions and lose their established ordering"
     C: "It requires downtime of the whole cluster"
     D: "It disables compaction"
   answer: [B]
-  explanation: "key -> partition is murmur2(key) % numPartitions. Changing numPartitions remaps keys, so a key's new events can land on a different partition than its old ones, breaking per-key ordering across the change. Size partitions for future load up front."
+  explanation: "The mapping key -> partition is murmur2(key) % numPartitions. If numPartitions changes, the keys map to new partitions. New events of a key can land on a different partition than its old events. This breaks per-key ordering across the change. Size the partitions for future load up front."
   source: "https://kafka.apache.org/documentation/#intro_concepts_and_terms"
 
 - id: KFK-09-q6
   type: single
   prompt: "What is the correct distinction between an event topic and an entity topic?"
   options:
-    A: "Event topics are compacted; entity topics are time-retained"
-    B: "Event topics are append-only facts (time-retained); entity topics are compacted changelogs of latest state per key"
+    A: "Event topics are compacted. Entity topics are time-retained."
+    B: "Event topics are append-only facts (time-retained). Entity topics are compacted changelogs of latest state per key."
     C: "They are the same thing with different names"
     D: "Entity topics cannot be keyed"
   answer: [B]
-  explanation: "An event topic records independent facts and is retained by time (your fact feed). An entity topic is a compacted changelog keyed by entity id, keeping the latest state per key (your dimension/KTable source)."
+  explanation: "An event topic records independent facts and Kafka retains it by time (your fact feed). An entity topic is a compacted changelog keyed by entity id. It keeps the latest state per key (your dimension or KTable source)."
   source: "https://kafka.apache.org/documentation/#compaction"
 
 - id: KFK-09-q7
@@ -75,21 +75,21 @@
   prompt: "What is the main drawback of a topic-per-tenant design at thousands of tenants?"
   options:
     A: "It cannot preserve per-entity ordering"
-    B: "Partition and metadata explosion that burdens the controller and brokers"
+    B: "The number of partitions and the amount of metadata grow very large, which burdens the controller and brokers"
     C: "It disables consumer groups"
     D: "It forces round-robin partitioning"
   answer: [B]
-  explanation: "Each topic has partitions with fixed overhead (files, replication, controller metadata). Thousands of tenant topics multiply that overhead and strain the cluster, even though isolation is strong. A shared, well-keyed topic usually scales better."
+  explanation: "Each topic has partitions with a fixed overhead (files, replication, controller metadata). Thousands of tenant topics multiply this overhead and strain the cluster, even though isolation is strong. A shared, well-keyed topic usually scales better."
   source: "https://kafka.apache.org/documentation/#intro_concepts_and_terms"
 
 - id: KFK-09-q8
   type: single
-  prompt: "To preserve per-entity ordering while spreading a skewed tenant's load, which key is best?"
+  prompt: "You must preserve per-entity ordering and spread the load of a skewed tenant. Which key is best?"
   options:
     A: "company_id"
     B: "a random UUID per event"
     C: "the high-cardinality entity id (e.g. order_id)"
     D: "null (let the producer round-robin)"
   answer: [C]
-  explanation: "Keying by the entity id co-locates all of one entity's events (ordering) while distributing many entities of a big tenant across partitions (no hot spot). A random key per event destroys ordering; a null key round-robins; company_id hot-spots."
+  explanation: "Keying by the entity id puts all events of one entity on one partition (ordering). It also distributes the many entities of a big tenant across partitions (no hot spot). A random key per event destroys ordering. A null key round-robins. company_id creates a hot spot."
   source: "https://kafka.apache.org/documentation/#producerconfigs_partitioner.class"

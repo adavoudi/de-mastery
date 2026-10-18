@@ -2,26 +2,35 @@
 
 ## Why Java at all
 
-You already think in SQL and Python. So why learn Java? Because the tools you are moving toward are
+You already think in SQL and Python. So why learn Java? The tools you are moving toward are
 *written in Java and only speak Java at their core*. Kafka Streams has no Python API. The Flink
 DataStream API, its state backends, and almost all production Flink code are Java. When a Kafka
-producer throws, you read a Java stack trace. When a Flink job runs out of memory, you tune a JVM
-heap. Most Kafka client examples are in Java. The goal of this track is **productive Java for data
-work** — enough to read the source, write a connector or a Streams topology, and package a job —
-*not* enterprise Java with Spring and reflection magic.
+producer throws an error, you read a Java stack trace. When a Flink job runs out of memory, you tune
+a JVM heap. Most Kafka client examples are in Java.
 
-The good news: modern Java (17/21) is far closer to Python than the Java of 2010. Records give you
-dataclass-like value types in one line, `var` gives you local type inference, `Optional` replaces
-"return None", and the Streams API is a lazy, chainable pipeline that will feel like a typed,
-compiled version of a Python generator expression.
+The goal of this track is **productive Java for data work**. You learn enough to do three things:
+
+1. Read the source code.
+2. Write a connector or a Streams topology.
+3. Package a job.
+
+This track is *not* about enterprise Java with Spring and reflection magic.
+
+The good news: modern Java (17/21) is much closer to Python than the Java of 2010.
+
+- Records give you dataclass-like value types in one line.
+- `var` gives you local type inference.
+- `Optional` replaces "return None".
+- The Streams API is a lazy, chainable pipeline. It feels like a typed, compiled version of a Python
+  generator expression.
 
 ## How Java differs from Python (the mental model)
 
-**Static typing, compiled.** Every variable, parameter and return value has a type the compiler
-checks *before* the program runs. A typo like calling `.toUppercase()` (wrong) instead of
-`.toUpperCase()` is a compile error, not a runtime `AttributeError`. You trade some ceremony for
-the compiler catching a whole class of bugs up front — the same safety a dbt `--warn-error` or a
-typed schema gives you.
+**Static typing, compiled.** Every variable, parameter and return value has a type. The compiler
+checks the types *before* the program runs. Suppose you call `.toUppercase()` (wrong) instead of
+`.toUpperCase()`. This is a compile error, not a runtime `AttributeError`. You write a little more
+code, and the compiler catches a whole class of bugs early. A dbt `--warn-error` or a typed schema
+gives you the same safety.
 
 ```java
 int n = 5;                 // primitive
@@ -33,10 +42,10 @@ var list = new ArrayList<String>();  // 'var' infers the type on the left
 
 **Everything lives in a class, in a package.** A file `src/main/java/de/mastery/Money.java`
 declares `package de.mastery;` and a `public class Money`. The folder path must match the package.
-This is the layout every build tool (Maven, Gradle) and every Java exercise in this track uses.
+Every build tool (Maven, Gradle) and every Java exercise in this track uses this layout.
 
-**Records = dataclasses.** A `record` is an immutable value type with constructor, accessors,
-`equals`, `hashCode` and `toString` generated for you:
+**Records = dataclasses.** A `record` is an immutable value type. Java generates the constructor,
+the accessors, `equals`, `hashCode` and `toString` for you:
 
 ```java
 public record Order(String currency, double amount) {}
@@ -44,21 +53,21 @@ Order o = new Order("USD", 10.0);
 o.currency();   // accessor is currency(), not o.currency
 ```
 
-That one line is the Java equivalent of a frozen `@dataclass`. Note accessors are *methods*
+That one line is the Java equivalent of a frozen `@dataclass`. Accessors are *methods*
 (`o.currency()`), because Java has no properties.
 
-**Generics = typed containers.** `List<String>`, `Map<String, Double>`. The `<...>` is the element
-type, checked at compile time — like `list[str]` in a type hint, but enforced. There are no bare
-`list`/`dict`; you always say what's inside.
+**Generics = typed containers.** Examples are `List<String>` and `Map<String, Double>`. The `<...>`
+is the element type. The compiler checks it. It is like `list[str]` in a type hint, but Java
+enforces it. Java has no bare `list` or `dict`. You always say what is inside.
 
-**Interfaces = structural contracts (Protocols/ABCs).** An `interface` declares method signatures;
-a class `implements` it. `Comparable<T>`, `Runnable`, `Function<T,R>` are interfaces. A **lambda**
-`x -> x * 2` is shorthand for implementing a one-method (functional) interface — the compiled
-cousin of a Python `lambda`.
+**Interfaces = structural contracts (Protocols/ABCs).** An `interface` declares method signatures.
+A class `implements` it. `Comparable<T>`, `Runnable` and `Function<T,R>` are interfaces. A
+**lambda** `x -> x * 2` is a short way to implement a one-method (functional) interface. It is the
+compiled cousin of a Python `lambda`.
 
-**`Optional<T>` instead of `None`.** Java references can be `null`, and dereferencing `null` throws
-`NullPointerException` (the Java `TypeError: NoneType`). `Optional<T>` makes "maybe absent" explicit
-in the type, so you handle it deliberately:
+**`Optional<T>` instead of `None`.** Java references can be `null`. If you dereference `null`, Java
+throws `NullPointerException` (the Java version of `TypeError: NoneType`). `Optional<T>` shows
+"maybe absent" in the type, so you handle the case on purpose:
 
 ```java
 Optional<String> name = lookup(id);
@@ -66,11 +75,15 @@ String shown = name.orElse("unknown");         // default
 name.map(String::toUpperCase).ifPresent(...);  // transform if present
 ```
 
-**Exceptions: checked vs unchecked.** Python has only runtime exceptions. Java splits them:
-*unchecked* (`RuntimeException`, e.g. `IllegalArgumentException`, `NullPointerException`) need no
-declaration; *checked* (e.g. `IOException`) must be either caught or declared with `throws` on the
-method. The compiler enforces that you acknowledge checked failures — annoying at first, but it is
-why Kafka/Flink APIs force you to deal with I/O errors.
+**Exceptions: checked vs unchecked.** Python has only runtime exceptions. Java has two kinds:
+
+- *Unchecked* exceptions need no declaration. Examples are `RuntimeException`,
+  `IllegalArgumentException` and `NullPointerException`.
+- *Checked* exceptions (for example `IOException`) must be caught. Or you declare them with `throws`
+  on the method.
+
+The compiler makes you acknowledge checked failures. This is annoying at first. It is also the
+reason why Kafka and Flink APIs force you to deal with I/O errors.
 
 ```java
 public static int parse(String s) {
@@ -79,9 +92,9 @@ public static int parse(String s) {
 }
 ```
 
-**No truthiness, explicit equality.** `if (x)` requires a `boolean`; there is no "empty list is
-false". And `==` on objects compares *references*, not contents — use `.equals()` for value
-equality (`"a".equals(other)`), the single most common beginner bug coming from Python.
+**No truthiness, explicit equality.** `if (x)` requires a `boolean`. An empty list is not "false".
+Also, `==` on objects compares *references*, not contents. Use `.equals()` for value equality
+(`"a".equals(other)`). This is the most common beginner bug for people who come from Python.
 
 ## From your world
 
@@ -98,14 +111,15 @@ equality (`"a".equals(other)`), the single most common beginner bug coming from 
 
 ## When NOT to reach for Java
 
-- **Don't** write Scala-style or framework-heavy Java here. Keep methods small, favor records and
-  plain functions. (Scala is never required in this track; SPK-05 has a short "reading Scala"
-  sidebar only.)
-- **Don't** translate Python idioms literally. Mutating a list while iterating, relying on
-  truthiness, or comparing strings with `==` will bite you. Learn the Java idiom (`equals`, typed
-  loops, `Optional`).
-- **Don't** use Java where PySpark/dbt already solves it. This track is for the *engine-internal*
-  work (Streams, connectors, Flink jobs), not for re-implementing a staging model.
+- **Don't** write Scala-style or framework-heavy Java here. Keep methods small. Prefer records and
+  plain functions. (This track never requires Scala. SPK-05 has a short "reading Scala" sidebar
+  only.)
+- **Don't** translate Python idioms literally. These three habits will cause bugs in Java:
+  mutating a list while you iterate, relying on truthiness, and comparing strings with `==`. Learn
+  the Java idiom (`equals`, typed loops, `Optional`).
+- **Don't** use Java where PySpark or dbt already solves the problem. This track is for the
+  *engine-internal* work (Streams, connectors, Flink jobs). It is not for re-implementing a staging
+  model.
 
 ## Further reading (official)
 

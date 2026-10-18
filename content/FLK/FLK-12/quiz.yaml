@@ -3,23 +3,23 @@
   prompt: "What is the difference between a checkpoint and a savepoint in Flink?"
   options:
     A: "They are the same thing"
-    B: "Checkpoints are automatic, system-owned snapshots for crash recovery; savepoints are manual, user-owned snapshots for upgrades/migrations and are not auto-expired"
+    B: "Checkpoints are automatic, system-owned snapshots for crash recovery. Savepoints are manual, user-owned snapshots for upgrades and migrations. Flink does not expire them automatically"
     C: "Savepoints are only for batch jobs"
     D: "Checkpoints cannot restore state"
   answer: [B]
-  explanation: "Checkpoints are periodic and owned by Flink for fault tolerance; savepoints are triggered by you for planned upgrades/rescales and persist until you delete them."
+  explanation: "Checkpoints are periodic and Flink owns them for fault tolerance. You trigger savepoints for planned upgrades and rescales. They persist until you delete them."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/ops/state/savepoints/"
 
 - id: FLK-12-q2
   type: single
-  prompt: "A counter is kept in a transient instance field (transient long n) instead of ValueState. What happens after restoring the job from a savepoint?"
+  prompt: "A job keeps a counter in a transient instance field (transient long n) and not in ValueState. What happens after you restore the job from a savepoint?"
   options:
     A: "The count is restored correctly"
-    B: "The count resets to zero — instance fields are not part of Flink's managed state and are not snapshotted"
+    B: "The count resets to zero. Instance fields are not part of the managed state of Flink and Flink does not snapshot them"
     C: "The job fails to start"
     D: "The field is restored but the ValueState is lost"
   answer: [B]
-  explanation: "Only Flink-managed state (keyed/operator state) is snapshotted. A plain field is reinitialized on restore, so the accumulated value is lost."
+  explanation: "Flink snapshots only Flink-managed state (keyed/operator state). On restore, Flink initializes a plain field again, so the accumulated value is lost."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/fault-tolerance/state/"
 
 - id: FLK-12-q3
@@ -27,23 +27,23 @@
   prompt: "Why should you assign an explicit .uid() to stateful operators?"
   options:
     A: "To make the UI prettier"
-    B: "A savepoint maps saved state to operators by UID; without an explicit UID, Flink derives one from the graph position, which changes when you edit the job and breaks state restore"
+    B: "A savepoint maps saved state to operators by UID. Without an explicit UID, Flink derives one from the graph position. This position changes when you edit the job and breaks the state restore"
     C: "It speeds up checkpoints"
     D: "It is required to compile"
   answer: [B]
-  explanation: "Stable, explicit UIDs let an upgraded job find its state in the savepoint. Auto-generated UIDs change with the graph and can orphan state."
+  explanation: "Stable, explicit UIDs let an upgraded job find its state in the savepoint. Automatic UIDs change with the graph and can orphan state."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/ops/production_ready/"
 
 - id: FLK-12-q4
   type: single
-  prompt: "What is the correct sequence to upgrade a running stateful job to a new jar without losing state?"
+  prompt: "What is the correct sequence of steps to upgrade a running stateful job to a new jar without losing state?"
   options:
     A: "Cancel the job, then start the new jar fresh"
     B: "Stop the job WITH a savepoint, then start the new jar --fromSavepoint <path>"
     C: "Hot-swap the jar in place"
     D: "Delete all checkpoints first, then redeploy"
   answer: [B]
-  explanation: "stop-with-savepoint snapshots state; starting the new jar from that savepoint restores each operator's state by UID."
+  explanation: "stop-with-savepoint snapshots the state. When you start the new jar from that savepoint, Flink restores the state of each operator by UID."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/ops/upgrading/"
 
 - id: FLK-12-q5
@@ -51,45 +51,45 @@
   prompt: "You remove a stateful operator from the job. The savepoint still contains its state. How do you start the new job?"
   options:
     A: "It is impossible"
-    B: "Start with allowNonRestoredState so Flink drops the orphaned state deliberately"
+    B: "Start with allowNonRestoredState, so Flink drops the orphaned state deliberately"
     C: "Rename all other operators"
     D: "Delete the savepoint"
   answer: [B]
-  explanation: "allowNonRestoredState lets you intentionally discard state that no longer has a matching operator; without it, unmatched state is an error."
+  explanation: "allowNonRestoredState lets you discard on purpose the state that has no matching operator. Without it, unmatched state is an error."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/ops/state/savepoints/"
 
 - id: FLK-12-q6
   type: single
-  prompt: "Why must rescaling (changing parallelism) of a stateful job go through a savepoint rather than a plain restart?"
+  prompt: "Why must the rescaling (change of parallelism) of a stateful job go through a savepoint and not a plain restart?"
   options:
     A: "Plain restarts are banned"
-    B: "Rescaling redistributes key groups across subtasks; the savepoint carries the keyed state so it can be re-assigned to the new parallelism"
+    B: "Rescaling redistributes key groups across subtasks. The savepoint carries the keyed state, so Flink can assign it again for the new parallelism"
     C: "Savepoints change the data"
     D: "Parallelism can never change"
   answer: [B]
-  explanation: "Keyed state is organized in key groups; a savepoint lets Flink redistribute those groups to the new number of subtasks on restore."
+  explanation: "Flink organizes keyed state in key groups. A savepoint lets Flink redistribute those groups to the new number of subtasks on restore."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/ops/state/savepoints/"
 
 - id: FLK-12-q7
   type: single
-  prompt: "In production, which systems perform the stop-with-savepoint / start-from-savepoint on each deploy?"
+  prompt: "In production, which systems do the stop-with-savepoint and start-from-savepoint on each deploy?"
   options:
     A: "Only a human on the CLI"
     B: "The Flink Kubernetes Operator, AWS Managed Service for Apache Flink, or Confluent Cloud Flink"
     C: "The source database"
     D: "Kafka Connect"
   answer: [B]
-  explanation: "Managed runtimes (K8s Operator, AWS MSF, Confluent Cloud Flink) automate the savepoint upgrade cycle. The same guarantee is taught locally."
+  explanation: "Managed runtimes (K8s Operator, AWS MSF, Confluent Cloud Flink) automate the savepoint upgrade cycle. The local exercise teaches the same guarantee."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/ops/upgrading/"
 
 - id: FLK-12-q8
   type: single
-  prompt: "A source's read offset must survive a savepoint so the stream resumes where it left off. Where should it live?"
+  prompt: "The read offset of a source must survive a savepoint, so the stream resumes where it stopped. Where should the offset live?"
   options:
     A: "A transient field"
-    B: "Operator state (ListState via CheckpointedFunction), snapshotted and restored on isRestored()"
+    B: "Operator state (ListState via CheckpointedFunction). The job snapshots it and restores it on isRestored()"
     C: "A static variable"
     D: "A local file only"
   answer: [B]
-  explanation: "A source's per-subtask offset is operator state: declare it as ListState through CheckpointedFunction, snapshot it, and reload it when the context isRestored()."
+  explanation: "The offset of a source for each subtask is operator state. Declare it as ListState through CheckpointedFunction. Snapshot it. Reload it when the context isRestored()."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/fault-tolerance/state/"

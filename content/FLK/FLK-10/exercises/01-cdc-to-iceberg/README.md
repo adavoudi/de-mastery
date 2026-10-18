@@ -1,10 +1,10 @@
 # Apply a Debezium changelog into an upserted Iceberg table
 
-Build the SQL for a CDC → Iceberg pipeline. The test wires up the infrastructure (an Iceberg
-`hadoop` catalog on a local `file://` warehouse, and a `debezium-json` source table over a fixed
-file of change events). You write the pieces that make it an **upsert** and that **evolve the
-schema**. The test then reconciles the Iceberg table against an independent DuckDB fold of the same
-change events (G6) — never against your SQL text.
+Build the SQL for a CDC → Iceberg pipeline. The test sets up the infrastructure. It creates an Iceberg
+`hadoop` catalog on a local `file://` warehouse. It also creates a `debezium-json` source table over a fixed
+file of change events. You write the pieces that make it an **upsert** and that **evolve the
+schema**. Then the test reconciles the Iceberg table against an independent DuckDB fold of the same
+change events (G6). It never compares against your SQL text.
 
 ## The change events (phase 1)
 
@@ -31,25 +31,25 @@ existed before the column was added read `NULL` for `region`.
 
 ## What to implement in `cdc_to_iceberg.py`
 
-1. **`target_ddl(table: str) -> str`** — the `CREATE TABLE <table> (…)` for the Iceberg sink. It
-   must be **upsert-capable**: columns `id INT, name STRING, amt INT`, a `PRIMARY KEY (id) NOT
-   ENFORCED`, and `WITH ('format-version'='2')`. (The test prefixes `IF NOT EXISTS` is **not** added
-   for you — return a plain `CREATE TABLE`.)
+1. **`target_ddl(table: str) -> str`** — Return the `CREATE TABLE <table> (…)` for the Iceberg sink. It
+   must be **upsert-capable**. It has the columns `id INT, name STRING, amt INT`, a `PRIMARY KEY (id) NOT
+   ENFORCED`, and `WITH ('format-version'='2')`. The test does **not** add `IF NOT EXISTS` for
+   you. Return a plain `CREATE TABLE`.
 
-2. **`upsert_sql(src: str, tgt: str) -> str`** — `INSERT INTO <tgt> SELECT id, name, amt FROM
-   <src>` that applies the changelog (the `src` table already emits +I/-U/+U/-D).
+2. **`upsert_sql(src: str, tgt: str) -> str`** — Return `INSERT INTO <tgt> SELECT id, name, amt FROM
+   <src>`. It applies the changelog (the `src` table already emits +I/-U/+U/-D).
 
-3. **`evolve_ddl(table: str) -> str`** — the `ALTER TABLE <table> ADD (region STRING)` that evolves
+3. **`evolve_ddl(table: str) -> str`** — Return the `ALTER TABLE <table> ADD (region STRING)` that evolves
    the schema.
 
-4. **`upsert_sql_v2(src: str, tgt: str) -> str`** — the phase-2 upsert that also carries the new
+4. **`upsert_sql_v2(src: str, tgt: str) -> str`** — Return the phase-2 upsert that also carries the new
    column: `INSERT INTO <tgt> SELECT id, name, amt, region FROM <src>`.
 
 ## Constraints
 
-- Return SQL strings; the test runs them in the right order on the embedded Flink `flink_sql`
+- Return SQL strings. The test runs them in the right order on the embedded Flink `flink_sql`
   runner.
-- Use the parameters (`table`, `src`, `tgt`) you are given for the identifiers.
-- The test asserts: (a) the table reconciles the DuckDB fold after each phase, (b) at least one
-  Iceberg snapshot was committed (commit-on-checkpoint), and (c) after evolution, old rows read NULL
-  for `region`. Nothing is graded on SQL text or timing.
+- Use the parameters (`table`, `src`, `tgt`) that you get for the identifiers.
+- The test asserts three things. (a) The table reconciles with the DuckDB fold after each phase. (b) At least one
+  Iceberg snapshot was committed (commit-on-checkpoint). (c) After evolution, old rows read NULL
+  for `region`. The test grades nothing on SQL text or timing.

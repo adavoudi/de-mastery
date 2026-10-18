@@ -2,20 +2,22 @@
 
 ## Why it exists
 
-In the warehouse your data-quality checks run *after* the load: dbt tests assert not-null, accepted
-values and relationships, and a failing test fails the run so a human looks before anything
-downstream reads it. A stream has no "after the run" — data flows continuously and consumers read it
-immediately. So quality moves **in-flight**: you check each record as it passes and decide, per
-record, whether it is fit to enter the mart. The dangerous reflex is to write a `WHERE good`
-predicate that silently discards everything else. That turns a data problem into an invisible data
-problem: your fact table reconciles to itself, looks clean, and is quietly missing rows nobody can
-account for. In a SOX context, *unexplained* missing records are a worse finding than bad ones.
+In the warehouse, your data-quality checks run *after* the load. dbt tests assert not-null,
+accepted values and relationships. A failing test fails the run. Then a person looks at the problem
+before anything downstream reads the data. A stream has no "after the run". Data flows continuously,
+and consumers read it immediately. So quality moves **in-flight**. You check each record as it
+passes. For each record, you decide if it is fit to enter the mart.
 
-The fix is a **quarantine** (a.k.a. dead-letter queue, DLQ): every record that fails a rule is
-*routed* to a side table with the reason it failed, not dropped. The governing invariant is
-**completeness**: `count(mart) + count(quarantine) == count(input)`, and the two sets are disjoint.
-Every input is accounted for — valued in the mart or explained in the quarantine. That is the
-streaming form of "the load balanced".
+There is a dangerous habit: you write a `WHERE good` predicate that silently discards everything
+else. This turns a data problem into an invisible data problem. Your fact table reconciles to
+itself and looks clean. But it quietly misses rows that nobody can account for. In a SOX context, an
+*unexplained* missing record is a worse finding than a bad record.
+
+The fix is a **quarantine** (also called a dead-letter queue, DLQ). You *route* every record that
+fails a rule to a side table, together with the reason it failed. You do not drop it. The governing
+invariant is **completeness**: `count(mart) + count(quarantine) == count(input)`, and the two sets
+are disjoint. The system accounts for every input. Each input is valued in the mart or explained in
+the quarantine. This is the streaming form of "the load balanced".
 
 ## How it works
 
@@ -23,25 +25,32 @@ A streaming DQ stage is a routing step, not a filter:
 
 ![The input splits by complementary predicates into a good stream for the mart and a bad stream for quarantine, each rejected row tagged with a reason](diagrams/dq-split.svg)
 
-1. **Define the rules as a data contract.** For orders: `cid` not null (not-null), `amt` present and
-   `> 0` (a value/accepted-range rule), and `cid` must reference a real customer (a relationship /
-   referential rule). These are exactly dbt's `not_null`, accepted-values and `relationships` tests,
-   evaluated per event.
-2. **Split, don't filter.** Partition the input into two streams by the same predicate: the **good**
-   stream (all rules pass) feeds the mart (`fct_orders` via the STH-05 as-of join); the **bad**
-   stream (any rule fails) feeds the **quarantine** table, each row tagged with a `reason`. The two
-   predicates must be exact complements so no row goes to both and no row goes to neither.
-3. **Keep the reason.** The quarantine row carries *why* it failed (`null_customer`,
-   `non_positive_amount`, `unknown_customer`), so an operator can triage, fix the source, and
-   replay — the whole point of a DLQ over a silent drop.
-4. **Assert completeness continuously.** The acceptance check is counts: `|good| + |quarantine|
-   == |input|` with `good ∩ quarantine = ∅`. A silent-drop bug (a `WHERE` that filters without a
-   matching quarantine) breaks this immediately — which is exactly what the tests here enforce.
+1. **Define the rules as a data contract.** For orders:
+   - `cid` is not null (not-null).
+   - `amt` is present and `> 0` (a value/accepted-range rule).
+   - `cid` must reference a real customer (a relationship / referential rule).
 
-**Order of rules matters for the reason, not for the split.** When a row violates several rules, you
-report *one* reason (the first that applies, via a `CASE`), but it must still be in the quarantine
-exactly once. The *membership* (good vs bad) is rule-order-independent; only the label depends on the
-`CASE` ordering.
+   These are exactly the `not_null`, accepted-values and `relationships` tests of dbt. You evaluate
+   them for each event.
+2. **Split, do not filter.** Use the same predicate to partition the input into two streams.
+   - The **good** stream (all rules pass) feeds the mart (`fct_orders` via the STH-05 as-of join).
+   - The **bad** stream (any rule fails) feeds the **quarantine** table. Each row has a `reason`
+     tag.
+
+   The two predicates must be exact complements. Then no row goes to both streams, and no row goes
+   to neither.
+3. **Keep the reason.** The quarantine row carries *why* it failed (`null_customer`,
+   `non_positive_amount`, `unknown_customer`). An operator can triage the row, fix the source and
+   replay the row. This is the purpose of a DLQ, and a silent drop does not offer it.
+4. **Assert completeness continuously.** The acceptance check uses counts:
+   `|good| + |quarantine| == |input|` with `good ∩ quarantine = ∅`. A silent-drop bug breaks this
+   immediately. A silent-drop bug is a `WHERE` that filters without a matching quarantine. The tests
+   here enforce this check.
+
+**The order of the rules matters for the reason, not for the split.** A row can violate several
+rules. Then you report *one* reason (the first rule that applies, via a `CASE`). But the row must
+still be in the quarantine exactly once. The *membership* (good or bad) does not depend on the order
+of the rules. Only the label depends on the `CASE` order.
 
 ## From your world
 
@@ -56,18 +65,19 @@ exactly once. The *membership* (good vs bad) is rule-order-independent; only the
 
 ## When NOT to use it
 
-- **Don't filter bad rows with a bare `WHERE` and no quarantine** — that is a silent drop. If a rule
-  removes a row from the mart, that row must land in the quarantine with a reason, or your counts no
-  longer reconcile.
-- **Don't quarantine what you can safely fix in-flight** — if a rule has a deterministic repair
-  (e.g. uppercase a currency code, default a missing region), fix it rather than DLQ it; reserve
-  quarantine for records you genuinely cannot trust.
-- **Don't let the quarantine grow unbounded and unwatched** — a DLQ is a queue to be triaged and
-  replayed, not a graveyard. If nobody reads it, you have reinvented the silent drop with extra
-  steps.
-- **Don't apply heavy DQ at sub-second latency when hourly is fine** — if the batch lakehouse SLA is
-  adequate, run the same checks as dbt tests on a schedule; in-flight DQ earns its complexity only
-  when the mart must be both fresh and trustworthy.
+- **Do not filter bad rows with a bare `WHERE` and no quarantine.** This is a silent drop. A rule
+  can remove a row from the mart. Then that row must land in the quarantine with a reason. If not,
+  your counts no longer reconcile.
+- **Do not quarantine what you can safely fix in-flight.** Suppose a rule has a deterministic repair
+  (for example, change a currency code to uppercase, or set a default for a missing region). Then
+  fix the record and do not send it to the DLQ. Use quarantine only for records that you genuinely
+  cannot trust.
+- **Do not let the quarantine grow without limit and without a watcher.** A DLQ is a queue that
+  people triage and replay. It is not a place where data stays forever. If nobody reads it, you have
+  rebuilt the silent drop with extra steps.
+- **Do not apply heavy DQ at sub-second latency when hourly is fine.** Suppose the SLA of the batch
+  lakehouse is adequate. Then run the same checks as dbt tests on a schedule. In-flight DQ is worth
+  its complexity only when the mart must be both fresh and trustworthy.
 
 ## Further reading
 

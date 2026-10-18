@@ -1,18 +1,18 @@
 # Build a revenue mart with SQL on files and a temp view
 
-Rebuild a small dbt-style mart in Spark SQL. The source is the `order_items` Parquet file, which
-contains a few **duplicate line rows** (the deliberate dirt). You must dedup before you aggregate,
-or the duplicates inflate revenue.
+Rebuild a small dbt-style mart in Spark SQL. The source is the `order_items` Parquet file. It
+contains a few **duplicate line rows** (the deliberate dirt). You must dedup before you
+aggregate. If you do not, the duplicates inflate revenue.
 
-Implement `company_revenue(spark, order_items_path)` in `solution.py`. It must:
+Implement `company_revenue(spark, order_items_path)` in `solution.py`. It must do these steps:
 
-1. Read the Parquet file at `order_items_path` (via the DataFrame reader, or directly in SQL with
-   ``FROM parquet.`<path>` ``).
+1. Read the Parquet file at `order_items_path` (with the DataFrame reader, or directly in SQL
+   with ``FROM parquet.`<path>` ``).
 2. Remove exact duplicate line rows (dedup on the full business key:
    `company_id, order_item_id, order_id, product_code, qty, line_amount`).
-3. Register the cleaned data as a temporary view and query it with `spark.sql(...)` (use at least
-   one temp view — this is the `ref()` analogue).
-4. Return a DataFrame with one row per company:
+3. Register the cleaned data as a temporary view. Query it with `spark.sql(...)`. Use at least
+   one temp view. This is the `ref()` analogue.
+4. Return a DataFrame with one row for each company:
 
 | column | value |
 |---|---|
@@ -20,5 +20,5 @@ Implement `company_revenue(spark, order_items_path)` in `solution.py`. It must:
 | `revenue` | `SUM(line_amount)` over deduped rows |
 | `units` | `SUM(qty)` over deduped rows |
 
-The test compares against a DuckDB oracle (which dedups the same way). Row/column order are
-ignored; floats compared with tolerance.
+The test compares against a DuckDB oracle (which dedups in the same way). The test ignores
+row order and column order. It compares floats with a tolerance.

@@ -1,73 +1,73 @@
 - id: STH-08-q1
   type: single
-  prompt: "Moving a mart from an hourly tier to a seconds tier changes the bill. Which cost bucket typically grows the MOST steeply?"
+  prompt: "You move a mart from an hourly tier to a seconds tier. The bill changes. Which cost bucket typically grows the MOST steeply?"
   options:
-    A: "Storage — more bytes are retained"
-    B: "Compute — from a few scheduled job-minutes to a 24/7 always-on cluster"
+    A: "Storage, because the system retains more bytes"
+    B: "Compute, from a few scheduled job-minutes to a 24/7 always-on cluster"
     C: "Network egress to the dashboard"
     D: "The cost of the dashboard tool licence"
   answer: [B]
-  explanation: "Batch pays compute only while a scheduled job runs; the seconds tier is a fully provisioned always-on cluster, which is the dominant and steepest-growing cost at low latency."
+  explanation: "Batch pays for compute only while a scheduled job runs. The seconds tier is a fully provisioned always-on cluster. This is the dominant cost, and it grows most steeply at low latency."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/"
 
 - id: STH-08-q2
   type: single
   prompt: "The seconds tier stores roughly the same retained data as the hours tier. Why does its STORAGE cost still rise (mildly)?"
   options:
-    A: "Streaming data is encrypted and encryption doubles size"
-    B: "Frequent commits write many small files (and old snapshots), adding small-file overhead until compaction/expiry"
+    A: "Streaming data is encrypted, and encryption doubles the size"
+    B: "Frequent commits write many small files (and old snapshots). This adds small-file overhead until compaction or expiry"
     C: "Object stores charge more per GB for fresh data"
-    D: "Storage does not rise at all; the premise is false"
+    D: "Storage does not rise at all. The premise is false"
   answer: [B]
-  explanation: "Frequent checkpoints/commits produce many small files and extra snapshots, adding overhead until compaction and snapshot expiry reclaim it. The retained bytes are similar, so storage rises mildly compared with always-on compute."
+  explanation: "Frequent checkpoints and commits produce many small files and extra snapshots. This adds overhead until compaction and snapshot expiry reclaim it. The retained bytes are similar. So storage rises mildly compared with always-on compute."
   source: "https://paimon.apache.org/docs/2.0/"
 
 - id: STH-08-q3
   type: multi
-  prompt: "Which cost buckets should a freshness-tier cost model include? (select all)"
+  prompt: "Which cost buckets should a cost model for freshness tiers include? (select all)"
   options:
     A: "Compute (job / cluster time, including compaction)"
     B: "Storage (retained bytes plus small-file overhead)"
     C: "Operations / people (monitoring, on-call)"
     D: "The colour of the dashboard theme"
   answer: [A, B, C]
-  explanation: "A tier changes compute, storage and operations/people at once. A model that omits any of the three understates the real cost of lower latency."
+  explanation: "A tier changes compute, storage and operations/people at once. If a model omits any of the three, it understates the real cost of lower latency."
   source: "https://fluss.apache.org/"
 
 - id: STH-08-q4
   type: single
   prompt: "Two engineers model the same workload and tiers independently. What makes their totals land within ±20% of each other?"
   options:
-    A: "They copy each other's spreadsheet"
-    B: "A deterministic, formula-driven model: fixed inputs (volume, retention, per-unit prices) and explicit per-component formulas; the tier only changes a few multipliers"
+    A: "They copy the spreadsheet of each other"
+    B: "A deterministic model that formulas drive: fixed inputs (volume, retention, per-unit prices) and explicit formulas for each component. The tier changes only a few multipliers"
     C: "They both round everything up to the nearest thousand"
     D: "They each guess a round number"
   answer: [B]
-  explanation: "Determinism comes from explicit formulas over the same inputs; the tier changes only a few multipliers (always-on fraction, file-count multiplier, on-call hours). Independent implementations then agree within rounding, well inside ±20%."
+  explanation: "Determinism comes from explicit formulas over the same inputs. The tier changes only a few multipliers (always-on fraction, file-count multiplier, on-call hours). Then independent implementations agree within rounding, well inside ±20%."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/"
 
 - id: STH-08-q5
   type: single
-  prompt: "A mart's SLA is 'fresh by 9 a.m.' The business asks for second-level freshness anyway. What is the right engineering recommendation?"
+  prompt: "The SLA of a mart is 'fresh by 9 a.m.' The business asks for second-level freshness anyway. What is the right engineering recommendation?"
   options:
-    A: "Always choose the freshest tier; freshness is free"
-    B: "Price all three tiers and recommend the cheapest tier that meets the SLA; seconds buys nothing here but costs several times more"
-    C: "Refuse to model cost and let the business decide blindly"
+    A: "Always choose the freshest tier. Freshness is free"
+    B: "Price all three tiers and recommend the cheapest tier that meets the SLA. Seconds gives nothing here and costs several times more"
+    C: "Refuse to model cost and let the business decide without information"
     D: "Move every other mart to seconds too, for consistency"
   answer: [B]
-  explanation: "Freshness is a cost lever. If hourly meets the SLA, the seconds tier adds always-on compute, compaction and on-call for no benefit. Tier per mart by its actual SLA."
+  explanation: "Freshness is a cost lever. Suppose hourly meets the SLA. Then the seconds tier adds always-on compute, compaction and on-call with no benefit. Choose the tier per mart by its actual SLA."
   source: "https://paimon.apache.org/docs/2.0/"
 
 - id: STH-08-q6
   type: single
-  prompt: "In the cost model, where does continuous COMPACTION work belong?"
+  prompt: "In the cost model, which bucket includes continuous COMPACTION work?"
   options:
-    A: "In storage, because it rewrites files"
-    B: "In compute, because it is cluster time spent merging small files"
-    C: "In operations, because an engineer triggers it"
+    A: "Storage, because compaction rewrites files"
+    B: "Compute, because it is cluster time that the system spends to merge small files"
+    C: "Operations, because an engineer triggers it"
     D: "It is free and belongs nowhere"
   answer: [B]
-  explanation: "Compaction consumes cluster/job time to merge small files, so it is compute. Storage captures the retained bytes plus the transient small-file overhead; the work of compacting is compute."
+  explanation: "Compaction uses cluster/job time to merge small files, so it is compute. Storage captures the retained bytes plus the temporary small-file overhead. The work of compaction is compute."
   source: "https://paimon.apache.org/docs/2.0/"
 
 - id: STH-08-q7
@@ -75,9 +75,9 @@
   prompt: "A cost model shows the HOURS tier costing more than the SECONDS tier for the same mart. What is the most likely modelling error?"
   options:
     A: "The model correctly reflects reality"
-    B: "The tier multipliers are inverted (e.g. always-on compute or on-call applied to batch, not to streaming)"
+    B: "The tier multipliers are inverted (for example, the model applies always-on compute or on-call to batch and not to streaming)"
     C: "The storage price is too low"
     D: "The dashboard query is too fast"
   answer: [B]
-  explanation: "Seconds > minutes > hours is the expected ordering because compute and on-call grow as latency shrinks. Hours > seconds signals inverted multipliers — applying always-on/on-call costs to the batch tier instead of the streaming tier."
+  explanation: "The expected ordering is seconds > minutes > hours, because compute and on-call grow as latency shrinks. If hours > seconds, the multipliers are inverted. The model applies always-on and on-call costs to the batch tier and not to the streaming tier."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/"

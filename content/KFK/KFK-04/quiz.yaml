@@ -1,97 +1,101 @@
 - id: KFK-04-q1
   type: single
-  prompt: "To get at-least-once processing (no loss, possible duplicates), you should:"
+  prompt: "You want at-least-once processing (no loss, possible duplicates). What do you do?"
   options:
     A: "Enable auto-commit with a short interval."
     B: "Disable auto-commit and commit the offset AFTER the processing work is durably done."
-    C: "Commit the offset before processing each record."
-    D: "Never commit; rely on auto.offset.reset."
+    C: "Commit the offset before you process each record."
+    D: "Never commit. Rely on auto.offset.reset."
   answer: [B]
   explanation: >-
-    Committing after processing means the committed offset only advances past records you handled, so
-    a crash reprocesses (at-least-once). Committing before processing risks loss (at-most-once).
+    When you commit after processing, the committed offset moves only past records that you
+    handled. So a crash causes reprocessing (at-least-once). Committing before processing risks
+    loss (at-most-once).
   source: "https://kafka.apache.org/documentation/#semantics"
 
 - id: KFK-04-q2
   type: single
-  prompt: "A consumer uses enable.auto.commit=true. It polls a batch, auto-commit fires, then the process crashes before finishing the batch. On restart, those records are:"
+  prompt: "A consumer uses enable.auto.commit=true. It polls a batch. Auto-commit runs. Then the process crashes before it finishes the batch. After the restart, what happens to those records?"
   options:
-    A: "Reprocessed from the start of the batch."
-    B: "Skipped — the offset was already committed, so the group resumes past them (at-most-once)."
-    C: "Delivered to a dead-letter topic automatically."
-    D: "Delivered to every consumer in the group."
+    A: "They are reprocessed from the start of the batch."
+    B: "They are skipped. The offset was already committed, so the group resumes after them (at-most-once)."
+    C: "They are delivered to a dead-letter topic automatically."
+    D: "They are delivered to every consumer in the group."
   answer: [B]
   explanation: >-
-    Auto-commit advanced the offset before the work finished, so the resuming consumer starts past the
-    unprocessed records — they are lost. This is the at-most-once trap of auto-commit.
+    Auto-commit moved the offset forward before the work finished. So the resuming consumer starts
+    after the unprocessed records, and they are lost. This is the at-most-once trap of auto-commit.
   source: "https://kafka.apache.org/documentation/#consumerconfigs"
 
 - id: KFK-04-q3
   type: single
-  prompt: "How is work divided within a consumer group?"
+  prompt: "How does Kafka divide work within a consumer group?"
   options:
     A: "Every consumer reads every partition."
-    B: "Each partition is assigned to exactly one consumer in the group at a time."
+    B: "At any time, each partition is assigned to exactly one consumer in the group."
     C: "The group leader reads everything and forwards it."
-    D: "Partitions are split byte-wise across consumers."
+    D: "Kafka splits partitions by bytes across consumers."
   answer: [B]
   explanation: >-
-    Within a group each partition is owned by one consumer; adding/removing consumers triggers a
-    rebalance that reassigns partitions. This is how groups scale and fail over.
+    Within a group, one consumer owns each partition. When you add or remove consumers, a rebalance
+    reassigns the partitions. This is how groups scale and fail over.
   source: "https://kafka.apache.org/documentation/#semantics"
 
 - id: KFK-04-q4
   type: single
-  prompt: "What does KIP-848 (the new consumer group protocol in Kafka 4.x) primarily change?"
+  prompt: "What does KIP-848 (the new consumer group protocol in Kafka 4.x) mainly change?"
   options:
     A: "It removes consumer groups entirely."
-    B: "It moves assignment to the broker-side coordinator with incremental reconciliation, reducing stop-the-world rebalances."
+    B: "It moves assignment to the broker-side coordinator with incremental reconciliation. This reduces stop-the-world rebalances."
     C: "It makes every consumer read every partition."
     D: "It replaces offsets with timestamps."
   answer: [B]
   explanation: >-
-    KIP-848 is a broker-driven, incremental rebalance protocol that shortens and reduces the
-    disruptive pauses of the old client-driven protocol. The subscribe/poll/commit API is unchanged.
+    KIP-848 is a rebalance protocol that the broker drives, and it works incrementally. It shortens
+    and reduces the disruptive pauses of the old client-driven protocol. The subscribe, poll, and
+    commit API does not change.
   source: "https://cwiki.apache.org/confluence/display/KAFKA/KIP-848%3A+The+Next+Generation+of+the+Consumer+Rebalance+Protocol"
 
 - id: KFK-04-q5
   type: single
-  prompt: "Consumer lag for a partition is defined as:"
+  prompt: "How is consumer lag for a partition defined?"
   options:
     A: "The number of consumers in the group."
-    B: "log-end-offset minus the group's committed offset for that partition."
+    B: "log-end-offset minus the committed offset of the group for that partition."
     C: "The time since the last poll."
     D: "The replication factor minus one."
   answer: [B]
   explanation: >-
-    Lag measures how far behind a group is: records written but not yet committed-as-consumed. Rising
-    lag means the consumers can't keep up and is the key alerting metric.
+    Lag measures how far behind a group is. It counts the records that are written but not yet
+    committed as consumed. Rising lag means that the consumers cannot keep up. It is the key
+    alerting metric.
   source: "https://kafka.apache.org/documentation/#consumerconfigs"
 
 - id: KFK-04-q6
   type: single
   prompt: "At-least-once can produce duplicates. What is the standard way to make the end result correct anyway?"
   options:
-    A: "Ignore duplicates; they are harmless."
-    B: "Make the downstream write idempotent (e.g. an upsert keyed by a business id), or use transactions for exactly-once."
+    A: "Ignore duplicates. They are harmless."
+    B: "Make the downstream write idempotent (for example, an upsert keyed by a business id), or use transactions for exactly-once."
     C: "Commit before processing to avoid them."
     D: "Reduce the replication factor."
   answer: [B]
   explanation: >-
-    An idempotent sink (upsert by business key) absorbs the rare reprocessed duplicate; if no
-    downstream dedup is possible, escalate to transactional exactly-once (KFK-05).
+    An idempotent sink (upsert by business key) absorbs the rare reprocessed duplicate. If no
+    downstream dedup is possible, use transactional exactly-once (KFK-05).
   source: "https://kafka.apache.org/documentation/#semantics"
 
 - id: KFK-04-q7
   type: single
-  prompt: "Share groups (KIP-932) differ from classic consumer groups because they:"
+  prompt: "How do share groups (KIP-932) differ from classic consumer groups?"
   options:
-    A: "Guarantee exactly-once by default."
-    B: "Allow multiple consumers to share a partition's records with per-record acknowledgement (queue-like), rather than one-partition-per-consumer."
-    C: "Remove the need for brokers."
-    D: "Only work with transactions."
+    A: "They guarantee exactly-once by default."
+    B: "They allow multiple consumers to share the records of a partition, with per-record acknowledgement (queue-like). Classic groups use one partition for each consumer."
+    C: "They remove the need for brokers."
+    D: "They work only with transactions."
   answer: [B]
   explanation: >-
-    Share groups add SQS-like queue semantics (shared consumption + per-record ack). They are early
-    access in this Kafka line; classic groups keep the one-partition-per-consumer rule.
+    Share groups add SQS-like queue semantics (shared consumption and per-record ack). They are
+    early access in this Kafka line. Classic groups keep the rule of one partition for each
+    consumer.
   source: "https://cwiki.apache.org/confluence/display/KAFKA/KIP-932%3A+Queues+for+Kafka"

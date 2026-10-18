@@ -2,64 +2,69 @@
 
 ## Why join strategy is the whole game
 
-In Redshift you learned that a join's cost is dominated by data movement: if both tables are
-distributed on the join key the join is local, but if one must be redistributed (or broadcast with
-`DISTSTYLE ALL`) across the cluster, that network shuffle is the expensive part. Spark is identical.
-The *logic* of a join — which rows match — is trivial; the *cost* is the shuffle. So the single
-most valuable skill here is choosing (or letting Spark choose) the right **physical join strategy**
-and proving it from the plan.
+In Redshift, you learned that data movement is most of the cost of a join. Suppose both tables
+are distributed on the join key. Then the join is local. Suppose one table must be redistributed
+across the cluster (or broadcast with `DISTSTYLE ALL`). Then that network shuffle is the
+expensive part. Spark works in the same way. The *logic* of a join (which rows match) is simple.
+The *cost* is the shuffle. So the most valuable skill here is to choose the right **physical
+join strategy**. You can also let Spark choose it. In both cases, prove the choice from the plan.
 
 ## The three strategies
 
-- **Broadcast hash join (`BroadcastHashJoin`).** The small side is collected to the driver,
-  broadcast to every executor, and hashed in memory; the large side streams through with **no
-  shuffle**. This is the fastest join when one side is small — the direct analogue of Redshift's
-  `DISTSTYLE ALL` on a small dimension. Spark auto-broadcasts a side whose estimated size is below
-  `spark.sql.autoBroadcastJoinThreshold` (default 10 MB), or when you wrap it in `F.broadcast(df)`.
-- **Sort-merge join (`SortMergeJoin`).** Both sides are shuffled on the join key, sorted, and
-  merged. This is the default for two large tables. It costs **two shuffles** (one per side) plus
-  sorts — but it scales to any size and is robust.
-- **Shuffle hash join (`ShuffledHashJoin`).** Both sides shuffled on the key; one side built into a
-  hash table per partition. Used when one side is medium-sized and building a hash is cheaper than
-  sorting. Spark picks it under specific size/config conditions.
+- **Broadcast hash join (`BroadcastHashJoin`).** Spark collects the small side to the driver,
+  broadcasts it to every executor, and hashes it in memory. The large side streams through with
+  **no shuffle**. This is the fastest join when one side is small. It is the direct analogue of
+  Redshift `DISTSTYLE ALL` on a small dimension. Spark broadcasts a side automatically when its
+  estimated size is below `spark.sql.autoBroadcastJoinThreshold` (default 10 MB). It also
+  broadcasts a side when you wrap it in `F.broadcast(df)`.
+- **Sort-merge join (`SortMergeJoin`).** Spark shuffles both sides on the join key, sorts them,
+  and merges them. This is the default for two large tables. It costs **two shuffles** (one for
+  each side) plus sorts. But it scales to any size and it is reliable.
+- **Shuffle hash join (`ShuffledHashJoin`).** Spark shuffles both sides on the key. It builds
+  one side into a hash table for each partition. Spark uses it when one side has a medium size
+  and building a hash is cheaper than sorting. Spark picks it under specific size and
+  configuration conditions.
 
 ![Where data moves in broadcast, shuffle hash and sort-merge joins](diagrams/join-strategies.svg)
 
-The rule of thumb that matches your warehouse intuition: **broadcast the small dimension, sort-merge
-two big facts.** Broadcasting the *large* side is a classic, expensive mistake — it tries to pull a
-huge table to the driver and ship it everywhere.
+This rule of thumb matches your warehouse intuition: **broadcast the small dimension, and
+sort-merge two big facts.** Do not broadcast the *large* side. This is a classic, expensive
+mistake. Spark tries to pull a huge table to the driver and send it everywhere.
 
 ## Broadcast variables and accumulators
 
-Separate from the join operator, Spark exposes two low-level shared-state primitives:
+Spark has two low-level primitives for shared state. They are separate from the join operator:
 
-- **Broadcast variable** (`spark.sparkContext.broadcast(value)`): ship a read-only Python object
-  (a lookup dict, a model) to every executor once, instead of serialising it into every task. The
-  broadcast *join* uses this mechanism under the hood, but you can also use a broadcast variable
-  directly inside a UDF/mapPartitions.
-- **Accumulator** (`spark.sparkContext.accumulator(0)`): a write-only-from-executors, read-on-driver
-  counter for metrics (e.g. count bad rows seen). Accumulator values are only reliable in
-  **actions**, not transformations that may re-run, so treat them as approximate monitoring, not as
-  business logic.
+- **Broadcast variable** (`spark.sparkContext.broadcast(value)`): it sends a read-only Python
+  object (a lookup dict, a model) to every executor once. Without it, Spark would serialize the
+  object into every task. The broadcast *join* uses this mechanism internally. You can also use
+  a broadcast variable directly inside a UDF/mapPartitions.
+- **Accumulator** (`spark.sparkContext.accumulator(0)`): a counter for metrics (for example, a
+  count of the bad rows that Spark saw). Executors can only write to it. The driver reads it.
+  Accumulator values are reliable only in **actions**. They are not reliable in transformations
+  that may run again. So treat them as approximate monitoring, not as business logic.
 
 ## Skew: when one key dominates
 
-If one join key value owns a huge share of the rows (one giant customer, a NULL key, a default
-company), the partition holding that key becomes a straggler: every other task finishes and one
-runs for ages. This is **data skew**. Classic fixes:
+Suppose one join key value owns a large share of the rows (one giant customer, a NULL key, a
+default company). The partition that holds this key becomes a straggler. Every other task
+finishes, and one task runs for a very long time. This is **data skew**. These are the classic
+fixes:
 
-- **Broadcast the other side** if it is small (no shuffle, so no skewed partition).
-- **Salting:** add a random suffix to the hot key on both sides so its rows spread across many
-  partitions, then aggregate back. Salting must **not change the result** — a salt that drops or
-  duplicates rows is a bug.
+- **Broadcast the other side** if it is small. There is no shuffle, so there is no skewed
+  partition.
+- **Salting:** add a random suffix to the hot key on both sides. Then the rows of the key spread
+  across many partitions. After that, aggregate back. Salting must **not change the result**. A
+  salt that drops or duplicates rows is a bug.
 
 ![One hot key makes a straggler partition; salting splits it into even ones](diagrams/skew-salting.svg)
 - **AQE skew-join handling (SPK-08):** `spark.sql.adaptive.skewJoin.enabled` splits oversized
   shuffle partitions at runtime. You will see this in the plan in SPK-08.
 
-A multi-company gotcha from your world: `order_id` is unique per company but can repeat across
-companies, and a surrogate id can collide after an acquisition. Always join dimensions on the full
-**business key**, or you double-count — the Spark version of an intercompany double-count.
+Here is a multi-company gotcha from your world. `order_id` is unique for each company, but it
+can repeat across companies. A surrogate id can also collide after an acquisition. Always join
+dimensions on the full **business key**. If you do not, you double-count. This is the Spark
+version of an intercompany double-count.
 
 ## From your world
 
@@ -73,14 +78,15 @@ companies, and a surrogate id can collide after an acquisition. Always join dime
 
 ## When NOT to broadcast / not to salt
 
-- **Don't broadcast a large table.** It OOMs the driver (collecting it) and wastes network. Check
-  the estimated size, not the row count intuition.
-- **Don't salt a join that isn't skewed.** Salting adds a shuffle-widening step and complexity for
-  no gain if the key distribution is even. Measure first.
-- **Don't lower `autoBroadcastJoinThreshold` to force sort-merge** as a habit; prefer letting AQE
-  and the cost model decide unless you have a specific reason.
-- **Don't rely on accumulators for correctness.** They can over-count on task retries; use them for
-  monitoring only.
+- **Do not broadcast a large table.** Spark collects it on the driver and the driver can run out
+  of memory (OOM). It also wastes network. Check the estimated size. Do not rely on your
+  intuition about the row count.
+- **Do not salt a join that is not skewed.** Salting adds a shuffle-widening step and
+  complexity. If the key distribution is even, you get no gain. Measure first.
+- **Do not lower `autoBroadcastJoinThreshold` to force sort-merge** as a habit. Prefer to let
+  AQE and the cost model decide, unless you have a specific reason.
+- **Do not rely on accumulators for correctness.** They can over-count when tasks retry. Use
+  them for monitoring only.
 
 ## Further reading
 

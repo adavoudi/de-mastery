@@ -2,13 +2,15 @@
 
 ## Why this module
 
-A huge fraction of data-engineering Java is "take a collection of events and reshape it": group,
-sum, filter, join to a lookup, deduplicate. In Python you reach for comprehensions, `collections`,
-and `itertools`. In Java you use the **Collections framework** (`List`, `Map`, `Set`) and the
-**Streams API** (`java.util.stream`). A Kafka Streams `KStream`/`KTable` pipeline is literally
-modeled on this API — once you can read a `stream().filter(...).map(...).collect(...)` chain, a
-Streams topology reads the same way. Flink's DataStream operators mirror it too. So this is the
-module where Java starts to feel like SQL and dbt again, just typed and compiled.
+Much data-engineering Java does one job: it takes a collection of events and reshapes it. You
+group, sum, filter, join to a lookup, and deduplicate. In Python you use comprehensions,
+`collections`, and `itertools`. In Java you use the **Collections framework** (`List`, `Map`,
+`Set`) and the **Streams API** (`java.util.stream`).
+
+A Kafka Streams `KStream`/`KTable` pipeline follows the design of this API. Learn to read a
+`stream().filter(...).map(...).collect(...)` chain. Then a Streams topology reads the same way.
+Flink's DataStream operators also follow this design. In this module, Java starts to feel like SQL
+and dbt again. The difference is that it is typed and compiled.
 
 ## How Java collections work
 
@@ -27,22 +29,30 @@ counts.merge("a", 1, Integer::sum);   // the Java defaultdict(int) idiom
 counts.getOrDefault("z", 0);          // like dict.get(k, 0)
 ```
 
-Two idioms worth memorizing: `map.merge(key, delta, (old,new) -> ...)` is how you accumulate (the
-`defaultdict`/`Counter` pattern), and `map.computeIfAbsent(key, k -> new ArrayList<>())` is how you
-build a `dict[list]` grouping.
+Learn these two idioms:
 
-**Immutable vs mutable factories.** `List.of(...)`, `Map.of(...)`, `Set.of(...)` return
-*immutable* collections (adding throws). Wrap in `new ArrayList<>(...)` when you need to mutate.
-This trips up Python developers who expect every list to be mutable.
+- `map.merge(key, delta, (oldVal, newVal) -> ...)` accumulates values. It is the `defaultdict`/`Counter`
+  pattern.
+- `map.computeIfAbsent(key, k -> new ArrayList<>())` builds a `dict[list]` grouping.
+
+**Immutable vs mutable factories.** `List.of(...)`, `Map.of(...)` and `Set.of(...)` return
+*immutable* collections. If you add an element, Java throws an exception. Wrap the result in
+`new ArrayList<>(...)` when you need to change it. This surprises Python developers, because they
+expect every list to be mutable.
 
 ## How the Streams API works
 
-A **stream** is a lazy pipeline over a source, built from a `source → 0+ intermediate ops →
-1 terminal op`. Intermediate ops (`filter`, `map`, `flatMap`, `distinct`, `sorted`, `limit`) are
-lazy and return a new stream; the terminal op (`collect`, `reduce`, `count`, `forEach`,
-`toList`, `min`/`max`) runs the pipeline. Nothing happens until the terminal op — exactly Spark's
-transformation/action split (SPK-02), and exactly a Python generator that only produces when
-consumed.
+A **stream** is a lazy pipeline over a source. It has this form: `source → 0+ intermediate ops →
+1 terminal op`.
+
+- Intermediate ops (`filter`, `map`, `flatMap`, `distinct`, `sorted`, `limit`) are lazy. Each one
+  returns a new stream.
+- The terminal op (`collect`, `reduce`, `count`, `forEach`, `toList`, `min`/`max`) runs the
+  pipeline.
+
+Nothing happens until the terminal op. This is the same as Spark's transformation/action split
+(SPK-02). It is also the same as a Python generator, which produces values only when something
+consumes them.
 
 ![Elements only move once collect() pulls them, one at a time through filter and map; one is dropped at the filter](diagrams/stream-lazy-pipeline.svg)
 
@@ -60,19 +70,22 @@ Map<String, Double> byCurrency = orders.stream()
         Collectors.summingDouble(Order::amount)));// SUM(amount)
 ```
 
-- **`map` vs `flatMap`.** `map` is 1→1 (project a column). `flatMap` is 1→many then flattened
-  (SQL `UNNEST`/`explode`): `lines.stream().flatMap(l -> Arrays.stream(l.split(",")))`.
-- **Method references.** `Order::amount` is shorthand for `o -> o.amount()`; `Double::sum` for
-  `(a,b) -> a + b`; `System.out::println` for `x -> System.out.println(x)`.
-- **Collectors are your SQL aggregates.** `groupingBy`, `counting`, `summingDouble`,
-  `averagingDouble`, `mapping`, `toMap`, `toList`, `joining`. `groupingBy(k, downstream)` nests
-  like `GROUP BY k` with an aggregate.
-- **`reduce`** folds a stream with an *associative* identity+combiner — the same associativity rule
-  you learned in FND for parallel aggregation. If your combiner isn't associative, a parallel
-  stream gives wrong answers.
+- **`map` vs `flatMap`.** `map` is 1→1 (project a column). `flatMap` is 1→many, and then Java
+  flattens the result (SQL `UNNEST`/`explode`):
+  `lines.stream().flatMap(l -> Arrays.stream(l.split(",")))`.
+- **Method references.** `Order::amount` is a short form of `o -> o.amount()`. `Double::sum` is a
+  short form of `(a,b) -> a + b`. `System.out::println` is a short form of
+  `x -> System.out.println(x)`.
+- **Collectors are your SQL aggregates.** They are `groupingBy`, `counting`, `summingDouble`,
+  `averagingDouble`, `mapping`, `toMap`, `toList` and `joining`. `groupingBy(k, downstream)` works
+  like `GROUP BY k` with an aggregate. You can nest it.
+- **`reduce`** folds a stream. It takes an identity and a combiner, and the combiner must be
+  *associative*. This is the same associativity rule that you learned in FND for parallel
+  aggregation. If your combiner is not associative, a parallel stream gives wrong answers.
 
-**Primitive streams.** `IntStream`, `LongStream`, `DoubleStream` avoid boxing and add `sum()`,
-`average()`, `summaryStatistics()`. Use `mapToDouble`/`mapToInt` to get there.
+**Primitive streams.** `IntStream`, `LongStream` and `DoubleStream` avoid boxing. They add
+`sum()`, `average()` and `summaryStatistics()`. Use `mapToDouble` or `mapToInt` to get a primitive
+stream.
 
 ## From your world
 
@@ -90,14 +103,16 @@ Map<String, Double> byCurrency = orders.stream()
 
 ## When NOT to use streams
 
-- **Don't** use a parallel stream (`.parallelStream()`) by reflex. For small collections the
-  thread-pool overhead loses, and a non-associative `reduce`/stateful lambda gives wrong or
-  non-deterministic results. Parallelism belongs to Spark/Flink, not to a `parallelStream` here.
-- **Don't** force a plain loop into a tortured stream. If a `for` loop with early `break` is
-  clearer, use it. Streams shine for *declarative transforms*, not for side-effecting control flow.
-- **Don't** mutate external state from inside a lambda (`list.add(...)` in a `map`). It breaks
-  under parallelism and is a code smell; use a `Collector` instead.
-- **Don't** reuse a stream — a stream is consumed once by its terminal op (unlike a `List`).
+- **Don't** use a parallel stream (`.parallelStream()`) without a reason. For small collections,
+  the thread-pool overhead costs more than it saves. A non-associative `reduce` or a stateful
+  lambda gives wrong or non-deterministic results. Parallelism belongs to Spark and Flink, not to a
+  `parallelStream` here.
+- **Don't** force a plain loop into a hard-to-read stream. Use a `for` loop with an early `break`
+  if it is clearer. Streams work best for *declarative transforms*. They do not work well for
+  control flow with side effects.
+- **Don't** change external state from inside a lambda (`list.add(...)` in a `map`). It breaks
+  under parallelism and it is a sign of bad code. Use a `Collector` instead.
+- **Don't** reuse a stream. The terminal op consumes a stream once. A `List` is different.
 
 ## Further reading (official)
 

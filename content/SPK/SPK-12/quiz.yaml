@@ -2,15 +2,15 @@
   type: single
   prompt: "A unit test passes your correct transformation. What else must be true for the test to be trustworthy?"
   options:
-    A: "Nothing; passing the correct code is sufficient."
+    A: "Nothing. Passing the correct code is sufficient."
     B: "It must also FAIL plausible wrong versions (mutants) of the transformation."
     C: "It must assert the exact column order."
     D: "It must run on full-scale production data."
   answer: [B]
   explanation: >-
-    A test that passes correct code but also passes buggy code is worthless. A strong test kills
-    mutants (e.g. sum->avg, missing dedup, inner vs left join). Asserting column order is brittle,
-    and full-scale data belongs in a separate run, not a unit test.
+    A test that passes correct code and also passes buggy code has no value. A strong test kills
+    mutants (for example sum->avg, missing dedup, inner vs left join). Asserting column order is
+    brittle. Full-scale data belongs in a separate run, not in a unit test.
   source: "https://spark.apache.org/docs/4.0.0/api/python/tutorial/sql/testing_pyspark.html"
 
 - id: SPK-12-q2
@@ -24,8 +24,8 @@
   answer: [B]
   explanation: >-
     assertDataFrameEqual compares rows (optionally order-insensitive) with float tolerance and gives
-    a readable diff. Raw collect()== is order-sensitive and float-fragile; count() is far too weak;
-    explain() tests the plan, not the data.
+    a readable diff. Raw collect()== is order-sensitive and fragile with floats. count() is far too
+    weak. explain() tests the plan, not the data.
   source: "https://spark.apache.org/docs/4.0.0/api/python/tutorial/sql/testing_pyspark.html"
 
 - id: SPK-12-q3
@@ -39,7 +39,7 @@
   answer: [A, B, D]
   explanation: >-
     Oracle equality, invariants, and plan properties test behavior and requirements. Column order is
-    an incidental detail that makes tests too strict and blocks valid refactors.
+    an incidental detail. It makes tests too strict and blocks valid refactors.
   source: "https://spark.apache.org/docs/4.0.0/api/python/tutorial/sql/testing_pyspark.html"
 
 - id: SPK-12-q4
@@ -47,14 +47,14 @@
   prompt: "Why structure a pipeline as pure DataFrame -> DataFrame transforms with a thin main()?"
   options:
     A: "It runs faster."
-    B: "Pure transforms are unit-testable with injected inputs; the thin main just wires read/transform/write and is integration-tested."
+    B: "You can unit-test pure transforms with injected inputs. The thin main only connects read/transform/write, and you integration-test it."
     C: "Spark requires it."
-    D: "It avoids the need for any configuration."
+    D: "It removes the need for any configuration."
   answer: [B]
   explanation: >-
-    Separating pure logic from I/O makes the logic testable with small in-memory inputs and lets the
-    same code run locally and on the cluster via injected config. It is the dbt discipline (logic in
-    models, I/O configured) applied to PySpark.
+    When you separate pure logic from I/O, you can test the logic with small in-memory inputs. The
+    same code can also run locally and on the cluster, with injected config. It is the dbt discipline
+    (logic in models, I/O configured) applied to PySpark.
   source: "https://spark.apache.org/docs/4.0.0/api/python/tutorial/sql/testing_pyspark.html"
 
 - id: SPK-12-q5
@@ -67,9 +67,10 @@
     D: "spark.driver.cores only"
   answer: [B]
   explanation: >-
-    shuffle.partitions sets post-shuffle parallelism: too high yields many tiny files and scheduling
-    overhead, too low yields spill/skew. AQE can coalesce it adaptively. The UI flag and app name
-    don't affect this; driver cores alone don't set shuffle width.
+    shuffle.partitions sets the parallelism after a shuffle. If it is too high, you get many tiny
+    files and scheduling overhead. If it is too low, you get spill/skew. AQE can coalesce it
+    adaptively. The UI flag and the app name do not affect this. Driver cores alone do not set the
+    shuffle width.
   source: "https://spark.apache.org/docs/4.0.0/configuration.html"
 
 - id: SPK-12-q6
@@ -78,24 +79,25 @@
   options:
     A: "Run it untagged and leave the application running for convenience."
     B: "Right-size the application, tag resources (e.g. project=de-mastery), and tear it down afterward."
-    C: "Hard-code credentials in the job so it always works."
+    C: "Hard-code credentials in the job so that it always works."
     D: "Disable AQE to save money."
   answer: [B]
   explanation: >-
-    Tagging enables cost attribution, right-sizing controls spend, and teardown stops ongoing
-    charges. Hard-coding credentials is a security bug, and disabling AQE usually hurts, not helps.
+    Tags enable cost attribution. Right-sizing controls spend. Teardown stops ongoing charges.
+    Hard-coding credentials is a security bug. Disabling AQE usually hurts and does not help.
   source: "https://docs.aws.amazon.com/emr/latest/EMR-Serverless-UserGuide/what-is-emr-serverless.html"
 
 - id: SPK-12-q7
   type: single
-  prompt: "A teammate's test asserts the output columns are in the order [id, name, total]. The refactor renames nothing but reorders them to [id, total, name] and the test fails. What's the lesson?"
+  prompt: "The test of a teammate asserts that the output columns are in the order [id, name, total]. A refactor renames nothing but reorders them to [id, total, name], and the test fails. What is the lesson?"
   options:
     A: "The refactor is wrong."
-    B: "The test is too strict: column order is an incidental detail unless the task specifies it."
+    B: "The test is too strict. Column order is an incidental detail unless the task specifies it."
     C: "Spark changed the semantics."
     D: "You must always assert column order."
   answer: [B]
   explanation: >-
-    Asserting incidental column order rejects a correct refactor (the 'too strict' failure mode).
-    Compare as a set of named columns / row equality instead, unless ordering is a real requirement.
+    If you assert an incidental column order, the test rejects a correct refactor (the 'too strict'
+    failure mode). Compare as a set of named columns or by row equality instead, unless ordering is a
+    real requirement.
   source: "https://spark.apache.org/docs/4.0.0/api/python/tutorial/sql/testing_pyspark.html"

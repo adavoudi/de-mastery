@@ -2,23 +2,29 @@
 
 ## Why Paimon exists
 
-A plain lake table (Iceberg/Delta) is **append-and-snapshot**: writers add files, readers see a
-snapshot. That is perfect for immutable facts but awkward for data that *updates in place* — a
-customer whose email changes, an account whose balance moves. To update one row you rewrite files
-(copy-on-write) or stack delete files (merge-on-read), and you get no cheap streaming changelog.
+A plain lake table (Iceberg/Delta) is **append-and-snapshot**. Writers add files. Readers see a
+snapshot. This works well for immutable facts. It is awkward for data that *updates in place*, for
+example a customer whose email changes or an account whose balance moves. To update one row, you
+must do one of two things:
+
+- Rewrite files (copy-on-write).
+- Stack delete files (merge-on-read).
+
+You also get no cheap streaming changelog.
 
 **Apache Paimon** adds an **LSM-tree** (log-structured merge tree) on top of the lake. Writes go to
-small sorted files that are periodically compacted, exactly like a streaming database's storage
-engine. On top of the LSM, Paimon offers **primary-key tables**: rows with the same primary key are
-*merged* by a configurable **merge engine** at compaction/read time. This is what turns a lake table
-into a mutable, upsertable, streaming-friendly store — the storage layer of a streamhouse.
+small sorted files. The system compacts these files from time to time. This is the same design as
+the storage engine of a streaming database. On top of the LSM, Paimon offers **primary-key tables**.
+A configurable **merge engine** *merges* rows that have the same primary key. It does this at
+compaction time or at read time. This turns a lake table into a store that you can mutate, upsert
+into and use for streaming. This store is the storage layer of a streamhouse.
 
 ## How primary-key tables and merge engines work
 
-A PK table is declared `PRIMARY KEY(...) NOT ENFORCED` plus a **bucket** setting. For a small,
-deterministic table you pin `'bucket' = '1'` (a fixed bucket); without it the bucket count is
-dynamic and the layout is not reproducible. When two records share a key, the **merge engine**
-decides the surviving row:
+You declare a PK table with `PRIMARY KEY(...) NOT ENFORCED` and a **bucket** setting. For a small,
+deterministic table, you pin `'bucket' = '1'` (a fixed bucket). Without it, the bucket count is
+dynamic and the layout is not reproducible. Two records can share a key. Then the **merge engine**
+decides which row survives:
 
 | `merge-engine` | behaviour on same key |
 |---|---|
@@ -29,41 +35,53 @@ decides the surviving row:
 
 ![Same key from two writers: deduplicate wipes out the CRM name, partial-update keeps both, aggregation also sums points](diagrams/pk-merge-engines.svg)
 
-**`partial-update` is the one for an MDM golden record.** Three source systems each know *part* of
-the customer: the CRM knows the name, billing knows the email, the loyalty app knows the phone. Each
-writes a row keyed by `customer_id` with only its own column filled and the others `NULL`. With
-`partial-update`, Paimon merges them into one complete row — the *golden record* — keeping each
-non-null field as it arrives. With the default `deduplicate` engine, the last write would **wipe
-out** the earlier systems' columns with its NULLs: a classic MDM data-loss bug.
+**`partial-update` is the right engine for an MDM golden record.** Three source systems each know
+*part* of the customer:
 
-> Order and NULLs: `partial-update` keeps a column's latest **non-null** value, so a later writer
-> that sends `NULL` for a column does **not** erase the value an earlier writer set. (Erasing on a
-> retract needs `sequence.field` + `partial-update.remove-record-on-delete`; out of scope here.)
+- The CRM knows the name.
+- Billing knows the email.
+- The loyalty app knows the phone.
+
+Each system writes a row keyed by `customer_id`. It fills only its own column and leaves the other
+columns `NULL`. With `partial-update`, Paimon merges the rows into one complete row, the *golden
+record*. It keeps each non-null field as it arrives. With the default `deduplicate` engine, the last
+write would **wipe out** the columns of the earlier systems with its NULLs. This is a classic MDM
+data-loss bug.
+
+> Order and NULLs: `partial-update` keeps the latest **non-null** value of a column. A later writer
+> may send `NULL` for a column. This does **not** erase the value that an earlier writer set. (To
+> erase a value on a retract, you need `sequence.field` + `partial-update.remove-record-on-delete`.
+> This is out of scope here.)
 
 ## Changelog producers (why STH-03 cares)
 
-A PK table can also emit a **changelog** so downstream streams see `+I/-U/+U/-D` events, not just the
-merged state. The producer is set with `'changelog-producer'`: `'input'` echoes the input rows,
-`'lookup'`/`'full-compaction'` compute true before/after images. This module focuses on the merged
-*state*; STH-03 uses the changelog.
+A PK table can also emit a **changelog**. Then downstream streams see `+I/-U/+U/-D` events, not only
+the merged state. You set the producer with `'changelog-producer'`. The value `'input'` echoes the
+input rows. The values `'lookup'` and `'full-compaction'` compute true before/after images. This
+module focuses on the merged *state*. STH-03 uses the changelog.
 
 ## From your world
 
-This is **master data management**, which you already do in dbt: a `stg_customer` per source system,
-then a golden-record model that coalesces attributes by precedence into one conformed
-`dim_customer`. Paimon's `partial-update` merge engine *is* that coalesce, done continuously in the
-storage layer instead of in a nightly dbt run. `PRIMARY KEY` is your business key; `bucket` is the
-physical layout; the merge engine is your `COALESCE`/precedence policy. The failure mode is the same
-one SOX auditors fear: one source system overwriting another's attributes and silently losing data.
+This is **master data management**, which you already do in dbt. You have a `stg_customer` model
+for each source system. Then a golden-record model coalesces the attributes by precedence into one
+conformed `dim_customer`. The `partial-update` merge engine of Paimon *is* that coalesce. It runs
+continuously in the storage layer. It does not run in a nightly dbt job. Compare the parts:
+
+- `PRIMARY KEY` is your business key.
+- `bucket` is the physical layout.
+- The merge engine is your `COALESCE`/precedence policy.
+
+The failure mode is the same one that SOX auditors fear. One source system overwrites the
+attributes of another source system, and data is lost without any signal.
 
 ## When NOT to use it
 
-- **Immutable, append-only facts** (events, orders as placed): a plain Iceberg/Delta table is
-  simpler and cheaper; you do not need an LSM, PK merges or compaction.
-- **You actually want last-writer-wins** across the whole row (e.g. a full-document upsert): use the
-  default `deduplicate` engine, not `partial-update`.
-- **Heavy ad-hoc OLAP with no updates**: the LSM compaction overhead buys you nothing; stay on a
-  columnar lake table.
+- **Immutable, append-only facts** (events, orders as placed): A plain Iceberg/Delta table is
+  simpler and cheaper. You do not need an LSM, PK merges or compaction.
+- **You actually want last-writer-wins** across the whole row (for example a full-document upsert):
+  Use the default `deduplicate` engine, not `partial-update`.
+- **Heavy ad-hoc OLAP with no updates**: The LSM compaction overhead gives you no benefit. Stay on
+  a columnar lake table.
 
 ## Further reading
 

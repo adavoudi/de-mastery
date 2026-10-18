@@ -1,29 +1,32 @@
 # Format decision memo (machine-graded rubric)
 
-Three teams ask you to pick a table format. Record your decision in `decision.yaml`. The grader does
-**not** read prose — it checks two machine-checkable things per scenario: the **format** you chose
-(one defensible answer) and that your **factors** list includes the required justification keys.
+Three teams ask you to pick a table format. Record your decision in `decision.yaml`. The grader
+does **not** read prose. For each scenario, it checks two things that a machine can check. The
+first is the **format** that you chose (one defensible answer). The second is that your **factors**
+list includes the required justification keys.
 
-Edit `decision.yaml`. For each of `scenario_1`, `scenario_2`, `scenario_3` set:
+Edit `decision.yaml`. For each of `scenario_1`, `scenario_2` and `scenario_3`, set these keys:
 
 - `format`: one of `iceberg`, `delta`, `hudi`.
 - `factors`: a list of factor keys from the controlled vocabulary below. You must include **all
-  required** factors for that scenario; extra ones are allowed.
+  required** factors for that scenario. You may add extra factors.
 
 ## The scenarios
 
 **Scenario 1 — Databricks platform.** A team runs entirely on Databricks with Unity Catalog for
-governance and wants incrementally maintained data skipping via `CLUSTER BY` (liquid clustering),
-plus Lakeflow pipelines. One vendor, Spark-centric.
+governance. The team wants data skipping that the platform maintains incrementally via
+`CLUSTER BY` (liquid clustering). The team also wants Lakeflow pipelines. It uses one vendor and is
+Spark-centric.
 
-**Scenario 2 — Vendor-neutral lake.** A central lake must be queried by Trino, Athena, Spark and
-DuckDB (no Databricks). The platform team expects to change partitioning later (e.g. add
-`days(event_ts)`) **without rewriting history**, and wants analysts to filter raw columns without a
-physical partition column leaking into queries.
+**Scenario 2 — Vendor-neutral lake.** Trino, Athena, Spark and DuckDB must query a central lake
+(no Databricks). The platform team expects to change partitioning later (for example, add
+`days(event_ts)`) **without rewriting history**. The team wants analysts to filter raw columns
+without a physical partition column in the queries.
 
 **Scenario 3 — CDC ingestion.** A near-real-time pipeline applies frequent **primary-key upserts**
-from a CDC stream and must serve downstream consumers "**give me only the records that changed since
-time T**" efficiently, locating affected files without scanning the whole table.
+from a CDC stream. It must serve downstream consumers that say "**give me only the records that
+changed since time T**". It must do this efficiently, and it must find the affected files without a
+scan of the whole table.
 
 ## Controlled vocabulary for `factors`
 

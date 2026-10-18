@@ -8,8 +8,9 @@
     D: "Creates a global table visible to other applications."
   answer: [B]
   explanation: >-
-    A temporary view is just a name on a lazy plan, scoped to the session, storing no bytes. It is
-    the closest Spark analogue of a dbt ref(). It does not cache or persist anything.
+    A temporary view is only a name on a lazy plan. It is scoped to the session and stores no
+    bytes. It is the closest Spark analogue of a dbt ref(). It does not cache or persist
+    anything.
   source: "https://spark.apache.org/docs/4.2.0/sql-getting-started.html"
 
 - id: SPK-04-q2
@@ -25,7 +26,7 @@
   answer: [B]
   explanation: >-
     overwrite replaces the existing data. append would add a second full copy on top of the
-    existing data, doubling counts and sums — the classic refresh-vs-append bug.
+    existing data. This doubles counts and sums. It is the classic refresh-vs-append bug.
   source: "https://spark.apache.org/docs/4.2.0/sql-data-sources-load-save-functions.html#save-modes"
 
 - id: SPK-04-q3
@@ -38,8 +39,9 @@
     D: "SELECT * FROM OPENROWSET('orders.parquet')"
   answer: [B]
   explanation: >-
-    The format.`path` syntax (parquet/orc/json/csv/text) lets SQL read a file path directly, like
-    pointing Athena at an S3 prefix. For reuse, register a temp view so the name is stable.
+    The format.`path` syntax (parquet/orc/json/csv/text) lets SQL read a file path directly. It
+    is like pointing Athena at an S3 prefix. If you reuse the data, register a temp view so the
+    name is stable.
   source: "https://spark.apache.org/docs/4.2.0/sql-data-sources-load-save-functions.html#run-sql-on-files-directly"
 
 - id: SPK-04-q4
@@ -52,9 +54,9 @@
     D: "CSV cannot store types, so a schema is illegal."
   answer: [B]
   explanation: >-
-    inferSchema requires an extra pass and may mis-type columns — reading a zero-padded id as an
-    integer, or an empty column as the wrong type. An explicit StructType is deterministic and
-    cheaper, the same discipline as typing a dbt source.
+    inferSchema needs an extra pass and may give columns the wrong type. For example, it may read
+    a zero-padded id as an integer, or give an empty column the wrong type. An explicit
+    StructType is deterministic and cheaper. It is the same discipline as typing a dbt source.
   source: "https://spark.apache.org/docs/4.2.0/sql-data-sources-csv.html"
 
 - id: SPK-04-q5
@@ -67,8 +69,9 @@
     D: "It guarantees exactly one file per company."
   answer: [B]
   explanation: >-
-    partitionBy writes one directory per value; a query filtering that column skips entire
-    directories (partition pruning) — the analogue of Hive/Glue partitions or a Redshift zone map.
+    partitionBy writes one directory for each value. A query that filters that column skips whole
+    directories (partition pruning). This is the analogue of Hive/Glue partitions or a Redshift
+    zone map.
   source: "https://spark.apache.org/docs/4.2.0/sql-data-sources-load-save-functions.html"
 
 - id: SPK-04-q6
@@ -81,9 +84,9 @@
     D: "country, because it is a string."
   answer: [C]
   explanation: >-
-    Partitioning by a high-cardinality key like order_id creates a directory per id and a flood of
-    tiny files (the small-file problem). Partition by low-cardinality columns queries filter on
-    (date, company) and sort within.
+    If you partition by a high-cardinality key like order_id, Spark creates a directory for each
+    id and a flood of tiny files (the small-file problem). Partition by low-cardinality columns
+    that queries filter on (date, company), and sort within the partitions.
   source: "https://spark.apache.org/docs/4.2.0/sql-data-sources-load-save-functions.html"
 
 - id: SPK-04-q7
@@ -98,9 +101,9 @@
     D: "Nothing can drop a managed table."
   answer: [B]
   explanation: >-
-    For a managed table Spark owns the data lifecycle, so DROP TABLE deletes the files. An external
-    table (created with an explicit LOCATION/path) keeps its files on DROP — the same
-    managed-vs-external distinction as Iceberg/Glue.
+    For a managed table, Spark owns the data lifecycle, so DROP TABLE deletes the files. An
+    external table (created with an explicit LOCATION/path) keeps its files on DROP. This is the
+    same managed-vs-external distinction as in Iceberg/Glue.
   source: "https://spark.apache.org/docs/4.2.0/sql-data-sources-hive-tables.html"
 
 - id: SPK-04-q8
@@ -113,6 +116,6 @@
     D: "SQL cannot read Parquet."
   answer: [B]
   explanation: >-
-    Spark SQL and the DataFrame API are two front ends over the same Catalyst-optimized engine; the
-    same query compiles to the same plan either way. Choose whichever reads more clearly.
+    Spark SQL and the DataFrame API are two front ends over the same Catalyst-optimized engine.
+    The same query compiles to the same plan in both. Choose the one that reads more clearly.
   source: "https://spark.apache.org/docs/4.2.0/sql-programming-guide.html"

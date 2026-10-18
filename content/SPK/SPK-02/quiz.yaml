@@ -10,9 +10,9 @@
     D: "A sample for statistics."
   answer: [C]
   explanation: >-
-    filter and select return DataFrames, so they are transformations: they only record steps
-    in the logical plan. No data is read until an action (count, show, write, collect) forces
-    execution.
+    filter and select return DataFrames, so they are transformations. They only record steps
+    in the logical plan. Spark reads no data until an action (count, show, write, collect)
+    forces execution.
   source: "https://spark.apache.org/docs/4.2.0/rdd-programming-guide.html#transformations"
 
 - id: SPK-02-q2
@@ -25,7 +25,7 @@
     D: "collect()"
   answer: [A, C, D]
   explanation: >-
-    count, write, and collect return a value / rows or perform I/O, so they are actions that
+    count, write, and collect return a value or rows, or they do I/O. So they are actions that
     launch jobs. withColumn returns a DataFrame, so it is a lazy transformation.
   source: "https://spark.apache.org/docs/4.2.0/rdd-programming-guide.html#actions"
 
@@ -39,9 +39,9 @@
     D: "select"
   answer: [C]
   explanation: >-
-    groupBy/agg must bring together all rows sharing a key, which generally live in different
-    partitions, so it shuffles (wide). filter, withColumn, and select each compute an output
-    partition from a single input partition (narrow).
+    groupBy/agg must bring together all rows that share a key. These rows generally live in
+    different partitions, so the operation shuffles (wide). filter, withColumn, and select each
+    compute an output partition from a single input partition (narrow).
   source: "https://spark.apache.org/docs/4.2.0/rdd-programming-guide.html#shuffle-operations"
 
 - id: SPK-02-q4
@@ -57,7 +57,7 @@
   answer: [C]
   explanation: >-
     Two wide transformations (the groupBy aggregation and the orderBy) create two shuffle
-    boundaries. Stages = shuffles + 1 = 3. The read+filter pipeline into stage 1.
+    boundaries. Stages = shuffles + 1 = 3. The read and the filter pipeline into stage 1.
   source: "https://spark.apache.org/docs/4.2.0/sql-performance-tuning.html"
 
 - id: SPK-02-q5
@@ -70,15 +70,16 @@
     D: "Divide the number of columns by the number of partitions."
   answer: [B]
   explanation: >-
-    Each Exchange node is a shuffle, i.e. a stage boundary. For a linear plan the stage count is
-    (number of Exchanges) + 1. Project/Filter are narrow and pipeline within a stage.
+    Each Exchange node is a shuffle, which is a stage boundary. For a linear plan, the stage
+    count is (number of Exchanges) + 1. Project and Filter are narrow. They pipeline within a
+    stage.
   source: "https://spark.apache.org/docs/4.2.0/web-ui.html"
 
 - id: SPK-02-q6
   type: single
   prompt: >-
-    You call df.count() and later df.collect() on the same uncached DataFrame built from a long
-    chain of transformations. What happens?
+    You call df.count() and later df.collect() on the same uncached DataFrame. A long
+    chain of transformations built it. What happens?
   options:
     A: "The second action reuses the first action's results automatically."
     B: "The whole lineage is recomputed for each action, because transformations are lazy and not memoized."
@@ -86,8 +87,9 @@
     D: "Only the last transformation re-runs."
   answer: [B]
   explanation: >-
-    Transformations are lazy and not cached by default, so each action recomputes the entire
-    lineage. Call cache()/persist() (then an action) if you will reuse the DataFrame.
+    Transformations are lazy and Spark does not cache them by default. So each action
+    recomputes the entire lineage. Call cache()/persist() (then an action) if you will reuse
+    the DataFrame.
   source: "https://spark.apache.org/docs/4.2.0/rdd-programming-guide.html#rdd-persistence"
 
 - id: SPK-02-q7
@@ -96,11 +98,12 @@
     Which is the closest Redshift analogue of a Spark Exchange node in a query plan?
   options:
     A: "A sequential scan of a single table."
-    B: "A data redistribution step (e.g. DS_DIST_BOTH / DS_BCAST_INNER) that moves rows between slices."
+    B: "A data redistribution step (e.g. DS_DIST_BOTH / DS_DIST_INNER) that moves rows between slices."
     C: "A commit."
     D: "A vacuum."
   answer: [B]
   explanation: >-
-    An Exchange is a shuffle: rows move across partitions/machines, exactly like Redshift
-    redistributing rows across slices when the join/group key does not match the DISTKEY.
+    An Exchange is a shuffle. Rows move across partitions and machines. This is exactly like
+    Redshift redistributing rows across slices when the join/group key does not match the
+    DISTKEY.
   source: "https://spark.apache.org/docs/4.2.0/rdd-programming-guide.html#shuffle-operations"

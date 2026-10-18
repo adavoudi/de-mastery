@@ -2,47 +2,57 @@
 
 ## Why these architectures exist
 
-Every data architecture is an answer to one question: **how fresh must the answer be, and what
-will you pay for that freshness?** The four landmark architectures below are four different answers,
-and each exists because the previous one hurt somewhere.
+Every data architecture answers one question: **how fresh must the answer be, and what do you pay
+for that freshness?** The four landmark architectures below are four different answers. Each one
+exists because the previous one caused a problem.
 
-- **Lambda** (Marz, ~2011). Run **two** pipelines over the same events: a *batch layer* that
-  recomputes the correct, complete result slowly, and a *speed layer* that computes an approximate,
-  low-latency result for the recent window. A serving layer merges them. It exists because the batch
-  tools of the day could not give low latency and the streaming tools could not give completeness or
-  reprocessing. The cost is that **you maintain the same business logic twice, in two code bases,
-  and they drift** — the batch and speed answers disagree and someone has to reconcile them.
+- **Lambda** (Marz, ~2011). Run **two** pipelines over the same events.
+  - A *batch layer* recomputes the correct, complete result. It is slow.
+  - A *speed layer* computes an approximate result for the recent window. It has low latency.
+  - A serving layer merges the two results.
 
-- **Kappa** (Kreps, ~2014). Delete the batch layer. Keep **one** streaming pipeline; treat the log
-  (Kafka) as the system of record and *replay* it to reprocess history. One code path, no drift. It
-  exists to kill Lambda's dual-code tax. The cost: **long-term, queryable history in Kafka is
-  expensive**, ad-hoc OLAP over the log is awkward, and replaying months of events to fix a bug is
-  slow and operationally heavy.
+  Lambda exists because the batch tools of that time could not give low latency. The streaming tools
+  could not give completeness or reprocessing. The cost is that **you maintain the same business
+  logic twice, in two code bases, and the two copies drift**. The batch answer and the speed answer
+  disagree, and someone must reconcile them.
+
+- **Kappa** (Kreps, ~2014). Delete the batch layer. Keep **one** streaming pipeline. Use the log
+  (Kafka) as the system of record. *Replay* the log to reprocess history. There is one code path,
+  so nothing drifts. Kappa exists to remove the cost of two code bases in Lambda. The cost of Kappa
+  is this:
+  - **Long-term, queryable history in Kafka is expensive.**
+  - Ad-hoc OLAP over the log is awkward.
+  - Replaying months of events to fix a bug is slow and needs a lot of operational work.
 
 - **Lakehouse** (Databricks, ~2020). Put a **transactional table format** (Iceberg, Delta, Hudi) on
-  cheap object storage, so one copy of the data serves both SQL/BI and ML, with ACID commits, time
-  travel and schema evolution — warehouse semantics on a data lake. It exists to end the
-  warehouse-plus-lake split (two storage systems, two copies, ETL between them). The cost that
-  matters here: **it commits at batch/micro-batch latency** — snapshots land every few minutes at
-  best, so it does not answer sub-minute streaming questions, and frequent commits create a
-  small-files problem.
+  cheap object storage. Then one copy of the data serves both SQL/BI and ML. You get ACID commits,
+  time travel and schema evolution. This is warehouse semantics on a data lake. The lakehouse exists
+  to end the split between a warehouse and a lake (two storage systems, two copies, and ETL between
+  them). The cost that matters here: **it commits at batch/micro-batch latency**. Snapshots land
+  every few minutes at best. So it does not answer sub-minute streaming questions. Frequent commits
+  also create a small-files problem.
 
-- **Streamhouse** (coined by Ververica, ~2024; now a cross-vendor working group — Aiven, Confluent,
-  Redpanda, StreamNative, Ververica). Put a **stream-native storage layer** (Apache Paimon, Apache
-  Fluss) on the lake so **one copy** of the data serves *streaming* reads (changelogs, CDC, low
-  latency) **and** batch/OLAP reads, usually with Flink as the engine. It exists to give the
-  lakehouse a sub-minute tier and the stream a cheap, queryable, long-term tier — Kappa's single
-  pipeline but with lakehouse-grade storage underneath. The cost: **more moving parts and a newer,
-  less settled ecosystem**; you pay for the extra tier in operations and skills.
+- **Streamhouse** (Ververica coined the term, ~2024. It is now a cross-vendor working group: Aiven,
+  Confluent, Redpanda, StreamNative, Ververica). Put a **stream-native storage layer** (Apache
+  Paimon, Apache Fluss) on the lake. Then **one copy** of the data serves *streaming* reads
+  (changelogs, CDC, low latency) **and** batch/OLAP reads. It usually uses Flink as the engine. The
+  streamhouse gives the lakehouse a sub-minute tier. It gives the stream a cheap, queryable,
+  long-term tier. It keeps the single pipeline of Kappa, with lakehouse-grade storage underneath.
+  The cost: **more parts to run and a newer ecosystem that is less settled**. You pay for the extra
+  tier in operations and skills.
 
-The through-line: Lambda had two pipelines (drift); Kappa unified the pipeline but not storage
-(expensive history); the lakehouse unified storage but at batch latency; the streamhouse unifies
-storage **and** serves both latencies — at the price of a younger, more complex stack.
+The through-line:
+
+1. Lambda had two pipelines, and the logic drifted.
+2. Kappa unified the pipeline but not the storage, so history was expensive.
+3. The lakehouse unified the storage, but at batch latency.
+4. The streamhouse unifies the storage **and** serves both latencies. The price is a younger, more
+   complex stack.
 
 ## How to classify an architecture (the rubric)
 
-You classify a real system by its **storage and pipeline shape**, not by what the vendor calls it.
-Four yes/no signals decide it, applied in order:
+You classify a real system by its **storage and pipeline shape**. You do not use the name the vendor
+gives it. Four yes/no signals decide the answer. Apply them in this order:
 
 1. **Two parallel pipelines** (a batch recompute path *and* a separate speed path) that are
    merged at serving time → **Lambda**.
@@ -58,29 +68,34 @@ Four yes/no signals decide it, applied in order:
 
 ![Four yes/no signals applied in order: the first yes decides the architecture](diagrams/classify-architecture.svg)
 
-The exercise encodes exactly these signals as booleans and asserts the classification is
+The exercise encodes exactly these signals as booleans. It asserts that the classification is
 deterministic.
 
 ## From your world
 
-Your current stack is a **batch lakehouse**: dbt models materialized into Iceberg on S3, queried by
-Athena/Redshift, refreshed on a schedule. Map the signals: you have one transactional lake format
-(signal 3 → lakehouse), no second speed pipeline (not Lambda), Kafka is an *ingestion* bus feeding
-batch loads rather than the queryable system of record (not Kappa), and nothing serves a sub-minute
-changelog read from the same copy (not yet a streamhouse). A streamhouse would add Paimon/Fluss
-**underneath** the same marts so the slowest-moving facts can also answer "what changed in the last
-30 seconds" — without a parallel speed layer to reconcile (the SOX reconciliation pain of Lambda is
-exactly what you want to avoid).
+Your current stack is a **batch lakehouse**. dbt models are materialized into Iceberg on S3. Athena
+and Redshift query them. They refresh on a schedule. Map the signals to your stack:
+
+- You have one transactional lake format (signal 3 → lakehouse).
+- You have no second speed pipeline, so it is not Lambda.
+- Kafka is an *ingestion* bus that feeds batch loads. It is not the queryable system of record, so
+  it is not Kappa.
+- Nothing serves a sub-minute changelog read from the same copy, so it is not yet a streamhouse.
+
+A streamhouse would add Paimon/Fluss **underneath** the same marts. Then the facts that change most
+slowly can also answer "what changed in the last 30 seconds". You would not need a parallel speed
+layer to reconcile. The reconciliation pain of Lambda (the SOX reconciliation pain) is exactly what
+you want to avoid.
 
 ## When NOT to use a streamhouse
 
-- **Hourly or daily freshness is fine.** A batch lakehouse is simpler, cheaper and more mature; do
-  not add Paimon/Fluss, Flink and a tiering job to serve a dashboard that refreshes nightly.
-- **You truly only need a log.** If every consumer is a streaming app replaying Kafka and nobody
-  runs OLAP over history, plain Kappa is less to operate.
-- **You need two genuinely different computations** (e.g. an exact nightly regulatory recompute and
-  a separate real-time estimate with different logic). That is a legitimate Lambda, not a smell to
-  "fix" by unifying.
+- **Hourly or daily freshness is fine.** A batch lakehouse is simpler, cheaper and more mature. Do
+  not add Paimon/Fluss, Flink and a tiering job to serve a dashboard that refreshes every night.
+- **You truly only need a log.** Suppose every consumer is a streaming app that replays Kafka, and
+  nobody runs OLAP over history. Then plain Kappa is less to operate.
+- **You need two genuinely different computations.** One example is an exact nightly regulatory
+  recompute plus a separate real-time estimate with different logic. That is a legitimate Lambda.
+  Do not "fix" it by unifying it.
 
 ## Further reading
 

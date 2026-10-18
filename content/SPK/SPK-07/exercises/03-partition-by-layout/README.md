@@ -1,14 +1,14 @@
 # SPK-07 / 03 · Partition the output by a low-cardinality key
 
-Choosing the partition column is the same decision you make for Athena/Iceberg: partition on a
-**low-cardinality, frequently-filtered** column so each partition is a reasonably sized, prunable
-unit. Partitioning on a high-cardinality column (one directory per order) is the classic small-file
-explosion.
+You make the same decision for Athena/Iceberg when you choose the partition column. Partition on a
+**low-cardinality column that you filter on often**. Then each partition is a unit of reasonable size
+that the engine can prune. If you partition on a high-cardinality column (one directory per order), you
+get the classic small-file explosion.
 
 ## Task
 
-Implement `write_partitioned(df, out_dir)` that writes `df` as Parquet into `out_dir`, physically
-partitioned by **`company_id`** (Hive-style `company_id=<value>/` directories), data unchanged.
+Implement `write_partitioned(df, out_dir)`. It writes `df` as Parquet into `out_dir`, physically
+partitioned by **`company_id`** (Hive-style `company_id=<value>/` directories), with the data unchanged.
 Return the output path as a string.
 
 ## Constraints
@@ -19,7 +19,7 @@ Return the output path as a string.
 
 ## How it is graded
 
-- **Layout:** `out_dir` contains exactly one `company_id=<value>/` directory per distinct
-  `company_id` in the input (and no more — proof you did not partition by a high-cardinality key).
-- **Data (DuckDB oracle):** reading the whole output back equals the input rows. Reading a single
-  partition directory equals the rows for that company (partition pruning works).
+- **Layout:** `out_dir` contains exactly one `company_id=<value>/` directory for each distinct
+  `company_id` in the input, and no more. This proves that you did not partition by a high-cardinality key.
+- **Data (DuckDB oracle):** when you read the whole output back, it equals the input rows. When you read
+  a single partition directory, it equals the rows for that company (partition pruning works).

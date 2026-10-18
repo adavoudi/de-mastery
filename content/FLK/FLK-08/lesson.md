@@ -2,20 +2,24 @@
 
 ## Why the Table API (and PyFlink) exist
 
-Flink SQL (FLK-04) is the fastest way to express a relational pipeline, but a string of SQL is hard
-to compose, parameterize and unit-test. The **Table API** is the same relational model as a
-*programmatic* API: `table.groupBy($("ccy")).select($("ccy"), $("amt").sum())` is the Table API
-form of `SELECT ccy, SUM(amt) ... GROUP BY ccy`. It plans through the **same optimizer** as SQL and
-produces the **same changelog semantics**, so you can mix SQL and Table API freely and get identical
-results. You reach for it when you want host-language composition — build the pipeline from
-functions, inject parameters, reuse fragments — while keeping SQL's declarative power.
+Flink SQL (FLK-04) is the fastest way to express a relational pipeline. But a string of SQL is hard
+to compose, to parameterize and to unit-test. The **Table API** is the same relational model as a
+*programmatic* API. This is the Table API form of `SELECT ccy, SUM(amt) ... GROUP BY ccy`:
+`table.groupBy($("ccy")).select($("ccy"), $("amt").sum())`.
 
-**PyFlink** is the Python entry point to that same Table API (and DataStream). For an analytics
-engineer this is the natural on-ramp: it feels like pandas/dbt-Python but runs on the JVM engine
-underneath. The Python API builds the same logical plan and ships it to the same runtime, so a
-Python Table pipeline and the equivalent Java one are **the same job** — they must produce the same
-answer over the same data. That is the whole point of this module: write one pipeline (a per-currency
-GMV aggregation) in **both** Java Table API and PyFlink and prove they agree against one oracle.
+The Table API plans through the **same optimizer** as SQL. It produces the **same changelog semantics**.
+So you can mix SQL and Table API freely and get identical results. Use the Table API when you want to compose
+the pipeline in the host language. Then you build the pipeline from functions, inject parameters and reuse
+fragments. You still keep the declarative power of SQL.
+
+**PyFlink** is the Python entry point to that same Table API (and to DataStream). For an analytics
+engineer, this is the natural way to start. It feels like pandas or dbt-Python, but it runs on the JVM engine
+underneath. The Python API builds the same logical plan and sends it to the same runtime. So a
+Python Table pipeline and the equivalent Java pipeline are **the same job**. They must produce the same
+answer over the same data.
+
+This is the purpose of this module. You write one pipeline (a per-currency
+GMV aggregation) in **both** the Java Table API and PyFlink. Then you prove that they agree against one oracle.
 
 ## How the two map to each other
 
@@ -27,18 +31,22 @@ GMV aggregation) in **both** Java Table API and PyFlink and prove they agree aga
 | Run SQL instead | `t.executeSql("SELECT ...")` | `t.execute_sql("SELECT ...")` |
 | Collect results | `tableResult.collect()` → `Row` | `table_result.collect()` → `Row` |
 
-Both can also just run **SQL** via `executeSql` / `execute_sql` — in which case the SQL text is
-identical across the two languages. The grader does not care which surface you use (DataStream vs
-Table API vs SQL); it only checks the **result** equals the oracle, per docs/TESTING.md ("do not
+Both languages can also run **SQL** with `executeSql` / `execute_sql`. Then the SQL text is
+identical in the two languages. The grader does not care which surface you use (DataStream, Table API or
+SQL). It only checks that the **result** equals the oracle. This follows docs/TESTING.md ("do not
 assert which API was called").
 
 ## UDFs (scalar / table / aggregate)
 
-When built-in functions are not enough, both languages let you register user-defined functions: a
-**scalar** UDF (one row in, one value out), a **table** UDF (one row in, many rows out — like a
-lateral join / `explode`), and an **aggregate** UDF (many rows in, one value out — a custom
-`SUM`-like). Keep them pure and deterministic so results reconcile with a batch oracle. (Not graded
-here, but see the Further reading.)
+Sometimes the built-in functions are not enough. Then both languages let you register user-defined functions.
+There are three kinds:
+
+- A **scalar** UDF: one row in, one value out.
+- A **table** UDF: one row in, many rows out. It is like a lateral join or `explode`.
+- An **aggregate** UDF: many rows in, one value out. It is a custom function like `SUM`.
+
+Keep UDFs pure and deterministic, so results reconcile with a batch oracle. (The grader does not test UDFs
+here. See the Further reading.)
 
 ## From your world
 
@@ -51,20 +59,20 @@ here, but see the Further reading.)
 
 ## When NOT to use (each)
 
-- **Pure, static SQL with no composition** — just write Flink SQL; wrapping it in Table API calls
-  adds nothing.
-- **PyFlink for ultra-low-latency, UDF-heavy jobs** — crossing the Python/JVM boundary per record is
-  costly; keep hot UDFs in Java, or use vectorized (pandas) UDFs, or stay in SQL/Table API so the
+- **Pure, static SQL with no composition.** Write Flink SQL. If you wrap it in Table API calls,
+  you add nothing.
+- **PyFlink for ultra-low-latency, UDF-heavy jobs.** Each record crosses the Python/JVM boundary,
+  and this is costly. Keep hot UDFs in Java. Or use vectorized (pandas) UDFs. Or stay in SQL/Table API, so the
   work runs in the JVM.
-- **Table API when you need per-record custom timers/state** — drop to the DataStream process
-  functions (FLK-07); the Table API is relational, not event-at-a-time control.
+- **Table API when you need custom timers or state for each record.** Use the DataStream process
+  functions (FLK-07) instead. The Table API is relational. It does not give event-at-a-time control.
 
 ## PyFlink runs in a separate environment
 
-In this platform PyFlink lives in a **dedicated virtual environment** (its dependency pins conflict
-with the main project), so the PyFlink side of the exercise runs through a separate interpreter. If
-that environment is not installed, the Python test **skips cleanly** while the Java Table API test
-still grades — the Java side is always the graded surface.
+In this platform, PyFlink lives in a **dedicated virtual environment**. Its dependency pins conflict
+with the main project. So the PyFlink side of the exercise runs through a separate interpreter. Suppose
+that environment is not installed. Then the Python test **skips cleanly** and the Java Table API test
+still grades. The Java side is always the graded surface.
 
 ## Further reading
 

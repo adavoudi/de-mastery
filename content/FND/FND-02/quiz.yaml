@@ -7,18 +7,18 @@
     C: "Require broadcasting the larger table"
     D: "Fail unless the keys are sorted"
   answer: [A]
-  explanation: "Equal keys hash to the same partition on both sides, so each partition joins its local slice — no network redistribution. This is Redshift's collocated DISTKEY join."
+  explanation: "Equal keys hash to the same partition on both tables. So each partition joins its local slice, with no network redistribution. This is Redshift's collocated DISTKEY join."
   source: "https://docs.aws.amazon.com/redshift/latest/dg/c_choosing_dist_sort.html"
 - id: FND-02-q2
   type: single
-  prompt: "You hash-partition orders on company_id, but one of three companies has 90% of the rows. What happens?"
+  prompt: "You hash-partition orders on company_id, but one of the three companies has 90% of the rows. What happens?"
   options:
-    A: "Severe skew: one partition holds ~90% of rows and its task is a straggler"
+    A: "Severe skew: one partition holds ~90% of the rows and its task is a straggler"
     B: "The data is perfectly balanced because hashing is uniform"
     C: "The join becomes a broadcast join automatically"
     D: "Nothing — hashing fixes skew"
   answer: [A]
-  explanation: "Hashing spreads distinct keys, not row volume. A low-cardinality, skewed key puts most rows in one partition. Use a high-cardinality key or salt the hot value."
+  explanation: "Hashing spreads distinct keys, not row volume. A skewed key with low cardinality puts most rows in one partition. Use a high-cardinality key, or salt the hot value."
   source: "https://spark.apache.org/docs/latest/sql-performance-tuning.html"
 - id: FND-02-q3
   type: single
@@ -29,7 +29,7 @@
     C: "The number of partitions is a prime number"
     D: "The output is unsorted"
   answer: [A]
-  explanation: "Skew shows up as an uneven partition-size distribution; max/mean >> 1 means one task does far more work and becomes a straggler."
+  explanation: "Skew shows up as an uneven distribution of partition sizes. If max/mean >> 1, one task does far more work and becomes a straggler."
   source: "https://spark.apache.org/docs/latest/sql-performance-tuning.html"
 - id: FND-02-q4
   type: single
@@ -40,7 +40,7 @@
     C: "It always sorts the entire dataset twice"
     D: "It requires a broadcast of all data to all nodes"
   answer: [A]
-  explanation: "The map side spills partitioned records; the reduce side pulls its slice from every source. Serialization, disk, and network — the three slowest operations — all happen."
+  explanation: "The map side spills partitioned records. The reduce side pulls its slice from every source. Serialization, disk, and network all happen. These are the three slowest operations."
   source: "https://research.google/pubs/pub62/"
 - id: FND-02-q5
   type: multi
@@ -49,18 +49,18 @@
     A: "Salt the hot key (append a random suffix), aggregate, then re-aggregate"
     B: "Choose a higher-cardinality partition key if the logic allows"
     C: "Broadcast the small side if the join's other table is small"
-    D: "Increase the modulus P so hash(key) % P changes for the hot key"
+    D: "Increase the modulus P so that hash(key) % P changes for the hot key"
   answer: [A, B, C]
-  explanation: "Salting, a better key, and broadcasting all help. Increasing P does NOT help a single hot key: hash(k) % P is still one value, so all its rows still collide."
+  explanation: "Salting, a better key, and broadcasting all help. A larger P does NOT help a single hot key. hash(k) % P is still one value, so all its rows still go to the same partition."
   source: "https://spark.apache.org/docs/latest/sql-performance-tuning.html"
 - id: FND-02-q6
   type: single
-  prompt: "Range partitioning picks boundaries best by:"
+  prompt: "The best way for range partitioning to pick boundaries is:"
   options:
     A: "Sampling the actual data to choose balanced split points"
     B: "Always using evenly spaced numeric boundaries"
     C: "Hashing the key first"
     D: "Using the alphabetical order of column names"
   answer: [A]
-  explanation: "Range partitioners sample the data so each range gets a similar number of rows; evenly spaced boundaries skew when the data is non-uniform."
+  explanation: "Range partitioners sample the data, so each range gets a similar number of rows. Evenly spaced boundaries cause skew when the data is not uniform."
   source: "https://spark.apache.org/docs/latest/sql-performance-tuning.html"

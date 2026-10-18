@@ -1,25 +1,25 @@
 - id: FLK-02-q1
   type: single
-  prompt: "Which DataStream operator hash-partitions the stream so all records for a key go to the same subtask (and is required before keyed aggregations/state/windows)?"
+  prompt: "Which DataStream operator hash-partitions the stream, so that all records for a key go to the same subtask? You need it before keyed aggregations, state and windows."
   options: {A: "map", B: "filter", C: "keyBy", D: "flatMap"}
   answer: [C]
-  explanation: "keyBy is the only operator that changes the key; it hash-partitions the stream (the streaming shuffle) so per-key state and aggregation are possible."
+  explanation: "keyBy is the only operator that changes the key. It hash-partitions the stream (the streaming shuffle), so per-key state and aggregation are possible."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/operators/overview/"
 
 - id: FLK-02-q2
   type: single
-  prompt: "You want good records to flow downstream and invalid records to a dead-letter stream, in a single pass. Which mechanism does this?"
+  prompt: "Good records must flow downstream. Invalid records must go to a dead-letter stream. This must happen in a single pass. Which mechanism does this?"
   options: {A: "Two separate jobs reading the same topic", B: "A side output declared with an OutputTag and emitted via ctx.output(tag, value)", C: "A broadcast variable", D: "Calling filter twice"}
   answer: [B]
-  explanation: "A ProcessFunction can emit to the main collector AND to a side output via ctx.output(tag, value); getSideOutput(tag) reads the extra stream. This routes rejects without re-reading the input."
+  explanation: "A ProcessFunction can emit to the main collector AND to a side output with ctx.output(tag, value). getSideOutput(tag) reads the extra stream. This routes rejects without reading the input again."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/side_output/"
 
 - id: FLK-02-q3
   type: single
   prompt: "Why must an OutputTag be created as an anonymous subclass, e.g. new OutputTag<Order>(\"rejects\"){} ?"
-  options: {A: "For thread safety", B: "So Flink can capture the generic type parameter at runtime (type erasure otherwise loses it)", C: "To register it with the JobManager", D: "It is only a style convention"}
+  options: {A: "For thread safety", B: "So Flink can capture the generic type parameter at runtime (type erasure loses it otherwise)", C: "To register it with the JobManager", D: "It is only a style convention"}
   answer: [B]
-  explanation: "Java erases generics at runtime. The trailing {} creates an anonymous subclass whose supertype retains the type argument, letting Flink extract the TypeInformation for the side output."
+  explanation: "Java erases generics at runtime. The trailing {} creates an anonymous subclass. The supertype of this subclass keeps the type argument. Flink can then extract the TypeInformation for the side output."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/side_output/"
 
 - id: FLK-02-q4
@@ -27,37 +27,37 @@
   prompt: "In Flink 2.x, how is a Kafka source added to a job?"
   options: {A: "env.addSource(new FlinkKafkaConsumer(...))", B: "env.fromSource(KafkaSource.builder()...build(), watermarkStrategy, name)", C: "env.readKafka(topic)", D: "spark.readStream.format('kafka')"}
   answer: [B]
-  explanation: "Flink 2.x uses the FLIP-27 unified Source API: build a KafkaSource and add it via env.fromSource(source, watermarkStrategy, name). The old FlinkKafkaConsumer is removed."
+  explanation: "Flink 2.x uses the FLIP-27 unified Source API. Build a KafkaSource and add it with env.fromSource(source, watermarkStrategy, name). Flink 2.x removed the old FlinkKafkaConsumer."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/connectors/datastream/kafka/"
 
 - id: FLK-02-q5
   type: single
-  prompt: "You need to merge two streams of DIFFERENT types and process them together with shared state. Which operator?"
+  prompt: "You must merge two streams of DIFFERENT types and process them together with shared state. Which operator do you use?"
   options: {A: "union", B: "connect (+ a CoProcessFunction/CoMapFunction)", C: "join", D: "keyBy"}
   answer: [B]
-  explanation: "union requires the same type. connect joins two differently-typed streams into a ConnectedStreams, processed by a CoProcessFunction/CoMapFunction with access to both and (if keyed) shared state."
+  explanation: "union requires the same type. connect joins two streams of different types into a ConnectedStreams. A CoProcessFunction/CoMapFunction processes it. This function has access to both streams and (if keyed) to shared state."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/operators/overview/"
 
 - id: FLK-02-q6
   type: single
-  prompt: "Which transformation can emit zero, one, or many output records per input record?"
+  prompt: "Which transformation can emit zero, one or many output records for each input record?"
   options: {A: "map", B: "filter", C: "flatMap", D: "keyBy"}
   answer: [C]
-  explanation: "flatMap is 1→N: it calls out.collect() any number of times per input (including zero), unlike map (strictly 1→1) and filter (1→0-or-1)."
+  explanation: "flatMap is 1→N. It calls out.collect() any number of times for each input (including zero). map is strictly 1→1 and filter is 1→0-or-1."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/operators/overview/"
 
 - id: FLK-02-q7
   type: single
   prompt: "When should you prefer Flink SQL over the DataStream API?"
-  options: {A: "Never — DataStream is always faster", B: "For filters, projections, joins and windowed aggregations that SQL expresses cleanly; drop to DataStream only for custom state/timers/routing or a missing connector", C: "Only for batch", D: "Only when you have no Kafka source"}
+  options: {A: "Never. DataStream is always faster", B: "For filters, projections, joins and windowed aggregations that SQL expresses cleanly. Use DataStream only for custom state/timers/routing or a missing connector", C: "Only for batch", D: "Only when you have no Kafka source"}
   answer: [B]
-  explanation: "SQL is shorter and easier to evolve for standard logic and compiles down to DataStream operators anyway. Reach for DataStream when you need imperative control (state, timers, side outputs) or a connector SQL lacks."
+  explanation: "SQL is shorter and easier to change for standard logic. It also compiles down to DataStream operators. Use DataStream when you need imperative control (state, timers, side outputs) or a connector that SQL does not have."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/datastream/overview/"
 
 - id: FLK-02-q8
   type: single
   prompt: "What does stream.sinkTo(sink) attach in Flink 2.x?"
-  options: {A: "A legacy SinkFunction only", B: "A FLIP-143 unified Sink (e.g. KafkaSink) with configurable delivery guarantee", C: "A watermark strategy", D: "A keyBy partitioner"}
+  options: {A: "A legacy SinkFunction only", B: "A FLIP-143 unified Sink (for example KafkaSink) with a configurable delivery guarantee", C: "A watermark strategy", D: "A keyBy partitioner"}
   answer: [B]
-  explanation: "sinkTo attaches a FLIP-143 unified Sink such as KafkaSink, whose delivery guarantee (none/at-least-once/exactly-once via 2PC) is configured on the builder."
+  explanation: "sinkTo attaches a FLIP-143 unified Sink such as KafkaSink. You configure its delivery guarantee (none/at-least-once/exactly-once via 2PC) on the builder."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/connectors/datastream/kafka/"

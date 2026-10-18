@@ -3,19 +3,19 @@
   prompt: "In a Java stack trace with nested `Caused by:` sections, where is the root cause?"
   options:
     A: "The very first line (top exception)."
-    B: "The last `Caused by:` section — the deepest cause — then the first frame in your own package."
+    B: "The last `Caused by:` section (the deepest cause), then the first frame in your own package."
     C: "The last line of the whole trace regardless of content."
     D: "Any java.base frame."
   answer: [B]
   explanation: >-
-    Java prints the outermost exception first and nests causes under Caused by:; the deepest Caused
+    Java prints the outermost exception first and nests causes under Caused by:. The deepest Caused
     by is the root cause. Then the first stack frame in your package (not JDK/library frames) is
-    where the bug usually is.
+    usually where the bug is.
   source: "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Throwable.html"
 
 - id: JVM-06-q2
   type: single
-  prompt: "Which AssertJ assertion correctly checks that a method throws IllegalArgumentException?"
+  prompt: "Which AssertJ assertion correctly tests that a method throws IllegalArgumentException?"
   options:
     A: "assertThat(method()).isInstanceOf(IllegalArgumentException.class)"
     B: "assertThatThrownBy(() -> method()).isInstanceOf(IllegalArgumentException.class)"
@@ -23,9 +23,9 @@
     D: "assertThat(() -> method()).throwsException()"
   answer: [B]
   explanation: >-
-    assertThatThrownBy takes a lambda, invokes it, captures the thrown Throwable, and lets you
-    assert its type/message. Calling method() directly in assertThat would throw before the
-    assertion runs.
+    assertThatThrownBy takes a lambda, calls it, captures the thrown Throwable, and lets you assert
+    its type and message. If you call method() directly in assertThat, the exception happens before
+    the assertion runs.
   source: "https://assertj.github.io/doc/#assertj-core-assertions-guide"
 
 - id: JVM-06-q3
@@ -33,42 +33,43 @@
   prompt: "Why compare doubles with isCloseTo(v, within(1e-9)) rather than isEqualTo(v)?"
   options:
     A: "isEqualTo is deprecated."
-    B: "Floating-point arithmetic has rounding error, so exact equality is brittle; a tolerance makes the test robust and correct."
+    B: "Floating-point arithmetic has rounding error, so exact equality is brittle. A tolerance makes the test stable and correct."
     C: "within is faster."
     D: "Doubles cannot be compared at all."
   answer: [B]
   explanation: >-
-    IEEE-754 rounding means mathematically equal computations can differ in the last bits. Assert
-    with a tolerance (within) for floating point, as the platform's testing rules require.
+    Because of IEEE-754 rounding, computations that are mathematically equal can differ in the last
+    bits. Assert with a tolerance (within) for floating point, as the platform's testing rules
+    require.
   source: "https://assertj.github.io/doc/#assertj-core-assertions-guide"
 
 - id: JVM-06-q4
   type: single
   prompt: "What does Testcontainers provide for a JVM integration test, and what does it require?"
   options:
-    A: "A mock broker in-process; requires nothing."
-    B: "Throwaway real dependencies (e.g. a Kafka/Postgres container) started and torn down per test; it requires Docker."
+    A: "A mock broker in-process. It requires nothing."
+    B: "Temporary real dependencies (e.g. a Kafka/Postgres container) that start and stop for each test. It requires Docker."
     C: "A way to skip all tests."
     D: "A replacement for JUnit."
   answer: [B]
   explanation: >-
-    Testcontainers launches real services in Docker containers for the test and cleans them up
-    afterward — high-fidelity integration tests, but Docker must be available. Hence the no-Docker
-    native-broker path for grading.
+    Testcontainers starts real services in Docker containers for the test and removes them
+    afterward. These integration tests are close to production, but Docker must be available. This
+    is why grading has a no-Docker native-broker path.
   source: "https://java.testcontainers.org/modules/kafka/"
 
 - id: JVM-06-q5
   type: single
-  prompt: "Per this platform's rules, how must a graded Kafka exercise be gradable without Docker?"
+  prompt: "Per this platform's rules, how must a graded Kafka exercise work without Docker?"
   options:
-    A: "It can't; Kafka needs Docker."
-    B: "It uses the native kafka_broker (a real Kafka JVM from the tarball) or TopologyTestDriver; any Testcontainers/lab layer is an EXTRA that skips when Docker/the lab is down."
+    A: "It cannot. Kafka needs Docker."
+    B: "It uses the native kafka_broker (a real Kafka JVM from the tarball) or TopologyTestDriver. Any Testcontainers/lab layer is an EXTRA that skips when Docker/the lab is down."
     C: "It mocks Kafka entirely."
     D: "It only runs on CI."
   answer: [B]
   explanation: >-
     The native broker (no container) or an in-process TopologyTestDriver provides the no-Docker
-    graded path; a skipped test cannot fail G1, so the container/lab layer is additional only.
+    graded path. A skipped test cannot fail G1, so the container/lab layer is additional only.
   source: "https://junit.org/junit5/docs/current/user-guide/"
 
 - id: JVM-06-q6
@@ -76,13 +77,13 @@
   prompt: "Why should an integration test poll for the expected records with a deadline instead of calling Thread.sleep(2000)?"
   options:
     A: "sleep is illegal in Java."
-    B: "A fixed sleep is both flaky (too short) and slow (too long); polling with a deadline is deterministic and fast, finishing as soon as the data arrives."
+    B: "A fixed sleep is both flaky (too short) and slow (too long). Polling with a deadline is deterministic and fast. It finishes as soon as the data arrives."
     C: "Polling uses less memory."
     D: "There is no difference."
   answer: [B]
   explanation: >-
     Fixed sleeps make tests either flaky or needlessly slow. Poll (e.g. consumer.poll in a loop)
-    until you have the expected records or hit a timeout — deterministic and quick.
+    until you have the expected records or reach a timeout. This is deterministic and quick.
   source: "https://junit.org/junit5/docs/current/user-guide/"
 
 - id: JVM-06-q7
@@ -90,11 +91,11 @@
   prompt: "A trace ends with `... 3 more`. What does that mean?"
   options:
     A: "Three records were dropped."
-    B: "The remaining 3 frames are identical to the enclosing trace's frames and were elided for brevity."
+    B: "The remaining 3 frames are identical to the frames of the enclosing trace. The trace leaves them out to be short."
     C: "Three more exceptions were thrown."
     D: "The JVM ran out of stack."
   answer: [B]
   explanation: >-
-    '... N more' is frame elision: those N frames match the enclosing stack trace and are omitted.
+    '... N more' means that frames are left out. Those N frames match the enclosing stack trace.
     It is not a separate failure path.
   source: "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Throwable.html"

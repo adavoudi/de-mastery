@@ -1,6 +1,6 @@
 - id: JVM-05-q1
   type: single
-  prompt: "In a GC log, which pattern across successive collections indicates a memory leak (heading for OutOfMemoryError)?"
+  prompt: "In a GC log, which pattern across successive collections shows a memory leak (heading for OutOfMemoryError)?"
   options:
     A: "A sawtooth whose post-GC floor (live set) stays roughly flat."
     B: "The post-GC 'after' occupancy steadily rises toward the heap ceiling and Full GCs reclaim almost nothing."
@@ -8,9 +8,9 @@
     D: "Occupancy drops after every GC."
   answer: [B]
   explanation: >-
-    A leak shows as a rising floor: each GC reclaims less, the live set climbs toward the max heap,
-    Full GCs free little, then OOM. A flat floor (even with frequent minor GCs) is healthy churn,
-    not a leak.
+    A leak shows as a rising floor. Each GC reclaims less. The live set climbs toward the max heap.
+    Full GCs free little, and then an OOM happens. A flat floor (even with frequent minor GCs) is
+    healthy churn, not a leak.
   source: "https://docs.oracle.com/en/java/javase/21/troubleshoot/troubleshooting-memory-leaks.html"
 
 - id: JVM-05-q2
@@ -23,8 +23,9 @@
     D: "Min heap, max heap, committed heap."
   answer: [B]
   explanation: >-
-    The format is before->after(total): 820M used before, reclaimed to 410M after, out of a 1024M
-    heap. Tracking the 'after' value over time reveals the live-set trend.
+    The format is before->after(total). 820M was in use before the GC. The GC reclaimed memory down
+    to 410M. The total heap is 1024M. If you track the 'after' value over time, you see the
+    live-set trend.
   source: "https://docs.oracle.com/en/java/javase/21/docs/specs/man/java.html#enable-logging-with-the-jvm-unified-logging-framework"
 
 - id: JVM-05-q3
@@ -32,27 +33,27 @@
   prompt: "Why is 'just increase -Xmx' usually the wrong fix for a genuine memory leak?"
   options:
     A: "A bigger heap is illegal."
-    B: "A real leak grows without bound, so a larger heap only delays the OOM and makes GC pauses longer; you must find the retained references."
+    B: "A real leak grows without bound, so a larger heap only delays the OOM and makes GC pauses longer. You must find the retained references."
     C: "-Xmx has no effect on heap size."
     D: "Leaks only happen off-heap."
   answer: [B]
   explanation: >-
-    A leak fills any heap. Raising -Xmx postpones the crash and increases pause times. The fix is to
-    stop retaining objects (bounded caches, remove listeners, close resources).
+    A leak fills any heap. If you raise -Xmx, the crash happens later and the pause times increase.
+    The fix is to stop retaining objects (bounded caches, remove listeners, close resources).
   source: "https://docs.oracle.com/en/java/javase/21/troubleshoot/troubleshooting-memory-leaks.html"
 
 - id: JVM-05-q4
   type: single
-  prompt: "Heap-after is flat across GCs but the process RSS keeps climbing. Most likely cause?"
+  prompt: "Heap-after is flat across GCs, but the process RSS keeps climbing. What is the most likely cause?"
   options:
     A: "A Java heap leak."
-    B: "An off-heap / native-memory leak (direct ByteBuffers, Netty, mmap, JNI) that GC logs don't show."
+    B: "An off-heap / native-memory leak (direct ByteBuffers, Netty, mmap, JNI) that GC logs do not show."
     C: "Too few minor GCs."
     D: "A healthy sawtooth."
   answer: [B]
   explanation: >-
-    GC logs only cover the managed heap. If the live set is flat but RSS grows, suspect off-heap/
-    direct/native memory (common with Netty, Flink managed memory, mmap).
+    GC logs only cover the managed heap. Suppose the live set is flat but RSS grows. Then suspect
+    off-heap, direct, or native memory (common with Netty, Flink managed memory, mmap).
   source: "https://docs.oracle.com/en/java/javase/21/gctuning/introduction-garbage-collection-tuning.html"
 
 - id: JVM-05-q5
@@ -60,13 +61,13 @@
   prompt: "What does an ExecutorService give you over creating raw Threads?"
   options:
     A: "Nothing."
-    B: "A managed thread pool: submit tasks, reuse threads, get Futures, and shut down cleanly — avoiding unbounded thread creation."
+    B: "A managed thread pool: you submit tasks, reuse threads, get Futures, and shut down cleanly. It avoids unbounded thread creation."
     C: "It disables the GC."
     D: "It runs tasks on the GPU."
   answer: [B]
   explanation: >-
-    ExecutorService pools and reuses threads, returns Futures for results, and bounds concurrency —
-    far safer than new Thread() per task, which can exhaust resources.
+    ExecutorService pools and reuses threads, returns Futures for results, and bounds concurrency.
+    This is much safer than new Thread() for each task, which can exhaust resources.
   source: "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/concurrent/ExecutorService.html"
 
 - id: JVM-05-q6
@@ -74,26 +75,27 @@
   prompt: "Why are data races a real concern in Java threads (unlike single-threaded Python with the GIL)?"
   options:
     A: "Java has no threads."
-    B: "Java threads run truly in parallel, so unsynchronized shared mutable state can be read/written concurrently, producing races; use synchronization, atomics, or concurrent collections."
+    B: "Java threads run truly in parallel, so threads can read and write unsynchronized shared mutable state at the same time. This produces races. Use synchronization, atomics, or concurrent collections."
     C: "The GIL protects Java too."
     D: "Races only occur in C."
   answer: [B]
   explanation: >-
-    Java has no GIL; threads execute concurrently on multiple cores. Shared mutable state must be
-    protected (synchronized/atomic/concurrent collections) or results are non-deterministic.
+    Java has no GIL. Threads execute concurrently on multiple cores. You must protect shared mutable
+    state (synchronized/atomic/concurrent collections). Otherwise the results are
+    non-deterministic.
   source: "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/concurrent/package-summary.html"
 
 - id: JVM-05-q7
   type: single
-  prompt: "Frequent minor GCs with a flat post-GC floor most likely indicate what?"
+  prompt: "What do frequent minor GCs with a flat post-GC floor most likely show?"
   options:
     A: "A memory leak."
-    B: "A high allocation rate (churn); reduce allocations rather than enlarging old gen."
+    B: "A high allocation rate (churn). Reduce allocations rather than enlarging old gen."
     C: "An off-heap leak."
     D: "A deadlock."
   answer: [B]
   explanation: >-
-    A flat floor means objects die young — healthy. Frequent minor GCs just reflect a high
-    allocation rate; the fix is to allocate less (reuse buffers, avoid per-record garbage), not to
-    grow the heap.
+    A flat floor means that objects die young. This is healthy. Frequent minor GCs only reflect a
+    high allocation rate. The fix is to allocate less (reuse buffers, avoid per-record garbage). Do
+    not grow the heap.
   source: "https://docs.oracle.com/en/java/javase/21/gctuning/introduction-garbage-collection-tuning.html"

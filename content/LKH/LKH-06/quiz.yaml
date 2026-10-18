@@ -5,12 +5,13 @@
     A: "A single catalog pointer to one metadata.json that names the live files (as in Iceberg)"
     B: "The fold of an ordered log of JSON commit files in _delta_log/, each listing add/remove actions"
     C: "A row in a relational database that stores all the data"
-    D: "The newest Parquet file wins; older ones are ignored"
+    D: "The newest Parquet file wins. Older ones are ignored"
   answer: [B]
   explanation: >-
-    A Delta table's state is reconstructed by replaying the ordered commits in _delta_log/ (add/remove
-    actions). Iceberg instead keeps a catalog pointer to a single metadata.json. Both are append-only
-    with atomic optimistic-concurrency commits; the metadata shape differs.
+    Delta rebuilds the state of a table when it replays the ordered commits in _delta_log/
+    (add/remove actions). Iceberg instead keeps a catalog pointer to a single metadata.json. Both
+    formats are append-only, with atomic optimistic-concurrency commits. The shape of the metadata
+    is different.
   source: "https://github.com/delta-io/delta/blob/master/PROTOCOL.md"
 
 - id: LKH-06-q2
@@ -23,26 +24,28 @@
     D: "A lock that prevents concurrent writes"
   answer: [B]
   explanation: >-
-    Replaying thousands of JSON commits is slow, so Delta periodically writes a checkpoint Parquet
-    that captures the full live-file set at a version. Readers load the latest checkpoint and replay
-    only the commits after it. It is Delta's scaling mechanism, analogous to Iceberg manifest lists.
+    A replay of thousands of JSON commits is slow. So Delta periodically writes a checkpoint
+    Parquet file. It captures the full live-file set at a version. Readers load the latest
+    checkpoint and replay only the commits after it. This is the scaling mechanism of Delta. It is
+    similar to Iceberg manifest lists.
   source: "https://docs.delta.io/latest/delta-utility.html#history"
 
 - id: LKH-06-q3
   type: single
   prompt: >-
-    In an SCD Type 2 MERGE, an incoming row changes a customer's tier. Which action is correct for
-    the EXISTING current row?
+    In an SCD Type 2 MERGE, an incoming row changes the tier of a customer. Which action is correct
+    for the EXISTING current row?
   options:
     A: "UPDATE SET tier = new tier (overwrite in place)"
     B: "UPDATE SET valid_to = effective_date (close the version), then INSERT a new current row with valid_to NULL"
     C: "DELETE the old row and INSERT the new one"
-    D: "Do nothing; SCD2 ignores changes"
+    D: "Do nothing. SCD2 ignores changes"
   answer: [B]
   explanation: >-
-    SCD2 preserves history: close the current version by setting valid_to, and insert a new current
-    version (valid_to NULL). Overwriting the attribute in place is SCD Type 1 and destroys history —
-    the classic mistake. Deleting the old row also loses history.
+    SCD2 preserves history. Close the current version when you set valid_to. Then insert a new
+    current version (valid_to NULL). If you overwrite the attribute in place, you get SCD Type 1,
+    and you destroy history. This is the classic mistake. If you delete the old row, you also lose
+    history.
   source: "https://docs.delta.io/latest/delta-update.html#upsert-into-a-table-using-merge"
 
 - id: LKH-06-q4
@@ -52,12 +55,12 @@
     A: "Only 'update'"
     B: "'update_preimage' (the old row) and 'update_postimage' (the new row)"
     C: "'insert' and 'delete'"
-    D: "None; CDF only tracks inserts"
+    D: "None. CDF only tracks inserts"
   answer: [B]
   explanation: >-
-    An UPDATE emits both the preimage (row before) and postimage (row after) so a consumer sees the
-    exact before/after. Inserts emit 'insert', deletes emit 'delete'. Each change row also carries
-    _commit_version.
+    An UPDATE emits both the preimage (the row before) and the postimage (the row after). So a
+    consumer sees the exact before and after. Inserts emit 'insert'. Deletes emit 'delete'. Each
+    change row also carries _commit_version.
   source: "https://docs.delta.io/latest/delta-change-data-feed.html"
 
 - id: LKH-06-q5
@@ -65,28 +68,30 @@
   prompt: "Change Data Feed was not enabled when some changes were written. Can you read those past changes via CDF now?"
   options:
     A: "Yes, CDF is always retroactive"
-    B: "No — CDF only records changes made after it was enabled; it is not free retroactive history"
+    B: "No — CDF only records changes made after you enabled it. It is not free retroactive history"
     C: "Yes, but only inserts"
     D: "Only if you run VACUUM first"
   answer: [B]
   explanation: >-
-    CDF must be enabled (delta.enableChangeDataFeed=true) before the changes you want to read; it adds
-    write cost and change files. Changes written before it was on are not available via the feed.
+    You must enable CDF (delta.enableChangeDataFeed=true) before the changes that you want to read.
+    It adds write cost and change files. The feed does not have the changes that were written
+    before you turned it on.
   source: "https://docs.delta.io/latest/delta-change-data-feed.html"
 
 - id: LKH-06-q6
   type: single
   prompt: "What problem does Delta liquid clustering address, and what Iceberg feature(s) is it most comparable to?"
   options:
-    A: "Concurrency; comparable to Iceberg isolation levels"
-    B: "Data layout for skipping; comparable to Iceberg sort order + hidden partitioning (CLUSTER BY instead of static partitions + ZORDER)"
-    C: "Security; comparable to Iceberg row filters"
-    D: "Streaming; comparable to Iceberg's Flink sink"
+    A: "Concurrency. It is comparable to Iceberg isolation levels"
+    B: "Data layout for skipping. It is comparable to Iceberg sort order + hidden partitioning (CLUSTER BY instead of static partitions + ZORDER)"
+    C: "Security. It is comparable to Iceberg row filters"
+    D: "Streaming. It is comparable to the Flink sink of Iceberg"
   answer: [B]
   explanation: >-
-    Liquid clustering replaces static hive partitioning plus ZORDER with an incrementally maintained
-    CLUSTER BY, improving data-skipping without the pitfalls of fixed partition columns. It plays the
-    role Iceberg fills with sort orders and hidden partitioning.
+    Liquid clustering replaces static hive partitioning plus ZORDER with a CLUSTER BY that Delta
+    maintains incrementally. It improves data skipping, and it avoids the problems of fixed
+    partition columns. It plays the role that Iceberg fills with sort orders and hidden
+    partitioning.
   source: "https://docs.delta.io/latest/delta-clustering.html"
 
 - id: LKH-06-q7
@@ -94,12 +99,12 @@
   prompt: "What does Delta UniForm provide?"
   options:
     A: "A uniform random sampler"
-    B: "Iceberg-compatible metadata written alongside the Delta log, so Iceberg readers can read a Delta table"
+    B: "Iceberg-compatible metadata written next to the Delta log, so Iceberg readers can read a Delta table"
     C: "A way to merge two Delta tables"
     D: "Uniform file sizes via compaction"
   answer: [B]
   explanation: >-
-    UniForm (Universal Format) writes Iceberg (and Hudi) compatible metadata next to the Delta log so
-    engines that speak those formats can read the same underlying data — interoperability without
-    copying the data.
+    UniForm (Universal Format) writes Iceberg-compatible (and Hudi-compatible) metadata next to the
+    Delta log. Engines that speak those formats can then read the same underlying data. This is
+    interoperability without a copy of the data.
   source: "https://docs.delta.io/latest/delta-uniform.html"

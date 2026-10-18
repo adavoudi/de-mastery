@@ -3,18 +3,19 @@
   prompt: "Why does running the default (thin) `jar` of a Flink/Kafka job on a bare JVM throw NoClassDefFoundError?"
   options:
     A: "The jar is corrupt."
-    B: "A thin jar contains only your classes, not the dependency classes; a fat/uber jar bundles the dependencies so the cluster needs nothing else."
+    B: "A thin jar contains only your classes, not the dependency classes. A fat/uber jar bundles the dependencies, so the cluster needs nothing else."
     C: "Java cannot run jars directly."
     D: "The manifest is always missing."
   answer: [B]
   explanation: >-
-    The default jar packages only your compiled classes. The first dependency class referenced is
-    absent at runtime unless you build a fat/uber jar that includes the dependency classes.
+    The default jar packages only your compiled classes. The first dependency class that the code
+    uses is absent at runtime. To fix this, build a fat/uber jar that includes the dependency
+    classes.
   source: "https://docs.gradle.org/current/userguide/building_java_projects.html"
 
 - id: JVM-03-q2
   type: single
-  prompt: "You write a Flink job. Which Gradle configuration should Flink's own libraries use so you do NOT bundle a second copy into your job jar?"
+  prompt: "You write a Flink job. Which Gradle configuration should Flink's own libraries use, so that you do NOT bundle a second copy into your job jar?"
   options:
     A: "implementation"
     B: "compileOnly (Maven 'provided') — the cluster provides Flink at runtime"
@@ -22,9 +23,9 @@
     D: "testImplementation"
   answer: [B]
   explanation: >-
-    Flink is provided by the cluster, so mark it compileOnly (provided). Using implementation would
-    bundle Flink into the job jar and cause classloader/version conflicts and LinkageErrors on the
-    cluster.
+    The cluster provides Flink, so mark it compileOnly (provided). If you use implementation, Gradle
+    bundles Flink into the job jar. This causes classloader and version conflicts and
+    LinkageErrors on the cluster.
   source: "https://nightlies.apache.org/flink/flink-docs-release-1.20/docs/dev/configuration/overview/"
 
 - id: JVM-03-q3
@@ -32,26 +33,26 @@
   prompt: "When merging many jars into a fat jar, why must you exclude META-INF/*.SF, *.DSA and *.RSA?"
   options:
     A: "They make the jar bigger."
-    B: "They are signature files; keeping them in a jar whose contents changed makes the JVM verifier throw SecurityException: Invalid signature file digest."
+    B: "They are signature files. If you keep them in a jar whose contents changed, the JVM verifier throws SecurityException: Invalid signature file digest."
     C: "They contain source code."
     D: "They are required and must be kept."
   answer: [B]
   explanation: >-
-    Those are signed-jar signature files. After merging, the archive content no longer matches the
-    signatures, so the JVM's jar verifier rejects it. Standard fat-jar practice drops them.
+    Those are signature files of signed jars. After merging, the archive content no longer matches
+    the signatures, so the JVM's jar verifier rejects it. Standard fat-jar practice drops them.
   source: "https://docs.oracle.com/javase/tutorial/deployment/jar/signindex.html"
 
 - id: JVM-03-q4
   type: single
   prompt: "What does `java -jar app-all.jar` require in the jar's manifest?"
   options:
-    A: "Nothing; java infers the entry point."
+    A: "Nothing. Java infers the entry point."
     B: "A Main-Class attribute naming the class with public static void main(String[])."
     C: "A Class-Path listing every dependency jar on disk."
     D: "A Gradle-Version attribute."
   answer: [B]
   explanation: >-
-    java -jar reads Main-Class from META-INF/MANIFEST.MF to find the entry point. Without it you get
+    java -jar reads Main-Class from META-INF/MANIFEST.MF to find the entry point. Without it, you get
     'no main manifest attribute'.
   source: "https://docs.oracle.com/javase/tutorial/deployment/jar/appman.html"
 
@@ -65,36 +66,36 @@
     D: "To sign the jar."
   answer: [B]
   explanation: >-
-    Relocation renames packages of bundled libraries so multiple versions can coexist without
-    conflict. It is why the Shadow plugin exists; it also merges service descriptor files.
+    Relocation renames the packages of bundled libraries. Then multiple versions can coexist without
+    conflict. This is why the Shadow plugin exists. The plugin also merges service descriptor files.
   source: "https://docs.gradle.org/current/userguide/java_library_plugin.html"
 
 - id: JVM-03-q6
   type: single
-  prompt: "Two dependencies both contain META-INF/services/...; with no duplicatesStrategy a fat-jar Jar task does what?"
+  prompt: "Two dependencies both contain META-INF/services/.... There is no duplicatesStrategy. What does a fat-jar Jar task do?"
   options:
     A: "Silently keeps a random one."
-    B: "Fails the build with a duplicate-entry error; you must set a DuplicatesStrategy (or merge the files)."
+    B: "Fails the build with a duplicate-entry error. You must set a DuplicatesStrategy (or merge the files)."
     C: "Concatenates them automatically."
     D: "Deletes both."
   answer: [B]
   explanation: >-
     Gradle's Jar task fails on duplicate paths unless you set DuplicatesStrategy. EXCLUDE keeps the
-    first deterministically; truly correct handling MERGES service files (what Shadow's
-    mergeServiceFiles does).
+    first file in a deterministic way. The truly correct handling MERGES service files (what
+    Shadow's mergeServiceFiles does).
   source: "https://docs.gradle.org/current/javadoc/org/gradle/api/file/DuplicatesStrategy.html"
 
 - id: JVM-03-q7
   type: single
   prompt: "Which statement about implementation vs api/compileOnly is correct for a job (application) artifact?"
   options:
-    A: "implementation dependencies are bundled into the fat jar and on the runtime classpath; compileOnly ones are not bundled."
+    A: "implementation dependencies are bundled into the fat jar and are on the runtime classpath. compileOnly dependencies are not bundled."
     B: "compileOnly dependencies are always bundled."
     C: "implementation and compileOnly are identical."
     D: "Only testImplementation ends up in the fat jar."
   answer: [A]
   explanation: >-
-    implementation is compile+runtime (and thus bundled by a fat-jar task that reads
-    runtimeClasspath); compileOnly is compile-time only and intentionally excluded from the runtime
-    classpath and the fat jar.
+    implementation is compile+runtime. So a fat-jar task that reads runtimeClasspath bundles it.
+    compileOnly is compile-time only. It is intentionally not on the runtime classpath and not in
+    the fat jar.
   source: "https://docs.gradle.org/current/userguide/java_library_plugin.html"

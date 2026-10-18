@@ -2,44 +2,53 @@
 
 ## Why the catalog is the real boundary
 
-LKH-01 showed that a table is a tree of files; LKH-02 showed that a commit is an atomic swap of one
-pointer. The thing that **holds** that pointer — and decides who may swap it — is the **catalog**.
-In your Athena world the catalog is **Glue**: it maps `db.table` to the current `metadata.json` and
-(with Lake Formation) governs who can read or write. Swap the catalog and the same Iceberg files
-become a Hive-metastore table, a REST-catalog table (Polaris, Nessie, Unity, Lakekeeper), or a
-plain filesystem table. The data is portable; the catalog is the control plane.
+LKH-01 showed that a table is a tree of files. LKH-02 showed that a commit is an atomic swap of one
+pointer. The **catalog** **holds** that pointer. The catalog also decides who may swap it. In your
+Athena world, the catalog is **Glue**. Glue maps `db.table` to the current `metadata.json`. With
+Lake Formation, it also controls who can read or write.
 
-A catalog does three jobs: **name resolution** (`db.table` → metadata path), **atomic commit** (the
-compare-and-swap of LKH-02), and increasingly **governance** (permissions, lineage). The REST
-catalog standardises this behind one HTTP protocol so any engine talks to any catalog the same way.
+Imagine that you swap the catalog. The same Iceberg files then become a table in another system.
+This system can be a Hive metastore, a REST catalog (Polaris, Nessie, Unity, Lakekeeper), or a
+plain filesystem. The data is portable. The catalog is the control plane.
+
+A catalog does three jobs:
+
+1. **Name resolution** (`db.table` → metadata path).
+2. **Atomic commit** (the compare-and-swap of LKH-02).
+3. **Governance** (permissions, lineage). This job is growing.
+
+The REST catalog makes this standard with one HTTP protocol. Then any engine talks to any catalog
+in the same way.
 
 ## Branching, tagging, and write-audit-publish
 
 Iceberg can keep multiple named **references** to snapshots in one table:
 
-- A **tag** is an immutable label on a single snapshot — a named point in time ("eom-2026-01").
-- A **branch** is a mutable reference you can commit to independently of `main`, exactly like a git
-  branch. Writes to a branch do **not** change what readers of `main` see.
+- A **tag** is an immutable label on a single snapshot. It names one point in time ("eom-2026-01").
+- A **branch** is a mutable reference. You can commit to it independently of `main`, exactly like a
+  git branch. Writes to a branch do **not** change what readers of `main` see.
 
-This is the mechanism behind **write-audit-publish (WAP)** — the pattern that matches your SOX
-"audited publish" control. Instead of writing new data straight into the production table (`main`)
-and hoping it's good, you:
+This is the mechanism behind **write-audit-publish (WAP)**. This pattern matches your SOX "audited
+publish" control. A bad way is to write new data straight into the production table (`main`) and
+hope that it is good. Instead, you follow these steps:
 
-1. **Write** the new data to a short-lived **branch** (e.g. `audit`). Production readers on `main`
-   are untouched; nothing bad is visible yet.
-2. **Audit** the data *on the branch* — run your quality checks (row counts, null rates, referential
-   integrity, control totals) against the branch's snapshot, not against main.
-3. **Publish** only if the audit passes: **fast-forward** `main` to the branch tip (when main hasn't
-   moved) or **cherry-pick** the branch's snapshot onto main. If the audit fails, you drop the branch
-   and `main` never saw the bad data.
+1. **Write** the new data to a short-lived **branch** (for example `audit`). Production readers on
+   `main` are untouched. Nothing bad is visible yet.
+2. **Audit** the data *on the branch*. Run your quality checks against the snapshot of the branch.
+   Do not run them against main. Example checks are row counts, null rates, referential integrity
+   and control totals.
+3. **Publish** only if the audit passes. If main has not moved, **fast-forward** `main` to the
+   branch tip. Or **cherry-pick** the snapshot of the branch onto main. If the audit fails, you
+   drop the branch. `main` never saw the bad data.
 
-The order is the whole point. Auditing *before* publishing is what makes the control real; auditing
-the wrong snapshot (main instead of the branch), or publishing before the audit, defeats it — the
-same way signing off a SOX control on last quarter's numbers, or publishing before sign-off, would.
+The order is the whole point. The control is real only when you audit *before* you publish. Two
+actions defeat the control. One is to audit the wrong snapshot (main instead of the branch). The
+other is to publish before the audit. They are like a SOX control that is signed off on the numbers
+of last quarter, or that is published before sign-off.
 
 ![Writes land on the audit branch; main only moves, by fast-forward, after the audit of S4 passes](diagrams/wap-branch-lineage.svg)
 
-In Spark SQL (Iceberg extensions) the moves are:
+In Spark SQL (Iceberg extensions), the commands are:
 
 ```sql
 ALTER TABLE t CREATE BRANCH audit;              -- create the staging branch
@@ -61,12 +70,14 @@ CALL cat.system.fast_forward('db.t', 'main', 'audit');   -- PUBLISH (ff)
 
 ## When NOT to use branches / WAP
 
-- **Don't branch for every tiny append** where a failed load is cheap to retry; WAP shines when a
-  bad publish is expensive or regulated. Branch maintenance (and extra snapshots) isn't free.
-- **Don't treat a branch as long-lived parallel history** unless you really need it; branches that
-  live forever accumulate snapshots and complicate expiration (LKH-05).
-- **Don't rely on branch isolation for secrecy/row-level security** — that's the catalog's
-  governance job, not what a branch is for.
+- **Do not branch for every tiny append.** If a failed load is cheap to retry, use no branch. WAP
+  is best when a bad publish is expensive or regulated. Branch maintenance (and extra snapshots)
+  has a cost.
+- **Do not treat a branch as a long-lived parallel history.** Do this only if you really need it.
+  A branch that lives forever accumulates snapshots. It also makes expiration more complex
+  (LKH-05).
+- **Do not rely on branch isolation for secrecy or row-level security.** That is the job of the
+  governance of the catalog. A branch has a different purpose.
 
 ## Further reading
 

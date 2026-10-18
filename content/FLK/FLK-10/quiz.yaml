@@ -5,9 +5,9 @@
     A: "A single +I"
     B: "A -U for the before image, then a +U for the after image"
     C: "A -D then a +I"
-    D: "Nothing — updates are ignored"
+    D: "Nothing. The format ignores updates"
   answer: [B]
-  explanation: "The debezium-json format turns an update into a retract of the old row (-U) and an insert of the new row (+U), so downstream operators and sinks apply it correctly."
+  explanation: "The debezium-json format turns an update into a retract of the old row (-U) and an insert of the new row (+U). So downstream operators and sinks apply it correctly."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/connectors/table/formats/debezium/"
 
 - id: FLK-10-q2
@@ -15,35 +15,35 @@
   prompt: "Why must the target Iceberg table be format-version 2 with a PRIMARY KEY for a CDC upsert sink?"
   options:
     A: "v2 is faster for reads"
-    B: "v2 supports row-level deletes (equality/position), and the primary key tells Flink which row an update/delete targets so changes are applied, not appended"
+    B: "v2 supports row-level deletes (equality/position). The primary key tells Flink which row an update or delete targets. So Flink applies the changes and does not append them"
     C: "v1 cannot store strings"
     D: "It is only a style preference"
   answer: [B]
-  explanation: "Applying -U/+U/-D requires row-level deletes (Iceberg v2) keyed by a primary key; v1 is append-only."
+  explanation: "To apply -U/+U/-D, you need row-level deletes (Iceberg v2) with a primary key. v1 is append-only."
   source: "https://iceberg.apache.org/docs/latest/flink-writes/"
 
 - id: FLK-10-q3
   type: single
-  prompt: "When does Flink's Iceberg sink make its changes visible in the table?"
+  prompt: "When does the Iceberg sink of Flink make its changes visible in the table?"
   options:
     A: "After every record"
-    B: "When a Flink checkpoint completes — it commits one Iceberg snapshot per completed checkpoint"
+    B: "When a Flink checkpoint completes. It commits one Iceberg snapshot for each completed checkpoint"
     C: "Only when the job is cancelled"
     D: "On a fixed 10-minute timer"
   answer: [B]
-  explanation: "The sink buffers writes and commits an Iceberg snapshot on checkpoint completion. This commit-on-checkpoint is what gives exactly-once: snapshots are not double-committed or lost on recovery."
+  explanation: "The sink buffers writes. It commits an Iceberg snapshot when a checkpoint completes. This commit-on-checkpoint gives exactly-once. On recovery, the sink does not commit a snapshot twice and does not lose a snapshot."
   source: "https://iceberg.apache.org/docs/latest/flink-writes/"
 
 - id: FLK-10-q4
   type: single
-  prompt: "The source adds a new column 'region'. You run ALTER TABLE ... ADD (region STRING) on the Iceberg table. What happens to rows that existed before the ALTER?"
+  prompt: "The source adds a new column 'region'. You run ALTER TABLE ... ADD (region STRING) on the Iceberg table. What happens to the rows that existed before the ALTER?"
   options:
     A: "They are rewritten with a default value"
-    B: "They read back NULL for region (schema evolution is metadata-only; no data is rewritten)"
+    B: "They read back NULL for region. Schema evolution is metadata-only, and Iceberg does not rewrite any data"
     C: "They are deleted"
     D: "The ALTER fails because the table has data"
   answer: [B]
-  explanation: "Iceberg schema evolution is a metadata operation: existing data files are untouched and old rows read NULL for the new column."
+  explanation: "Iceberg schema evolution is a metadata operation. It does not change the existing data files. Old rows read NULL for the new column."
   source: "https://iceberg.apache.org/docs/latest/evolution/"
 
 - id: FLK-10-q5
@@ -55,41 +55,41 @@
     C: "Empty"
     D: "Only id=2"
   answer: [B]
-  explanation: "The upsert applies the changelog: id=1 is updated to its latest values, id=2 is deleted. The table reflects current source state."
+  explanation: "The upsert applies the changelog. id=1 gets its latest values and id=2 is deleted. The table shows the current source state."
   source: "https://iceberg.apache.org/docs/latest/flink-writes/"
 
 - id: FLK-10-q6
   type: single
-  prompt: "What is the correct no-Docker way to feed a deterministic CDC changelog into Flink for testing?"
+  prompt: "What is the correct way to feed a deterministic CDC changelog into Flink for testing, without Docker?"
   options:
     A: "A live Postgres with Debezium running in Docker"
-    B: "A file (or Kafka topic on a native broker) of Debezium-JSON envelopes read via the built-in debezium-json format"
+    B: "A file (or Kafka topic on a native broker) of Debezium-JSON envelopes that the built-in debezium-json format reads"
     C: "A random data generator"
     D: "There is no way without Docker"
   answer: [B]
-  explanation: "The debezium-json format reads Debezium envelopes from a file or Kafka topic with no containers, giving a fully deterministic, reconcilable changelog. The live Postgres→Debezium path is an optional lab layer."
+  explanation: "The debezium-json format reads Debezium envelopes from a file or Kafka topic with no containers. This gives a fully deterministic changelog that you can reconcile. The live Postgres→Debezium path is an optional lab layer."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/connectors/table/formats/debezium/"
 
 - id: FLK-10-q7
   type: single
-  prompt: "A Flink Iceberg CDC job crashes and recovers from its last checkpoint. Why are rows not double-committed to the table?"
+  prompt: "A Flink Iceberg CDC job crashes and recovers from its last checkpoint. Why does the job not commit rows twice to the table?"
   options:
     A: "The sink de-duplicates by scanning the whole table"
-    B: "The sink commits per checkpoint id idempotently; a snapshot for an already-committed checkpoint is not re-applied on recovery"
+    B: "The sink commits idempotently for each checkpoint id. On recovery, it does not apply again a snapshot for a checkpoint that it already committed"
     C: "Iceberg forbids duplicate rows"
     D: "Flink disables checkpointing after a crash"
   answer: [B]
-  explanation: "Commit-on-checkpoint plus an idempotent committer keyed on checkpoint id means recovery replays uncommitted work only; already-committed snapshots are not duplicated."
+  explanation: "Commit-on-checkpoint plus an idempotent committer with the checkpoint id as key means that recovery replays only the work that is not committed. It does not duplicate snapshots that are already committed."
   source: "https://iceberg.apache.org/docs/latest/flink-writes/"
 
 - id: FLK-10-q8
   type: multi
-  prompt: "Which are good reasons to prefer a continuous Flink CDC → Iceberg job over a nightly batch MERGE? Select all that apply."
+  prompt: "Which are good reasons to prefer a continuous Flink CDC → Iceberg job to a nightly batch MERGE? Select all that apply."
   options:
-    A: "The target stays continuously current instead of up to a day stale"
+    A: "The target stays continuously current. It is not up to a day old"
     B: "Exactly-once commit-on-checkpoint gives a clean snapshot history"
     C: "It is always cheaper to operate than batch for tiny, rarely-changing tables"
-    D: "It handles updates and deletes by primary key, not just appends"
+    D: "It handles updates and deletes by primary key, and not only appends"
   answer: [A, B, D]
-  explanation: "Continuous currency, exactly-once snapshots and key-based upserts favour streaming CDC. For tiny, rarely-changing tables a periodic batch MERGE is often cheaper to operate, so C is false."
+  explanation: "Continuous currency, exactly-once snapshots and key-based upserts favour streaming CDC. For tiny tables that rarely change, a periodic batch MERGE often costs less to operate, so C is false."
   source: "https://iceberg.apache.org/docs/latest/flink-writes/"

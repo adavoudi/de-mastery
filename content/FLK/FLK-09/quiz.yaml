@@ -2,12 +2,12 @@
   type: single
   prompt: "A deduplication query uses ROW_NUMBER() OVER (PARTITION BY k ORDER BY ts) WHERE rn = 1 with an ascending ORDER BY. What kind of changelog does it produce?"
   options:
-    A: "Updating — it retracts the previous first row when a duplicate arrives"
-    B: "Append-only — once the first row per key is emitted, later duplicates are dropped and never retract it"
+    A: "Updating. It retracts the previous first row when a duplicate arrives"
+    B: "Append-only. After the query emits the first row per key, it drops later duplicates and never retracts the first row"
     C: "It produces only deletes"
     D: "It depends on the sink"
   answer: [B]
-  explanation: "Keep-first dedup (ascending ORDER BY) is append-only: the first row per key is final; later duplicates are simply dropped."
+  explanation: "Keep-first dedup (ascending ORDER BY) is append-only. The first row per key is final. The query drops later duplicates."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/deduplication/"
 
 - id: FLK-09-q2
@@ -15,35 +15,35 @@
   prompt: "You change the dedup ORDER BY to DESC to keep the LAST row per key. How does the changelog change?"
   options:
     A: "It stays append-only"
-    B: "It becomes an updating query that retracts the previous 'last' row when a newer one arrives"
-    C: "It errors — DESC is not allowed in dedup"
+    B: "It becomes an updating query. It retracts the previous 'last' row when a newer row arrives"
+    C: "It gives an error because DESC is not allowed in dedup"
     D: "It emits each row twice"
   answer: [B]
-  explanation: "Keep-last dedup must retract the previously-emitted last row when a newer row arrives, so it is an updating query (needs an upsert-capable sink)."
+  explanation: "Keep-last dedup must retract the last row that it emitted before, when a newer row arrives. So it is an updating query (it needs a sink that supports upserts)."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/deduplication/"
 
 - id: FLK-09-q3
   type: single
-  prompt: "A streaming Top-N (ROW_NUMBER() OVER (... ORDER BY v DESC) WHERE rn <= 3) is written to a Kafka topic. Which sink is correct?"
+  prompt: "A streaming Top-N (ROW_NUMBER() OVER (... ORDER BY v DESC) WHERE rn <= 3) writes to a Kafka topic. Which sink is correct?"
   options:
     A: "A plain 'kafka' sink with the json format"
     B: "An 'upsert-kafka' sink keyed by the Top-N key, because Top-N is an updating query that emits retractions"
     C: "A filesystem sink"
-    D: "Any sink — Top-N is append-only"
+    D: "Any sink, because Top-N is append-only"
   answer: [B]
-  explanation: "Top-N retracts the row it displaces, so the sink must apply updates/deletes. upsert-kafka keyed by the entity handles that; a plain append kafka sink would double-count."
+  explanation: "Top-N retracts the row that it displaces. So the sink must apply updates and deletes. upsert-kafka keyed by the entity does this. A plain append kafka sink would double-count."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/topn/"
 
 - id: FLK-09-q4
   type: single
   prompt: "Why prefer UNION ALL over UNION when merging two event streams in Flink SQL?"
   options:
-    A: "UNION ALL is append-only; UNION (distinct) is an updating query that keeps unbounded state to suppress duplicates"
+    A: "UNION ALL is append-only. UNION (distinct) is an updating query that keeps unbounded state to suppress duplicates"
     B: "UNION ALL removes duplicates for you"
     C: "UNION is not supported in streaming"
     D: "They are identical in streaming mode"
   answer: [A]
-  explanation: "UNION must maintain state to deduplicate across an unbounded stream (updating); UNION ALL simply concatenates and is append-only."
+  explanation: "UNION must maintain state to deduplicate across an unbounded stream (updating). UNION ALL only concatenates the streams and is append-only."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/set-ops/"
 
 - id: FLK-09-q5
@@ -53,21 +53,21 @@
     A: "Any column"
     B: "A time attribute (event-time or processing-time), ascending"
     C: "The partition key"
-    D: "Nothing — ORDER BY is optional"
+    D: "Nothing, because ORDER BY is optional"
   answer: [B]
-  explanation: "MATCH_RECOGNIZE evaluates the pattern over rows ordered by time, so ORDER BY must be an ascending time attribute."
+  explanation: "MATCH_RECOGNIZE evaluates the pattern over rows that are ordered by time. So ORDER BY must be an ascending time attribute."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/match_recognize/"
 
 - id: FLK-09-q6
   type: single
   prompt: "How does an OVER aggregation differ from a GROUP BY aggregation in Flink SQL?"
   options:
-    A: "OVER collapses rows into one per group; GROUP BY keeps every row"
-    B: "OVER produces exactly one output row per input row carrying the running aggregate, without collapsing rows; GROUP BY collapses rows per key"
+    A: "OVER collapses rows into one row per group. GROUP BY keeps every row"
+    B: "OVER produces exactly one output row per input row, which carries the running aggregate. It does not collapse rows. GROUP BY collapses rows per key"
     C: "They are the same"
     D: "OVER cannot be used in streaming mode"
   answer: [B]
-  explanation: "OVER computes the aggregate per row over a window of preceding rows and emits one row per input (append-only); GROUP BY groups rows away and emits an updating aggregate."
+  explanation: "OVER computes the aggregate per row over a window of preceding rows. It emits one row per input row (append-only). GROUP BY groups the rows away and emits an updating aggregate."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/over-agg/"
 
 - id: FLK-09-q7
@@ -84,12 +84,12 @@
 
 - id: FLK-09-q8
   type: single
-  prompt: "A dedup-keep-first query over orders emits id=42 once, then the same id=42 arrives again. What does the query emit for the duplicate?"
+  prompt: "A dedup-keep-first query over orders emits id=42 once. Then the same id=42 arrives again. What does the query emit for the duplicate?"
   options:
     A: "A +I for the duplicate"
-    B: "Nothing — the duplicate is dropped (the first row is already final)"
+    B: "Nothing. The query drops the duplicate (the first row is already final)"
     C: "A -U then a +U"
     D: "A -D"
   answer: [B]
-  explanation: "Keep-first dedup emits the first occurrence and drops subsequent duplicates with no retraction, which is exactly why it is append-only."
+  explanation: "Keep-first dedup emits the first occurrence. It drops later duplicates and does not retract. This is why it is append-only."
   source: "https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/deduplication/"

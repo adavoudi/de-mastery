@@ -2,47 +2,52 @@
 
 ## Why this module exists
 
-A single-region Kafka cluster is a single point of failure for your streaming platform. If that
-region goes down — AZ outage, network partition, bad deploy — producers can't write and consumers
-can't read until it's back. For anything business-critical you need a **second region** and a
-plan: how does data get there, how much can you lose, and how fast can you fail over? Those last two
-are the numbers every DR plan lives or dies by:
+A Kafka cluster in a single region is a single point of failure for your streaming platform. The
+region can go down (an AZ outage, a network partition, a bad deploy). Then producers cannot write and
+consumers cannot read until the region is back. For anything business-critical, you need a **second
+region** and a plan. The plan answers three questions: How does the data get there? How much data can
+you lose? How fast can you fail over? The last two questions give the two numbers that decide whether
+a DR plan works:
 
 - **RPO (Recovery Point Objective)** — the maximum **data loss** you can tolerate, measured in time.
-  "RPO = 5 minutes" means after a disaster you may lose up to 5 minutes of the most recent events.
-- **RTO (Recovery Time Objective)** — the maximum **downtime** you can tolerate: how long until the
-  service is back, measured from the failure to full recovery.
+  "RPO = 5 minutes" means that after a disaster you may lose up to 5 minutes of the most recent
+  events.
+- **RTO (Recovery Time Objective)** — the maximum **downtime** you can tolerate. It is the time from
+  the failure to full recovery of the service.
 
-This is the same DR discipline you'd apply to a warehouse or data mart, now for the log that feeds
-them. The architecture you choose is a direct trade of **cost and complexity against RPO/RTO**.
+You would apply the same DR discipline to a warehouse or a data mart. Here you apply it to the log
+that feeds them. The architecture you choose trades **cost and complexity against RPO/RTO**.
 
 ## How multi-region Kafka works
 
-**Async replication (the common case): MirrorMaker 2.** MM2 is a Kafka Connect-based tool that
-consumes from a **source** cluster and produces to a **target** cluster in another region,
-**asynchronously**. Because it is async, the target always lags the source a little — that lag is
-your **RPO** (you lose whatever hadn't replicated yet). MM2 also mirrors consumer-group offsets and
-topic configs, and it **renames** topics with a source-cluster prefix (e.g. `us-east.orders`) under
-the default `DefaultReplicationPolicy` to avoid loops in active/active setups. Failover is a
-**manual or orchestrated** cutover: point producers/consumers at the target, translate offsets, and
-resume — so RTO is dominated by how automated that cutover is.
+**Async replication (the common case): MirrorMaker 2.** MM2 is a tool built on Kafka Connect. It
+consumes from a **source** cluster and produces to a **target** cluster in another region. It works
+**asynchronously**. Because it is async, the target always lags the source a little. That lag is your
+**RPO**, because you lose whatever has not replicated yet. MM2 also mirrors consumer-group offsets and
+topic configs. With the default `DefaultReplicationPolicy`, MM2 **renames** topics with a prefix of
+the source cluster (for example, `us-east.orders`). This avoids loops in active/active setups.
+Failover is a **manual or orchestrated** cutover. You point producers and consumers at the target,
+translate offsets, and resume. So the automation of this cutover decides most of the RTO.
 
 ![MirrorMaker 2 mirrors orders asynchronously to us-west as us-east.orders; on failover, clients repoint and offsets are translated](diagrams/mm2-failover.svg)
 
 **Topologies.**
 
-- **Active/Passive (warm standby).** One region serves; the other is a replica kept warm by MM2.
-  Simpler, cheaper; failover is a deliberate cutover. RPO = replication lag; RTO = cutover time.
+- **Active/Passive (warm standby).** One region serves. MM2 keeps the other region as a warm replica.
+  It is simpler and cheaper. Failover is a deliberate cutover. RPO = replication lag. RTO = cutover
+  time.
 - **Active/Active.** Both regions serve local traffic and mirror to each other (prefixed topics
-  prevent loops). Lowest RTO (the other region is already live) but more complex: you must handle
-  duplicate/looping data and conflicting writes.
-- **Stretched cluster (single cluster across regions).** Brokers span regions with rack-aware
-  placement so replicas are in both; `acks=all` across regions gives **RPO ≈ 0** but adds
-  cross-region write latency and needs ≥3 AZs/regions for quorum. Highest cost/latency, lowest RPO.
+  prevent loops). It has the lowest RTO, because the other region is already live. But it is more
+  complex: you must handle duplicate and looping data and conflicting writes.
+- **Stretched cluster (single cluster across regions).** Brokers span regions, with rack-aware
+  placement so that replicas are in both regions. `acks=all` across regions gives **RPO ≈ 0**. But it
+  adds cross-region write latency. It needs ≥3 AZs/regions for quorum. It has the highest cost and
+  latency and the lowest RPO.
 
-**Managed / newer options.** Confluent **Cluster Linking** (byte-for-byte offset-preserving async
-replication, no Connect), and offerings like MSK, Confluent Cloud, WarpStream/diskless architectures
-change the cost and operational model but the RPO/RTO reasoning is the same.
+**Managed / newer options.** Confluent **Cluster Linking** is async replication that copies bytes and
+preserves offsets, with no Connect. Other options are MSK, Confluent Cloud, and
+WarpStream/diskless architectures. They change the cost and the operational model, but the RPO/RTO
+reasoning is the same.
 
 ## From your world
 
@@ -57,15 +62,15 @@ change the cost and operational model but the RPO/RTO reasoning is the same.
 
 ## When NOT to / pitfalls
 
-- **Don't claim RPO = 0 with async replication.** MM2 and Cluster Linking are asynchronous; there is
-  always some lag. RPO ≈ 0 requires a synchronous (stretched) design and you pay in latency.
-- **Don't forget offset translation.** Consumers that fail over must resume at the right place; MM2's
-  offset-sync / checkpoint topics (or Cluster Linking's preserved offsets) make this possible — plan
-  for it or you reprocess or skip data.
-- **Don't ignore the prefix in active/active.** Mirrored topics are renamed to prevent loops;
-  consumers must know which topics to read in each region.
-- **Don't size a stretched cluster across 2 regions only.** Quorum needs an odd number of failure
-  domains (≥3) or a region loss can lose the controller quorum.
+- **Don't claim RPO = 0 with async replication.** MM2 and Cluster Linking are asynchronous, so there
+  is always some lag. RPO ≈ 0 requires a synchronous (stretched) design, and you pay in latency.
+- **Don't forget offset translation.** Consumers that fail over must resume at the right place. The
+  offset-sync and checkpoint topics of MM2 (or the preserved offsets of Cluster Linking) make this
+  possible. Plan for it. If you do not, you reprocess or skip data.
+- **Don't ignore the prefix in active/active.** MM2 renames mirrored topics to prevent loops.
+  Consumers must know which topics to read in each region.
+- **Don't size a stretched cluster across only 2 regions.** Quorum needs an odd number of failure
+  domains (≥3). Otherwise, the loss of a region can lose the controller quorum.
 
 ## Further reading
 

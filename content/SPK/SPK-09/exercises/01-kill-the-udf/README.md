@@ -1,14 +1,14 @@
 # Replace a slow per-row FX Python UDF
 
-Finance wants every payment converted to USD using the **daily** FX rate on the payment date.
-A teammate shipped a working-but-slow version: a Python UDF that looks up the rate for each row.
-Its physical plan contains a `BatchEvalPython` node, so every row makes a round trip to a Python
-worker. Your job is to produce the same numbers **without** that fence.
+Finance wants every payment converted to USD. The conversion must use the **daily** FX rate on the
+payment date. A teammate shipped a version that works but is slow. It is a Python UDF that looks up the
+rate for each row. Its physical plan contains a `BatchEvalPython` node, so every row makes a round trip
+to a Python worker. Your job is to produce the same numbers **without** that fence.
 
-Implement `to_usd(payments, fx_rates)` in `solution.py`. Inputs:
+Implement `to_usd(payments, fx_rates)` in `solution.py`. These are the inputs:
 
 - `payments(company_id, payment_id, order_id, amount, currency, paid_ts_utc)` — `amount` may be
-  NULL; `paid_ts_utc` is an ISO UTC timestamp string.
+  NULL. `paid_ts_utc` is an ISO UTC timestamp string.
 - `fx_rates(rate_date, currency, usd_per_unit)` — one rate per `(rate_date, currency)` day.
 
 Return a DataFrame with **one row per input payment** and these columns:
@@ -22,13 +22,16 @@ Return a DataFrame with **one row per input payment** and these columns:
 
 Rules:
 
-- Convert at the rate for the payment's **own date** (`paid_ts_utc`'s calendar date in UTC),
-  matched against `fx_rates.rate_date`.
-- **Keep every payment row** — a missing rate or a NULL amount must not drop the row (use a left
-  join), it just makes `usd_amount` NULL.
-- The result's physical plan must contain **no `BatchEvalPython`** node. Native
-  `pyspark.sql.functions`, a pandas UDF, or an Arrow UDF are all acceptable; a plain Python
-  `udf(...)` is not.
+- Convert at the rate for the **own date** of the payment (the calendar date of `paid_ts_utc` in UTC).
+  Match it against `fx_rates.rate_date`.
+- **Keep every payment row.** A missing rate or a NULL amount must not drop the row (use a left
+  join). It only makes `usd_amount` NULL.
+- The physical plan of the result must contain **no `BatchEvalPython`** node. You can use native
+  `pyspark.sql.functions`, a pandas UDF, or an Arrow UDF. You cannot use a plain Python
+  `udf(...)`.
 
-The test checks the values against a DuckDB oracle (order ignored, float tolerance), that every
-input payment survives, and that the plan has no `BatchEvalPython`.
+The test checks these three things:
+
+- The values match a DuckDB oracle (order ignored, float tolerance).
+- Every input payment survives.
+- The plan has no `BatchEvalPython`.

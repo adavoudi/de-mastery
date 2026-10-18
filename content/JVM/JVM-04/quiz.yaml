@@ -3,13 +3,13 @@
   prompt: "What is the key difference between Avro GenericRecord and SpecificRecord?"
   options:
     A: "They produce different wire bytes for the same data and schema."
-    B: "GenericRecord is a schema-driven, map-like object with untyped get/put; SpecificRecord is a generated class with typed getters/setters. Same wire format."
+    B: "GenericRecord is a schema-driven, map-like object with untyped get/put. SpecificRecord is a generated class with typed getters/setters. The wire format is the same."
     C: "SpecificRecord has no schema."
     D: "GenericRecord cannot be serialized."
   answer: [B]
   explanation: >-
     Both encode to the same Avro bytes under the same schema. GenericRecord accesses fields by name
-    returning Object; SpecificRecord is code-generated for compile-time-typed access and is the
+    and returns Object. SpecificRecord is generated code with compile-time-typed access. It is the
     production path.
   source: "https://avro.apache.org/docs/1.12.0/getting-started-java/"
 
@@ -17,19 +17,19 @@
   type: single
   prompt: "In Flink, when does a user type fall back to the generic Kryo serializer?"
   options:
-    A: "Never; Flink always uses Kryo."
+    A: "Never. Flink always uses Kryo."
     B: "When the type is neither an Avro/Flink-recognized type nor a valid POJO (missing public no-arg constructor, or fields that are not public and lack public getters/setters)."
     C: "Only for primitives."
     D: "Whenever you use generics."
   answer: [B]
   explanation: >-
-    Flink uses efficient serializers for recognized types (Avro, Tuple) and valid POJOs; anything
-    else falls back to Kryo, which is slower and more brittle across schema changes.
+    Flink uses efficient serializers for recognized types (Avro, Tuple) and for valid POJOs.
+    Anything else falls back to Kryo. Kryo is slower and more brittle across schema changes.
   source: "https://nightlies.apache.org/flink/flink-docs-release-1.20/docs/dev/datastream/fault-tolerance/serialization/types_serialization/"
 
 - id: JVM-04-q3
   type: multi
-  prompt: "Which conditions must a class meet to be a valid Flink POJO (avoid Kryo)? (select all)"
+  prompt: "Which conditions must a class meet to be a valid Flink POJO (to avoid Kryo)? (select all)"
   options:
     A: "The class is public and has a public no-argument constructor."
     B: "Every field is public, OR has a public getter and setter following the bean naming convention."
@@ -37,14 +37,14 @@
     D: "The class must implement java.io.Serializable with a custom writeObject."
   answer: [A, B]
   explanation: >-
-    Flink's POJO rules require a public class with a public no-arg constructor and fields that are
-    public or exposed via public getters/setters. Finality is not required, and a custom
-    Serializable writeObject is not what qualifies a POJO.
+    Flink's POJO rules require a public class with a public no-arg constructor. The fields must be
+    public or exposed through public getters/setters. The class does not need to be final. A custom
+    Serializable writeObject does not make a class a POJO.
   source: "https://nightlies.apache.org/flink/flink-docs-release-1.20/docs/dev/datastream/fault-tolerance/serialization/types_serialization/"
 
 - id: JVM-04-q4
   type: single
-  prompt: "You binary-encode an Avro record and decode it with the SAME schema. What should be true?"
+  prompt: "You binary-encode an Avro record and decode it with the SAME schema. What must be true?"
   options:
     A: "The decoded record equals the original (lossless round-trip)."
     B: "The decoded record is always null."
@@ -53,8 +53,8 @@
   answer: [A]
   explanation: >-
     A binary round-trip with the same schema is lossless: decoded.equals(original). Avro binary
-    encoding does NOT embed the schema per record (that's why Schema Registry or a container file
-    supplies it) — which is also why reader/writer schema management matters.
+    encoding does NOT embed the schema in each record. This is why Schema Registry or a container
+    file supplies it. It is also why reader/writer schema management matters.
   source: "https://avro.apache.org/docs/1.12.0/specification/"
 
 - id: JVM-04-q5
@@ -62,14 +62,14 @@
   prompt: "Why avoid Java's built-in Serializable / Kryo for data on a Kafka topic or at rest?"
   options:
     A: "They are illegal."
-    B: "They carry no explicit, evolvable schema and are JVM-only, so they are brittle across versions and not cross-language."
+    B: "They carry no explicit, evolvable schema and work only on the JVM. So they are brittle across versions and not cross-language."
     C: "They are slower than nothing else matters."
     D: "They cannot represent numbers."
   answer: [B]
   explanation: >-
-    Java serialization and Kryo lack an explicit, language-neutral, evolvable schema; data written
-    today may not deserialize after a class change, and non-JVM consumers can't read it. Avro/Parquet
-    solve this.
+    Java serialization and Kryo lack an explicit, language-neutral, evolvable schema. Data that you
+    write today may not deserialize after a class change. Non-JVM consumers cannot read it.
+    Avro/Parquet solve this.
   source: "https://avro.apache.org/docs/1.12.0/specification/"
 
 - id: JVM-04-q6
@@ -77,27 +77,27 @@
   prompt: "Does Avro binary encoding embed the schema inside every encoded record?"
   options:
     A: "Yes, each record carries its full JSON schema."
-    B: "No; binary encoding assumes reader and writer agree on the schema (supplied by a container file header or Schema Registry), which is why schema management exists."
+    B: "No. Binary encoding assumes that the reader and the writer agree on the schema (a container file header or Schema Registry supplies it). This is why schema management exists."
     C: "Only for strings."
     D: "Only when using SpecificRecord."
   answer: [B]
   explanation: >-
-    Avro binary data is compact precisely because the schema is not repeated per record. The schema
-    comes from an Object Container File header or from Schema Registry by id — the basis for KFK-06
-    compatibility checks.
+    Avro binary data is compact because the schema is not repeated in each record. The schema comes
+    from an Object Container File header or from Schema Registry by id. This is the basis for
+    KFK-06 compatibility checks.
   source: "https://avro.apache.org/docs/1.12.0/specification/"
 
 - id: JVM-04-q7
   type: single
-  prompt: "A teammate ships events as a class with private fields and no getters/no no-arg constructor, then wonders why Flink state is huge and slow. Likely cause?"
+  prompt: "A teammate ships events as a class with private fields, no getters, and no no-arg constructor. The teammate asks why Flink state is huge and slow. What is the likely cause?"
   options:
-    A: "The type is not a valid POJO and no Avro type, so Flink fell back to Kryo."
+    A: "The type is not a valid POJO and not an Avro type, so Flink fell back to Kryo."
     B: "Flink always compresses badly."
     C: "The fields are too small."
     D: "Kryo is the fastest option and this is expected."
   answer: [A]
   explanation: >-
-    Without a public no-arg constructor and accessible fields, the class is not a POJO; not being an
-    Avro type either, Flink uses Kryo — larger, slower state. Fixing the POJO rules (or using Avro)
-    restores the efficient serializer.
+    Without a public no-arg constructor and accessible fields, the class is not a POJO. It is not an
+    Avro type either. So Flink uses Kryo, which gives larger and slower state. If you fix the POJO
+    rules (or use Avro), Flink uses the efficient serializer again.
   source: "https://nightlies.apache.org/flink/flink-docs-release-1.20/docs/dev/datastream/fault-tolerance/serialization/types_serialization/"

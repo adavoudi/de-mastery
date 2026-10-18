@@ -1,10 +1,10 @@
 # Design topics for multi-company commerce
 
-Design the topic + key layout for a multi-company (multi-tenant) commerce platform
-and implement the partitioning function that makes your design hold. You are graded
-by a **rubric** (your design decisions) **and a property test** on your key /
-partition function (per-entity ordering, tenant isolation, no hot partition under
-skew).
+Design the topic and key layout for a multi-company (multi-tenant) commerce
+platform. Then implement the partitioning function that makes your design hold.
+Two checks grade you. A **rubric** checks your design decisions. A **property
+test** checks your key and partition function (per-entity ordering, tenant
+isolation, no hot partition under skew).
 
 An `event` is a dict:
 
@@ -18,17 +18,18 @@ Companies are **skewed**: a few huge tenants, many tiny ones.
 
 ### 1. `message_key(event) -> str`
 
-Return the Kafka message key for an order event. It must make all events for the
-**same order** co-locate on one partition (so Kafka's per-partition ordering keeps
-`created` before `updated`), while **not** sending a whole big tenant to one
-partition.
+Return the Kafka message key for an order event. The key must make all events for
+the **same order** go to one partition. Then the per-partition ordering of Kafka
+keeps `created` before `updated`. The key must **not** send a whole big tenant to
+one partition.
 
 ### 2. `partition_for(event, num_partitions) -> int`
 
 Return the partition index in `range(num_partitions)` for the event. It must be a
-**pure, deterministic** function of `message_key(event)` and `num_partitions`
-(same inputs → same partition, across processes). Use a stable hash
-(`hashlib`), not Python's per-process-salted `hash()`.
+**pure, deterministic** function of `message_key(event)` and `num_partitions`. The
+same inputs give the same partition, across processes. Use a stable hash
+(`hashlib`). Do not use `hash()` of Python, because Python salts it for each
+process.
 
 ### 3. `design() -> dict`
 
@@ -60,22 +61,23 @@ The defensible design:
 
 - **orders** = a time-retained **event** topic (append-only history of order
   facts), keyed by `order_id`. Required factors: `per_entity_ordering`,
-  `avoid_hot_partition`, `high_cardinality_key`; plus at least one of
+  `avoid_hot_partition`, `high_cardinality_key`. Also add at least one of
   `append_only_history` / `time_retention`.
 - **customers** = a **compacted entity** topic (latest state per customer),
   keyed by `customer_id`. Required factors: `latest_state_per_key`,
-  `log_compaction`; plus at least one of `rebuildable_from_log` /
+  `log_compaction`. Also add at least one of `rebuildable_from_log` /
   `tenant_isolation`.
 
 ## Grading
 
-- The **rubric** checks the `design()` choices and required factor keys.
-- **Property tests** (Hypothesis) check your `message_key` / `partition_for`:
+- The **rubric** checks the `design()` choices and the required factor keys.
+- **Property tests** (Hypothesis) check your `message_key` and `partition_for`:
   1. *Per-entity ordering* — all events for one `order_id` map to one partition.
-  2. *Determinism* — same event → same partition, recomputed in a fresh process.
+  2. *Determinism* — the same event gives the same partition, recomputed in a fresh
+     process.
   3. *No hot partition under skew* — for a heavily skewed tenant with many orders,
      the events spread across (nearly) all partitions, not just one.
-  4. *Tenant isolation* — the key is derived from the entity, so two tenants'
-     distinct orders are not forced to collide onto one partition by tenant alone.
+  4. *Tenant isolation* — the key is derived from the entity. The tenant alone does
+     not force the distinct orders of two tenants to collide on one partition.
 
 Pure Python, no Docker.

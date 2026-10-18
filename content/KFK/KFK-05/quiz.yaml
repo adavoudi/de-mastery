@@ -1,15 +1,16 @@
 - id: KFK-05-q1
   type: single
-  prompt: "In a transactional read-process-write loop, what must be committed atomically with the output writes to achieve exactly-once?"
+  prompt: "In a transactional read-process-write loop, what must commit atomically with the output writes to achieve exactly-once?"
   options:
-    A: "Nothing; the writes alone are enough."
-    B: "The input consumer's offsets, via send_offsets_to_transaction, so 'consumed up to here' and 'wrote outputs' commit together."
-    C: "The broker's replication factor."
-    D: "The producer's linger.ms."
+    A: "Nothing. The writes alone are enough."
+    B: "The offsets of the input consumer, with send_offsets_to_transaction. Then 'consumed up to here' and 'wrote outputs' commit together."
+    C: "The replication factor of the broker."
+    D: "The linger.ms of the producer."
   answer: [B]
   explanation: >-
-    Committing the input offsets inside the transaction makes consume+produce atomic: a crash either
-    rolls back both or commits both, so no input is processed twice or dropped.
+    When you commit the input offsets inside the transaction, consume+produce is atomic. After a
+    crash, Kafka either rolls back both or commits both. So Kafka never processes an input twice and
+    never drops one.
   source: "https://kafka.apache.org/documentation/#semantics"
 
 - id: KFK-05-q2
@@ -22,63 +23,64 @@
     D: "acks=all"
   answer: [B]
   explanation: >-
-    read_committed makes the consumer skip records belonging to aborted or not-yet-committed
-    transactions. read_uncommitted (the default) would surface them, breaking exactly-once.
+    read_committed makes the consumer skip records that belong to aborted or not-yet-committed
+    transactions. read_uncommitted (the default) shows them, which breaks exactly-once.
   source: "https://kafka.apache.org/documentation/#consumerconfigs_isolation.level"
 
 - id: KFK-05-q3
   type: single
-  prompt: "Why must the transactional.id be STABLE per logical processor (not random per run)?"
+  prompt: "Why must the transactional.id be STABLE for each logical processor (not random for each run)?"
   options:
     A: "To make logs easier to read."
-    B: "So zombie fencing works: init_transactions bumps the epoch and fences the old instance; a random id would let a zombie and its replacement both commit."
-    C: "Random ids are rejected by Kafka."
+    B: "So that zombie fencing works. init_transactions raises the epoch and fences the old instance. A random id would let a zombie and its replacement both commit."
+    C: "Kafka rejects random ids."
     D: "It controls the partition count."
   answer: [B]
   explanation: >-
-    Fencing keys on transactional.id + epoch. A stable id lets a new instance fence the old one. With
-    random ids the two instances have different ids and both could commit — duplicates.
+    Fencing uses transactional.id + epoch. A stable id lets a new instance fence the old one. With
+    random ids, the two instances have different ids and both could commit. This causes duplicates.
   source: "https://kafka.apache.org/documentation/#producerconfigs"
 
 - id: KFK-05-q4
   type: single
-  prompt: "What happens to a transaction's writes if the producer calls abort_transaction()?"
+  prompt: "What happens to the writes of a transaction if the producer calls abort_transaction()?"
   options:
-    A: "They are kept but marked as warnings."
-    B: "They are invisible to read_committed consumers — all-or-nothing."
-    C: "They are duplicated to a dead-letter topic."
+    A: "Kafka keeps them but marks them as warnings."
+    B: "read_committed consumers cannot see them (all-or-nothing)."
+    C: "Kafka duplicates them to a dead-letter topic."
     D: "They commit anyway after a delay."
   answer: [B]
   explanation: >-
-    Aborting discards the transaction atomically; read_committed consumers never see its records.
+    Aborting discards the transaction atomically. read_committed consumers never see its records.
     This is the atomicity half of exactly-once.
   source: "https://kafka.apache.org/documentation/#semantics"
 
 - id: KFK-05-q5
   type: multi
-  prompt: "Which are required/true for transactional exactly-once in Kafka? (choose all)"
+  prompt: "Which statements are required and true for transactional exactly-once in Kafka? (choose all)"
   options:
-    A: "The producer must be idempotent (transactions require and enable it)."
-    B: "A stable transactional.id is configured."
-    C: "Input offsets are sent inside the transaction."
+    A: "The producer must be idempotent (transactions require it and enable it)."
+    B: "You configure a stable transactional.id."
+    C: "You send the input offsets inside the transaction."
     D: "Downstream consumers use read_committed."
   answer: [A, B, C, D]
   explanation: >-
-    All four are needed: idempotence as the base, a stable transactional.id for fencing, offsets
-    committed in the transaction for atomic consume+produce, and read_committed to hide
-    aborted/in-flight records.
+    You need all four. Idempotence is the base. A stable transactional.id gives fencing. Offsets
+    committed in the transaction make consume+produce atomic. read_committed hides aborted and
+    in-flight records.
   source: "https://developer.confluent.io/courses/architecture/exactly-once/"
 
 - id: KFK-05-q6
   type: single
-  prompt: "When is plain at-least-once (KFK-04) + an idempotent sink preferable to Kafka transactions?"
+  prompt: "When is plain at-least-once (KFK-04) plus an idempotent sink better than Kafka transactions?"
   options:
-    A: "Never; always use transactions."
-    B: "When the output is a store you can upsert by business key, so duplicates self-correct — simpler and lower latency than transaction coordination."
+    A: "Never. Always use transactions."
+    B: "When the output is a store that you can upsert by business key, so duplicates correct themselves. This is simpler and has lower latency than transaction coordination."
     C: "Only when data loss is acceptable."
     D: "Only for single-partition topics."
   answer: [B]
   explanation: >-
-    If a downstream idempotent upsert dedups for you, at-least-once avoids the transaction
-    coordinator overhead and latency. Transactions shine when you need cross-Kafka-topic atomicity.
+    Suppose a downstream idempotent upsert removes duplicates for you. Then at-least-once avoids the
+    overhead and latency of the transaction coordinator. Transactions are best when you need
+    atomicity across Kafka topics.
   source: "https://developer.confluent.io/courses/architecture/exactly-once/"

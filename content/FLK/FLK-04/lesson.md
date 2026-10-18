@@ -2,21 +2,23 @@
 
 ## Why Flink SQL exists
 
-You already express transformations as SQL (dbt models). Flink SQL lets you write the **same
-SELECTs** against streams — but instead of a one-shot `CREATE TABLE AS` that runs and finishes, the
-query **keeps running** and keeps the result up to date as new events arrive. The result of a Flink
-SQL query is a **dynamic table**: a table that changes over time. This is the single most important
-idea in Flink SQL, and it has a consequence that trips up every SQL person on day one.
+You already write transformations as SQL (dbt models). Flink SQL lets you write the **same
+SELECTs** against streams. A `CREATE TABLE AS` in dbt runs one time and finishes. A Flink SQL query is
+different. It **keeps running** and keeps the result up to date as new events arrive.
+
+The result of a Flink SQL query is a **dynamic table**. This is a table that changes over time. It
+is the most important idea in Flink SQL. It also has a consequence that confuses every SQL person on
+the first day.
 
 ## How it works: the stream–table duality
 
 A stream and a table are two views of the same thing:
 
-- A **dynamic table** is the current state of a continuously-updating result.
+- A **dynamic table** is the current state of a result that updates continuously.
 - Its **changelog stream** is the sequence of *changes* that produce that table.
 
-Every Flink SQL query is compiled into operators that emit a **changelog**: a stream of rows, each
-tagged with a **RowKind**:
+Flink compiles every SQL query into operators that emit a **changelog**. This is a stream of rows.
+Each row has a **RowKind** tag:
 
 | RowKind | short | meaning |
 |---|---|---|
@@ -27,40 +29,44 @@ tagged with a **RowKind**:
 
 ### Append vs updating queries
 
-The kind of changelog a query produces determines where you can sink it and how you reason about it:
+The kind of changelog that a query produces decides two things. It decides where you can sink the
+result, and how you reason about it:
 
-- An **append-only** query emits only `+I`. Nothing it has already output ever changes. Examples:
-  a plain `SELECT ... WHERE ...` (filter/project), a windowed aggregation that emits once per closed
-  window (window TVF). You can write these to an ordinary append sink (a Kafka topic, a file).
+- An **append-only** query emits only `+I`. Nothing that it already output ever changes. Examples are
+  a plain `SELECT ... WHERE ...` (filter/project), and a windowed aggregation that emits once for
+  each closed window (window TVF). You can write these to an ordinary append sink (a Kafka topic or
+  a file).
 
-- An **updating** query emits `-U`/`+U` (and `-D`). Its past output is **revised** as new input
-  arrives. The canonical example is an **unbounded `GROUP BY`**: `SELECT k, COUNT(*) FROM t GROUP BY k`
-  emits `+I (k, 1)`, then when another `k` arrives it emits `-U (k, 1)` then `+U (k, 2)`. The row for
-  `k` is being updated in place. You cannot append this to a plain topic without losing the
-  semantics — you need an **upsert sink** keyed by `k` (see `upsert-kafka`).
+- An **updating** query emits `-U`/`+U` (and `-D`). New input **revises** its past output. The
+  standard example is an **unbounded `GROUP BY`**. Take `SELECT k, COUNT(*) FROM t GROUP BY k`. It
+  first emits `+I (k, 1)`. When another `k` arrives, it emits `-U (k, 1)` and then `+U (k, 2)`. The
+  row for `k` is updated in place. You cannot append this to a plain topic without losing the
+  semantics. You need an **upsert sink** keyed by `k` (see `upsert-kafka`).
 
 ![Each changelog row is applied to the table in order: +I creates the row, -U retracts it, +U writes the new count, -D removes it](diagrams/changelog-fold.svg)
 
-This is the thing to internalise: **an unbounded GROUP BY in streaming does not "append counts" — it
-retracts and re-emits.** The *final* state (after all input) equals the batch answer, but the
-*changelog* in between contains retractions. Grading a dbt-model port on its changelog is how you
-prove the student built an updating query that converges to the right answer, not a query that just
-happens to print the right final number once.
+Remember this: **an unbounded GROUP BY in streaming does not "append counts". It retracts and emits
+again.** The *final* state (after all input) equals the batch answer. But the *changelog* in between
+contains retractions. The course grades a dbt-model port on its changelog. This proves that the
+student built an updating query that converges to the right answer. It shows that the query does not
+just print the right final number one time.
 
 ### Window table-valued functions (window TVFs)
 
-Flink 2.x expresses windows in SQL with **window TVFs**: `TABLE(TUMBLE(TABLE t, DESCRIPTOR(ts),
-INTERVAL '1' HOUR))` produces rows annotated with `window_start`/`window_end`, which you then
-`GROUP BY`. A windowed aggregation over a window TVF is **append-only** (each window emits once when
-it closes), unlike an unbounded `GROUP BY`, which is updating. Same SQL skill you have; the stream
-twist is which queries append and which update.
+Flink 2.x expresses windows in SQL with **window TVFs**. For example,
+`TABLE(TUMBLE(TABLE t, DESCRIPTOR(ts), INTERVAL '1' HOUR))` produces rows with the columns
+`window_start` and `window_end`. You then `GROUP BY` these columns. A windowed aggregation over a
+window TVF is **append-only**, because each window emits once when it closes. An unbounded `GROUP BY`
+is updating. You already have the SQL skill. The new part for streams is to know which queries
+append and which queries update.
 
 ### upsert-kafka
 
-`upsert-kafka` is a connector that reads/writes a **compacted, keyed** changelog: each record is an
-upsert for its key (and a null value is a delete/tombstone). It is the natural sink for an updating
-query — it materialises the dynamic table as the latest value per key, exactly like a Kafka-backed
-dimension table. Use `kafka` (append) for append-only queries and `upsert-kafka` for updating ones.
+`upsert-kafka` is a connector that reads and writes a **compacted, keyed** changelog. Each record is
+an upsert for its key. A null value is a delete (a tombstone). It is the natural sink for an updating
+query. It materialises the dynamic table as the latest value per key, in the same way as a
+Kafka-backed dimension table. Use `kafka` (append) for append-only queries. Use `upsert-kafka` for
+updating queries.
 
 ## From your world
 
@@ -72,18 +78,20 @@ dimension table. Use `kafka` (append) for append-only queries and `upsert-kafka`
 | A daily windowed rollup | a **window TVF** aggregation (append-only per closed window) |
 | "The model's final result" | the dynamic table's **final materialised state** |
 
-The mental shift: a dbt model gives you a *result*; a Flink SQL query gives you a *changelog whose
-folded state* is that result. When you port a model, you must know whether it appends or updates,
-because that decides the sink and the correctness story.
+You must change how you think. A dbt model gives you a *result*. A Flink SQL query gives you a
+*changelog*, and the folded state of this changelog is that result. When you port a model, you must
+know whether it appends or updates. This decides the sink and how you show that the result is
+correct.
 
 ## When NOT to use Flink SQL
 
-- **One-shot batch models.** If dbt already builds the mart nightly, keep it in dbt. A standing Flink
-  SQL job to recompute a daily aggregate is cost with no latency benefit.
-- **Logic SQL can't express cleanly.** Custom per-record state machines, timers, broadcast rule
-  updates, async I/O — drop to the DataStream/Process API (FLK-02/FLK-07).
-- **When an updating query's retractions would overwhelm the sink.** A high-churn unbounded GROUP BY
-  feeding a non-upsert sink is an anti-pattern; use a window TVF (append) or an upsert sink.
+- **One-shot batch models.** Suppose dbt already builds the mart nightly. Then keep it in dbt. A
+  standing Flink SQL job that recomputes a daily aggregate costs money and gives no latency benefit.
+- **Logic that SQL cannot express cleanly.** Examples are custom per-record state machines, timers,
+  broadcast rule updates and async I/O. For these, use the DataStream/Process API (FLK-02/FLK-07).
+- **When the retractions of an updating query would overwhelm the sink.** A high-churn unbounded
+  GROUP BY that feeds a non-upsert sink is an anti-pattern. Use a window TVF (append) or an upsert
+  sink.
 
 ## Further reading
 

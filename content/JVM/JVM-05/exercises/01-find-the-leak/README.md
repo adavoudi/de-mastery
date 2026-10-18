@@ -1,14 +1,14 @@
 # Read a heap/GC log and find the leak
 
-A streaming job's JVM died. You have its unified GC log (`-Xlog:gc*`). Your job is to write a small
-analyzer that parses the log, tracks the **live set** (heap used *after* each GC), and decides
-whether the process was **leaking** — exactly the post-mortem you do when a Flink TaskManager or
-Spark executor OOMs.
+The JVM of a streaming job died. You have its unified GC log (`-Xlog:gc*`). Your job is to write a
+small analyzer. It parses the log and tracks the **live set** (the heap used *after* each GC). Then
+it decides whether the process was **leaking**. This is exactly the post-mortem that you do when a
+Flink TaskManager or a Spark executor OOMs.
 
-Two committed log artifacts are provided (in `artifact/`, and the test feeds you identical lines):
+The task provides two committed log artifacts (in `artifact/`). The test gives you identical lines.
 
-- `gc-leak.log` — a run whose post-GC occupancy climbs toward the 1024M ceiling, with Full GCs that
-  reclaim less and less, ending in `OutOfMemoryError`.
+- `gc-leak.log` — a run in which the post-GC occupancy climbs toward the 1024M ceiling. Full GCs
+  reclaim less and less. The run ends in `OutOfMemoryError`.
 - `gc-healthy.log` — a run with a flat post-GC floor (~120M) and only minor GCs (healthy churn).
 
 Implement `src/main/java/de/mastery/jvm05/GcLogAnalyzer.java` (package `de.mastery.jvm05`). The file
@@ -17,22 +17,24 @@ provides a `record GcEvent(int id, long beforeMb, long afterMb, long totalMb, bo
 
 1. `List<GcEvent> parse(List<String> lines)` — parse each GC pause line of the form
    `... GC(<id>) Pause <Young|Full> ... <before>M-><after>M(<total>M) <pause>ms`. Capture `id`,
-   `beforeMb`, `afterMb`, `totalMb`, and `full = true` for `Pause Full`. **Skip** any line that is
-   not a GC pause line (e.g. the `OutOfMemoryError` line, which has no occupancy numbers). Preserve
-   order.
+   `beforeMb`, `afterMb` and `totalMb`. Set `full = true` for `Pause Full`. **Skip** any line that
+   is not a GC pause line (for example the `OutOfMemoryError` line, which has no occupancy
+   numbers). Keep the order.
 
-2. `boolean sawOutOfMemory(List<String> lines)` — true iff any line contains `OutOfMemoryError`.
+2. `boolean sawOutOfMemory(List<String> lines)` — return true if and only if any line contains
+   `OutOfMemoryError`.
 
-3. `boolean isLeaking(List<GcEvent> events)` — true iff the live set (the `afterMb` values) trends
-   clearly **upward** over the run AND the final live set is near the heap ceiling (reclaiming
-   little). It must return **false** for the healthy log (flat floor). (A simple, robust rule: the
-   mean of the last three `afterMb` is at least 2× the mean of the first three, and the last
-   `afterMb` is ≥ 85% of `totalMb`.)
+3. `boolean isLeaking(List<GcEvent> events)` — return true if and only if two things are true. The
+   live set (the `afterMb` values) trends clearly **upward** over the run. The final live set is
+   also near the heap ceiling (it reclaims little). The method must return **false** for the
+   healthy log (flat floor). (A simple rule that works: the mean of the last three `afterMb` is at
+   least 2× the mean of the first three. Also, the last `afterMb` is ≥ 85% of `totalMb`.)
 
-4. `Diagnosis diagnose(List<GcEvent> events)` — `OLD_GEN_LEAK` when `isLeaking` is true,
-   `HEALTHY_CHURN` when there are events but it is not leaking, `UNKNOWN` when there are no events.
+4. `Diagnosis diagnose(List<GcEvent> events)` — return `OLD_GEN_LEAK` when `isLeaking` is true.
+   Return `HEALTHY_CHURN` when there are events but it is not leaking. Return `UNKNOWN` when there
+   are no events.
 
 Constraints:
 - Do not change the record, the enum, or the signatures. Keep the package.
 - Base the decision on the parsed `afterMb` trend, not on the pause times. The test checks your
-  parser on exact numbers and your classifier on both logs (and a tiny empty case).
+  parser on exact numbers. It also checks your classifier on both logs (and a tiny empty case).

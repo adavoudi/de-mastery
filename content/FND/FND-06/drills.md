@@ -2,32 +2,48 @@
 
 ### 1. "Why columnar?"
 **Model answer.** Analytical queries read a few columns across many rows. A columnar format stores
-each column contiguously, so the engine reads only the referenced columns' bytes instead of every
-field of every row — often a 10–100× reduction. Contiguity also makes compression and encoding
-(dictionary, run-length, delta) much more effective because adjacent values share a type and
-pattern. And per-row-group min/max stats let the engine skip whole row groups a filter can't match.
-Row formats (CSV, Avro) can't do any of that for wide scans.
+each column contiguously. So the engine reads only the bytes of the columns that the query
+references. It does not read every field of every row. This is often a 10–100× reduction.
+
+Contiguity also makes compression and encoding (dictionary, run-length, delta) much more
+effective, because adjacent values share a type and a pattern. Also, the min/max stats of each row
+group let the engine skip whole row groups that a filter cannot match. Row formats (CSV, Avro)
+cannot do any of this for scans of wide columns.
 
 ### 2. "Walk me through how Parquet skips data for a WHERE clause."
-**Model answer.** A Parquet file is row groups, each with a column chunk per column, each chunk
-split into pages, and the footer stores per-chunk statistics including min and max. For
-`WHERE x > 900`, the engine reads the footer and, for each row group, checks `max(x)`: if
-`max(x) <= 900`, no row can match, so it prunes the entire row group without reading its pages.
-Range and equality predicates prune whenever the group's `[min, max]` doesn't overlap the
-predicate. The win depends on sort/cluster order — tight, disjoint ranges prune a lot; random
-order prunes nothing.
+**Model answer.** A Parquet file is a set of row groups. Each row group has a column chunk per
+column. Each chunk is split into pages. The footer stores statistics for each chunk, including min
+and max.
+
+Take `WHERE x > 900`. The engine reads the footer. For each row group, it checks `max(x)`. If
+`max(x) <= 900`, no row can match. So it prunes the entire row group without reading its pages.
+
+Range and equality predicates prune whenever the `[min, max]` of the group does not overlap the
+predicate. The win depends on the sort or cluster order. Tight, disjoint ranges prune a lot.
+Random order prunes nothing.
 
 ### 3. "A query on Parquet still scans the whole file. Why?"
-**Model answer.** Most likely the filtered column isn't sorted or clustered, so every row group's
-`[min, max]` spans the whole domain and no group can be pruned. Other causes: stats weren't written
-for that column (or it's a complex type without stats), the row groups are huge so even one match
-forces a big read, or the predicate isn't pushable (e.g. a function wrapping the column defeats
-min/max comparison). Fixes: sort/cluster on the filter column (or set an Iceberg sort order),
-right-size row groups, and keep the predicate directly on the raw column.
+**Model answer.** Most likely the filtered column is not sorted or clustered. Then the `[min,
+max]` of every row group spans the whole domain, and no group can be pruned.
+
+Other causes:
+
+- The writer did not write stats for that column (or it is a complex type without stats).
+- The row groups are huge, so even one match forces a big read.
+- The predicate is not pushable. For example, a function around the column defeats the min/max
+  comparison.
+
+Fixes:
+
+- Sort or cluster on the filter column (or set an Iceberg sort order).
+- Choose a good size for row groups.
+- Keep the predicate directly on the raw column.
 
 ### 4. "How does this reduce an Athena bill?"
-**Model answer.** Athena bills by bytes scanned. First lever: store Parquet and select only the
-columns you need — column pruning alone can cut cost by an order of magnitude versus `SELECT *` on
-CSV/JSON. Second lever: partition the data and set a sort order so Athena prunes partitions and row
-groups for selective `WHERE`s. On Iceberg the same stats live in manifests, so it prunes whole files
-at planning time. Together, projection + pruning are the dominant cost controls.
+**Model answer.** Athena bills by bytes scanned. The first lever is to store Parquet and select
+only the columns that you need. Column pruning alone can cut cost by an order of magnitude,
+compared to `SELECT *` on CSV/JSON.
+
+The second lever is to partition the data and set a sort order. Then Athena prunes partitions and
+row groups for selective `WHERE` clauses. On Iceberg, the same stats live in manifests. So it
+prunes whole files at planning time. Together, projection and pruning are the main cost controls.

@@ -1,21 +1,23 @@
 # Explain it back (KFK-08)
 
-Explain to a dbt-fluent teammate: *how a Kafka Streams KStream-KTable join enriches
-orders with customers, and why it isn't just "a join in SQL."*
+Explain this to a teammate who knows dbt well. Cover *how a Kafka Streams
+KStream-KTable join enriches orders with customers*. Also cover *why it is not
+just "a join in SQL."*
 
 Rubric — a good answer covers:
 
-1. `KStream` = append-only facts (orders); `KTable` = latest value per key, a
-   changelog (customers / a conformed dimension).
-2. The **stream drives** the join: each order looks up the current customer; a
-   table-only change emits nothing.
-3. **Co-partitioning** (same key, same partition count) is required, or use a
-   `GlobalKTable`.
-4. State lives in a **state store** backed by a compacted **changelog topic**, so
-   a crashed instance recovers by replaying it.
-5. **Event-time** windows (not processing time) make aggregations correct under
-   reordering.
-6. **TopologyTestDriver** runs the topology in-process (no broker/RocksDB),
-   deterministically in event time — the way the logic is unit-tested.
-7. Analogy: fact→dimension lookup in dbt, but continuous and incremental, always
-   reflecting the dimension's latest value at event arrival.
+1. `KStream` = append-only facts (orders). `KTable` = latest value per key, a
+   changelog (customers, a conformed dimension).
+2. The **stream drives** the join. Each order looks up the current customer. A
+   change in the table alone emits nothing.
+3. **Co-partitioning** (same key, same partition count) is required. The other
+   option is a `GlobalKTable`.
+4. State lives in a **state store** that a compacted **changelog topic** backs. A
+   crashed instance recovers by replaying the changelog.
+5. **Event-time** windows (not processing time) keep aggregations correct when
+   records arrive in a different order.
+6. **TopologyTestDriver** runs the topology in-process (no broker, no RocksDB),
+   deterministically in event time. This is how you unit-test the logic.
+7. Analogy: it is the fact-to-dimension lookup in dbt, but continuous and
+   incremental. It always uses the latest dimension value at the time the event
+   arrives.

@@ -3,11 +3,11 @@
   prompt: "'Exactly-once' in practice is usually achieved by:"
   options:
     A: "At-least-once delivery plus idempotent or transactional processing at the sink"
-    B: "A network that never duplicates or drops messages"
-    C: "Sending every message exactly one time and hoping"
+    B: "A network that never duplicates messages and never drops messages"
+    C: "Sending every message one time and hoping"
     D: "At-most-once delivery with retries disabled"
   answer: [A]
-  explanation: "You rarely get exactly-once on the wire; you get effectively-once by delivering at-least-once and making the sink's effect idempotent/transactional."
+  explanation: "You rarely get exactly-once on the wire. You get effectively-once when you deliver at-least-once and make the effect of the sink idempotent or transactional."
   source: "https://kafka.apache.org/documentation/#semantics"
 - id: FND-05-q2
   type: single
@@ -18,18 +18,18 @@
     C: "It never requires a key"
     D: "It guarantees messages arrive in order"
   answer: [A]
-  explanation: "Idempotence: f(f(x)) = f(x). Re-applying the same keyed event does not change the result."
+  explanation: "Idempotence means f(f(x)) = f(x). If you apply the same keyed event again, the result does not change."
   source: "https://kafka.apache.org/documentation/#semantics"
 - id: FND-05-q3
   type: single
   prompt: "Why is a UUID generated at send time a BAD dedup key?"
   options:
-    A: "It changes on each retry, so duplicates get different keys and aren't recognized as duplicates"
+    A: "It changes on each retry, so duplicates get different keys and the system does not recognize them as duplicates"
     B: "UUIDs are too long to index"
     C: "It is always identical across events"
     D: "It sorts incorrectly"
   answer: [A]
-  explanation: "A dedup key must be STABLE across retries. A fresh UUID per send makes the same logical event look new every time, defeating dedup."
+  explanation: "A dedup key must be STABLE across retries. A fresh UUID for each send makes the same logical event look new every time. This defeats dedup."
   source: "https://www.confluent.io/blog/exactly-once-semantics-are-possible-heres-how-apache-kafka-does-it/"
 - id: FND-05-q4
   type: single
@@ -40,18 +40,18 @@
     C: "Disable retries"
     D: "Dedup on wall-clock time"
   answer: [A]
-  explanation: "Completeness forbids loss, so you must never drop an acknowledged event — at-least-once. Accuracy (no double counting) is then handled by idempotent keyed application."
+  explanation: "Completeness forbids loss, so you must never drop an acknowledged event. This means at-least-once. Idempotent keyed application then handles accuracy (no double counting)."
   source: "https://research.google/pubs/pub43864/"
 - id: FND-05-q5
   type: single
   prompt: "The two generals problem implies that over an unreliable channel:"
   options:
-    A: "No finite exchange of acks can make both sides certain, so a sender must choose between resending (duplicates) or giving up (loss)"
+    A: "No finite exchange of acks can make both sides certain, so a sender must choose between resending (duplicates) and giving up (loss)"
     B: "Messages can always be delivered exactly once with enough acks"
     C: "Acknowledgements are unnecessary"
     D: "Ordering is always preserved"
   answer: [A]
-  explanation: "The impossibility result is exactly why we pick a delivery guarantee and resolve duplicates/loss with idempotency or transactions."
+  explanation: "This impossibility result is exactly why we pick a delivery guarantee. We then resolve duplicates or loss with idempotency or transactions."
   source: "https://en.wikipedia.org/wiki/Two_Generals%27_Problem"
 - id: FND-05-q6
   type: multi
@@ -62,7 +62,7 @@
     C: "Randomly regenerated on each send"
     D: "Matched to the event's true grain (not too coarse)"
   answer: [A, B, D]
-  explanation: "Stable, unique, and at the right grain. Regenerating it per send (C) breaks stability and defeats dedup."
+  explanation: "The key must be stable, unique, and at the right grain. If you regenerate it for each send (C), stability breaks and dedup fails."
   source: "https://kafka.apache.org/documentation/#semantics"
 - id: FND-05-q7
   type: single
@@ -73,5 +73,5 @@
     C: "Guaranteed to double-count"
     D: "Non-deterministic"
   answer: [A]
-  explanation: "MERGE on a unique_key upserts, so reprocessing overlapping data yields the same target — the batch form of idempotent exactly-once."
+  explanation: "MERGE on a unique_key upserts, so reprocessing overlapping data gives the same target. This is the batch form of idempotent exactly-once."
   source: "https://kafka.apache.org/documentation/#semantics"

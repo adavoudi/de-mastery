@@ -1,12 +1,12 @@
 # KFK-02 · Explain it back (Feynman)
 
-**Prompt A.** "Explain, as if to an auditor who knows databases but not Kafka, why `acks=1` can
-silently lose an acknowledged write, and how `acks=all` + `min.insync.replicas=2` + RF=3 prevents
-it. Walk through what the ISR does as brokers fail."
+**Prompt A.** "Explain to an auditor who knows databases but not Kafka why `acks=1` can silently
+lose an acknowledged write. Explain how `acks=all` + `min.insync.replicas=2` + RF=3 prevents this
+loss. Describe what the ISR does when brokers fail."
 
-**Prompt B.** "A teammate set RF=3, acks=all, min.insync.replicas=3 'to be extra safe' and now
-every produce fails the moment any broker restarts. Explain what's wrong and what they should set
-instead, and what they'd be trading away."
+**Prompt B.** "A teammate set RF=3, acks=all, min.insync.replicas=3 'to be extra safe'. Now every
+produce fails when any broker restarts. Explain what is wrong. Explain what they should set
+instead. Explain what they give up."
 
 ## Rubric — a strong explanation hits these (5–7):
 
@@ -16,5 +16,5 @@ instead, and what they'd be trading away."
 - [ ] Explains `min.insync.replicas` as the ISR floor for accepting an `acks=all` write.
 - [ ] Shows RF=3/acks=all/misr=2 tolerates one failure and refuses writes under two.
 - [ ] Explains that misr=3 on RF=3 makes any single broker loss stop all writes (the teammate's bug).
-- [ ] (Bonus) Notes unclean leader election as the availability-vs-silent-loss trade; KRaft runs
+- [ ] (Bonus) Notes unclean leader election as the availability-vs-silent-loss trade. KRaft runs
       elections.

@@ -2,54 +2,62 @@
 
 ## Why joins in a stream are different
 
-In a batch warehouse you join `orders` to `dim_customer` and the dimension just *is* — it is the
-whole table, as it looks right now. In a stream there is no "right now": both inputs arrive over
-time, out of order, possibly forever. So "join" splits into several things that answer different
-questions, and picking the wrong one quietly gives wrong numbers.
+In a batch warehouse, you join `orders` to `dim_customer`. The dimension is simply there. It is the
+whole table, as it looks right now. In a stream, there is no "right now". Both inputs arrive over
+time and out of order. They can arrive forever.
 
-- **Regular join** (`FROM a JOIN b ON ...`): join every `a` with every matching `b`, *ever*. Both
-  sides are kept in state forever (or until a TTL). It emits retractions when a later row on either
-  side changes a previous match. Correct, but the state grows without bound — dangerous for facts.
-- **Interval join**: only join rows whose timestamps are within a bounded window of each other
-  (`a.ts BETWEEN b.ts - 1h AND b.ts`). State is bounded by the interval. Good for "events near each
+So "join" splits into several kinds of join. Each kind answers a different question. If you pick the
+wrong kind, you quietly get wrong numbers.
+
+- **Regular join** (`FROM a JOIN b ON ...`): it joins every `a` with every matching `b`, *ever*. It
+  keeps both sides in state forever (or until a TTL). A later row on either side can change a
+  previous match. Then the join emits retractions. The result is correct, but the state grows without
+  bound. This is dangerous for facts.
+- **Interval join**: it joins only rows whose timestamps are within a bounded window of each other
+  (`a.ts BETWEEN b.ts - 1h AND b.ts`). The interval bounds the state. Use it for "events near each
   other in time".
-- **Temporal / versioned join** (`FOR SYSTEM_TIME AS OF`): join each `a` to the **version of `b`
-  that was effective at `a`'s event time**. This is the stream form of an **SCD2 as-of join** — the
-  single most important join for finance. State for `b` is bounded to the versions you still need.
-- **Lookup join**: for each `a`, look the key up in an **external** table (JDBC/HBase) at processing
-  time. No `b` state in Flink; the external store is the source of truth. Simplest, but it reads
-  "now", not "as of the event" — wrong for back-dated corrections.
+- **Temporal / versioned join** (`FOR SYSTEM_TIME AS OF`): it joins each `a` to the **version of `b`
+  that was effective at the event time of `a`**. This is the stream form of an **SCD2 as-of join**.
+  It is the most important join for finance. The state for `b` is bounded to the versions that you
+  still need.
+- **Lookup join**: for each `a`, it looks the key up in an **external** table (JDBC/HBase) at
+  processing time. Flink keeps no `b` state. The external store is the source of truth. This is the
+  simplest join, but it reads "now", not "as of the event". It is wrong for back-dated corrections.
 
-This module's exercise is the temporal one, because it is where analytics engineers get burned:
-**an order placed on Jan 8 must be valued with the FX rate and the customer address that were in
-effect on Jan 8**, not today's rate and not today's address. Converting at today's rate
-double-counts nothing but silently restates history; it is a SOX accuracy defect.
+The exercise in this module uses the temporal join. This is where analytics engineers often make
+mistakes. **You must value an order placed on Jan 8 with the FX rate and the customer address that
+were in effect on Jan 8.** Do not use today's rate or today's address. Converting at today's rate does
+not double-count anything. But it silently restates history. This is a SOX accuracy defect.
 
 ## How a point-in-time (temporal) enrichment works
 
-The mechanism — whether you write it in Flink SQL or by hand in the DataStream API — is always the
-same three ideas:
+The mechanism is always the same three ideas. This is true if you write it in Flink SQL or by hand in
+the DataStream API.
 
-1. **Both sides carry an event-time timestamp and a watermark.** The order has `order_ts`; each FX
-   rate / address version has an `effective_from`. Watermarks tell the operator "no more rows with
-   a timestamp ≤ W will arrive", which is what lets it decide an as-of answer is final.
-2. **The dimension is kept as a set of versions in keyed state**, keyed by the join key (currency,
-   customer id). A version `(value, effective_from)` is just an SCD2 row with an open `valid_to`.
-3. **For each fact, pick the version with the greatest `effective_from ≤ fact event time`.** That
-   is the as-of rule. You must wait until the watermark has passed the fact's timestamp before you
-   answer, so that every version effective at or before that instant has already arrived; otherwise
-   you might pick an older version and miss a just-arrived one.
+1. **Both sides carry an event-time timestamp and a watermark.** The order has `order_ts`. Each FX
+   rate or address version has an `effective_from`. A watermark tells the operator "no more rows with
+   a timestamp ≤ W will arrive". With this, the operator can decide that an as-of answer is final.
+2. **The dimension is a set of versions in keyed state.** The join key (currency, customer id) is the
+   state key. A version `(value, effective_from)` is an SCD2 row with an open `valid_to`.
+3. **For each fact, pick the version with the greatest `effective_from ≤ fact event time`.** This
+   is the as-of rule. You must wait until the watermark passes the timestamp of the fact. Then every
+   version that is effective at or before that moment has already arrived. If you do not wait, you
+   might pick an older version and miss a version that just arrived.
 
-In **Flink SQL** this is `LEFT JOIN fx FOR SYSTEM_TIME AS OF o.order_ts`, where `fx` is a
+In **Flink SQL**, you write `LEFT JOIN fx FOR SYSTEM_TIME AS OF o.order_ts`. Here `fx` is a
 *versioned table* (a changelog with a `PRIMARY KEY` and an event-time attribute). The planner builds
-exactly the keyed-state version store described above.
+the keyed-state version store described above.
 
-In the **DataStream API** you build it yourself with a `KeyedCoProcessFunction`: key both streams by
-the join key, store incoming dimension versions in `ListState`, buffer each fact and register an
-**event-time timer at the fact's timestamp**; when the timer fires (watermark reached it) you scan
-the versions for the as-of match and emit. Writing it by hand is the point of FLK-05 — it makes the
-"as of" rule and the watermark dependency concrete, exactly like hand-writing an SCD2 `MERGE`
-teaches you what a temporal table *is*.
+In the **DataStream API**, you build it yourself with a `KeyedCoProcessFunction`:
+
+1. Key both streams by the join key.
+2. Store incoming dimension versions in `ListState`.
+3. Buffer each fact and register an **event-time timer at the timestamp of the fact**.
+4. When the timer fires, the watermark has reached that timestamp. Scan the versions for the as-of
+   match and emit it.
+
+Writing it by hand is the point of FLK-05. It makes the "as of" rule and the watermark dependency
+concrete. In the same way, if you write an SCD2 `MERGE` by hand, you learn what a temporal table *is*.
 
 ![Each order is matched to the FX rate version whose valid_from/valid_to range contains its event time, so the Jan 8 order gets 1.10, not today's 1.12](diagrams/temporal-asof-pick.svg)
 
@@ -65,16 +73,17 @@ teaches you what a temporal table *is*.
 
 ## When NOT to use (each join)
 
-- **Regular join on two unbounded facts** — state grows forever. Use an interval join if the match
-  is time-local, or a temporal join if one side is really a slowly-changing dimension.
-- **Temporal join when you actually want "latest"** — if back-dated corrections do not matter (e.g.
-  enriching with a product's *current* name for a live dashboard), a lookup or regular join on the
-  current version is simpler. Temporal joins pay for version bookkeeping.
-- **Lookup join for historical restatement** — a JDBC lookup reads the row as it is *now*, so it
-  gives the wrong answer for reprocessing old events. Use a temporal join over the dimension's
-  change history instead.
-- **Interval join when the match is not time-local** — if any `a` can match any `b` regardless of
-  time, an interval window will drop valid matches.
+- **Regular join on two unbounded facts.** The state grows forever. Use an interval join if the match
+  is local in time. Use a temporal join if one side is really a slowly-changing dimension.
+- **Temporal join when you actually want "latest".** Suppose back-dated corrections do not matter.
+  An example is to enrich with the *current* name of a product for a live dashboard. Then a lookup
+  join or a regular join on the current version is simpler. Temporal joins pay for version
+  bookkeeping.
+- **Lookup join for historical restatement.** A JDBC lookup reads the row as it is *now*. It gives
+  the wrong answer when you reprocess old events. Use a temporal join over the change history of the
+  dimension instead.
+- **Interval join when the match is not local in time.** Suppose any `a` can match any `b`, regardless
+  of time. Then an interval window drops valid matches.
 
 ## Further reading
 

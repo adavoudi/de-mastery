@@ -1,47 +1,49 @@
 # Interview drills (KFK-06)
 
-**1. Your subject is BACKWARD. You need to add a `currency` field to the order
-event. How do you do it without breaking anyone, and in what order do you deploy?**
+**1. Your subject is BACKWARD. You need to add a `currency` field to the order event. How do you do
+it without breaking anyone, and in what order do you deploy?**
 
-Add `currency` **with a default** (e.g. `"USD"`). Under BACKWARD the new-schema
-consumer can read old records (the default fills in). Register the new schema,
-upgrade **consumers first** so they understand the field, then upgrade producers to
-emit it. A required field with no default would be rejected at registration.
+Add `currency` **with a default** (for example `"USD"`). Under BACKWARD, a consumer on the new
+schema can read old records, because the default fills in the value. Follow these steps:
 
-**2. What's the difference between BACKWARD and FORWARD, and when would you
-deliberately choose FORWARD?**
+1. Register the new schema.
+2. Upgrade **consumers first**, so they understand the field.
+3. Upgrade the producers to emit the field.
 
-BACKWARD = new reader reads old data (consumers first). FORWARD = old reader reads
-new data (producers first). Choose FORWARD when you can't coordinate consumers —
-e.g. many external/independent teams consume the topic and you want to roll out a
-richer producer immediately while old consumers keep working by ignoring new fields.
+The registry rejects a required field with no default at registration.
 
-**3. Why is a 4-byte schema id in each message, instead of the schema itself?**
+**2. What is the difference between BACKWARD and FORWARD, and when would you deliberately choose
+FORWARD?**
 
-Payload size and decoupling. Embedding the full schema per message would bloat
-every record and couple serialization to transport. The id is a stable pointer; the
-consumer caches the fetched schema, so resolution costs one lookup per new id.
+BACKWARD = a new reader reads old data (consumers first). FORWARD = an old reader reads new data
+(producers first). Choose FORWARD when you cannot coordinate the consumers. For example, many
+external or independent teams consume the topic. You want to roll out a richer producer
+immediately. Old consumers keep working because they ignore new fields.
 
-**4. Someone proposes NONE compatibility to "ship faster." Argue against it with a
-concrete failure.**
+**3. Why does each message carry a 4-byte schema id, and not the schema itself?**
 
-NONE disables the gate, so the registry accepts anything — including a rename
-(`amount`→`total`), which is a drop + add with no default link. Every running
-consumer that reads `amount` gets a resolution failure or a null, corrupting
-downstream state. The whole point of the registry is to reject that at CI time;
-NONE throws that away.
+The reasons are payload size and decoupling. If you embed the full schema in each message, every
+record gets bigger. It also couples serialization to transport. The id is a stable pointer. The
+consumer caches the schema that it fetched. So resolution costs one lookup for each new id.
+
+**4. Someone proposes NONE compatibility to "ship faster." Argue against it with a concrete
+failure.**
+
+NONE disables the gate, so the registry accepts anything. This includes a rename
+(`amount`→`total`). A rename is a drop plus an add, with no default link. Every running consumer
+that reads `amount` receives a resolution failure or a null. This corrupts downstream state. The whole
+point of the registry is to reject this at CI time. NONE throws that away.
 
 **5. How is BACKWARD compatibility like a dbt model contract?**
 
-Both pin the shape and let a machine reject drift before it ships. A dbt contract
-fails the build if a column type changes or a contracted column disappears;
-BACKWARD fails registration if a change would break a reader. Additive-with-default
-is the safe move in both.
+Both fix the shape and let a machine reject drift before it ships. A dbt contract fails the build
+if a column type changes or a contracted column disappears. BACKWARD fails registration if a change
+would break a reader. In both, the safe move is to add something with a default.
 
-**6. The registry says a schema is compatible, but production still breaks. What
-class of bug did the registry NOT catch?**
+**6. The registry says a schema is compatible, but production still breaks. What class of bug did
+the registry NOT catch?**
 
-Semantic/value bugs. The registry checks the *shape* parses under resolution, not
-that values are sane (`amount >= 0`, currency in an allowed set, referential
-integrity). Those need explicit validation or registry *rules*, the on-the-wire
-equivalent of dbt data tests.
+Semantic or value bugs. The registry checks that the *shape* parses under resolution. It does not
+check that values are sane (`amount >= 0`, currency in an allowed set, referential integrity). For
+these checks you need explicit validation or registry *rules*. They are the on-the-wire equivalent
+of dbt data tests.

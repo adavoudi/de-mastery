@@ -2,70 +2,90 @@
 
 ## Why Delta exists
 
-Delta Lake solves the same problem as Iceberg — turn a pile of Parquet files in object storage into
-a transactional table — but it came out of the Databricks/Spark world and makes different design
-choices. You will meet it in job postings as often as Iceberg ("Delta shop"), and the Databricks
-Data Engineer exams assume it. The point of this module is not to relearn table formats from
-scratch; you already did that with Iceberg (LKH-01..05). The point is to do a task you know cold —
-a Slowly Changing Dimension Type 2 upsert — in Delta, read its transaction log, and see exactly
-where Delta and Iceberg agree and where they differ.
+Delta Lake solves the same problem as Iceberg. It turns a pile of Parquet files in object storage
+into a transactional table. But Delta came from the Databricks/Spark world, and it makes different
+design choices. You will see it in job postings as often as Iceberg ("Delta shop"). The Databricks
+Data Engineer exams also assume that you know it.
+
+The point of this module is not to learn table formats again from the start. You already did that
+with Iceberg (LKH-01..05). The point is to do a task that you know very well in Delta. This task
+is a Slowly Changing Dimension Type 2 upsert. You also read the transaction log of Delta. Then you
+see exactly where Delta and Iceberg agree and where they differ.
 
 ## How it works
 
 **The transaction log (`_delta_log`).** A Delta table is a directory of Parquet data files plus a
 `_delta_log/` directory. Each commit is a new JSON file (`00000000000000000000.json`,
-`...0001.json`, …) containing *actions*: `add` (a data file is now live), `remove` (a data file is
-tombstoned), `metaData`, `commitInfo`. The current table state is the result of replaying all
-commits in order. This is the key contrast with Iceberg: Iceberg's current state is a single
-pointer in the catalog to one `metadata.json` that *names* the live manifest list; Delta's current
-state is the *fold* of an ordered log of commits. Both are append-only and give atomic commits via
-optimistic concurrency, but the shape of the metadata differs.
+`...0001.json`, …). The file contains *actions*:
 
-**Checkpoints.** Replaying thousands of JSON commits would be slow, so every N commits (default 10)
-Delta writes a **checkpoint** — a Parquet file that materializes the full set of live files at that
-version. A reader loads the latest checkpoint and only replays the JSON commits after it. This is
-Delta's answer to the same scaling problem Iceberg solves with manifest lists and manifests.
+- `add` (a data file is now live)
+- `remove` (a data file is tombstoned)
+- `metaData`
+- `commitInfo`
+
+The current table state is the result of a replay of all commits in order. This is the key
+difference from Iceberg. In Iceberg, the current state is a single pointer in the catalog. The
+pointer goes to one `metadata.json`, and this file *names* the live manifest list. In Delta, the
+current state is the *fold* of an ordered log of commits. Both formats are append-only. Both give
+atomic commits with optimistic concurrency. But the shape of the metadata is different.
+
+**Checkpoints.** A replay of thousands of JSON commits would be slow. So Delta writes a
+**checkpoint** every N commits (default 10). A checkpoint is a Parquet file. It materializes the
+full set of live files at that version. A reader loads the latest checkpoint. Then it replays only
+the JSON commits after the checkpoint. Delta uses checkpoints to solve the same scaling problem
+that Iceberg solves with manifest lists and manifests.
 
 ![A reader loads the latest checkpoint (v10) and replays only the JSON commits after it to get the table state](diagrams/delta-log-replay.svg)
 
-**`MERGE INTO` for SCD2.** The upsert is the same shape you have written in dbt snapshots and SQL
-marts. For a Type 2 dimension you keep history: when an incoming row changes an attribute, you
-**close** the current version (set its `valid_to`) and **insert** a new current version
-(`valid_to IS NULL`). In Delta SQL:
+**`MERGE INTO` for SCD2.** The upsert has the same shape as the upserts that you wrote in dbt
+snapshots and SQL marts. For a Type 2 dimension, you keep history. An incoming row can change an
+attribute. Then you **close** the current version (set its `valid_to`). You also **insert** a new
+current version (`valid_to IS NULL`). One MERGE cannot do both for the same key: a changed key
+matches, so `WHEN NOT MATCHED` does not insert its new version. Use two MERGE statements. In Delta
+SQL:
 
 ```sql
+-- 1. Close the current version of every changed key.
 MERGE INTO dim t
 USING updates u
 ON t.business_key = u.business_key AND t.valid_to IS NULL
 WHEN MATCHED AND t.attr <> u.attr
-  THEN UPDATE SET t.valid_to = u.effective_date
+  THEN UPDATE SET t.valid_to = u.effective_date;
+
+-- 2. Insert a new current version for every changed key and every new key.
+--    Unchanged keys still match (t.attr = u.attr), so MERGE skips them.
+MERGE INTO dim t
+USING updates u
+ON t.business_key = u.business_key AND t.valid_to IS NULL AND t.attr = u.attr
 WHEN NOT MATCHED
   THEN INSERT (business_key, attr, valid_from, valid_to)
-       VALUES (u.business_key, u.attr, u.effective_date, NULL)
+       VALUES (u.business_key, u.attr, u.effective_date, NULL);
 ```
 
-The classic bug — and the one the exercise's mutants encode — is to `UPDATE SET attr = u.attr`
-(overwrite in place), which destroys history and makes it SCD **Type 1**. SCD2 never mutates the
-old attribute; it closes the old row and adds a new one.
+The classic bug is `UPDATE SET attr = u.attr` (overwrite in place). The mutants in the exercise
+encode this bug. It destroys history and makes the dimension SCD **Type 1**. SCD2 never changes the
+old attribute. It closes the old row and adds a new row.
 
-**Change Data Feed (CDF).** With `delta.enableChangeDataFeed=true`, Delta records row-level changes
-so a downstream consumer can read *what changed* between versions instead of diffing snapshots:
+**Change Data Feed (CDF).** Set `delta.enableChangeDataFeed=true`. Then Delta records row-level
+changes. A downstream consumer can read *what changed* between versions. It does not need to
+compare snapshots:
 
 ```python
 spark.read.format("delta").option("readChangeFeed", "true") \
      .option("startingVersion", 0).table("dim")
 ```
 
-Each row carries a `_change_type` of `insert`, `update_preimage`, `update_postimage`, or `delete`,
-plus `_commit_version`. This is the Delta analogue of consuming a changelog stream (your Kafka/CDC
-world) and the engine behind incremental pipelines. Iceberg has an equivalent via its
-`create_changelog_view` procedure / incremental scans; the concept is shared, the API differs.
+Each row carries a `_change_type` and a `_commit_version`. The `_change_type` is `insert`,
+`update_preimage`, `update_postimage`, or `delete`. This is the Delta equivalent of the
+consumption of a changelog stream (your Kafka/CDC world). It is the engine behind incremental
+pipelines. Iceberg has an equivalent in its `create_changelog_view` procedure and in incremental
+scans. The concept is the same, and the API is different.
 
-**Liquid clustering & UniForm (context, not graded here).** Delta's newer layout feature, *liquid
-clustering*, replaces hive-style partitioning + ZORDER with a single `CLUSTER BY` that it maintains
-incrementally — the Delta counterpart to Iceberg sort orders + hidden partitioning (LKH-05).
-*UniForm* writes Iceberg-compatible metadata alongside the Delta log so Iceberg readers can read a
-Delta table. They are described in Further reading.
+**Liquid clustering & UniForm (context, not graded here).** *Liquid clustering* is a newer layout
+feature of Delta. It replaces hive-style partitioning + ZORDER with a single `CLUSTER BY`. Delta
+maintains it incrementally. It is the Delta counterpart to Iceberg sort orders + hidden
+partitioning (LKH-05). *UniForm* writes Iceberg-compatible metadata next to the Delta log. Then
+Iceberg readers can read a Delta table. The Further reading section describes both features.
 
 ## From your world
 
@@ -81,15 +101,16 @@ Delta table. They are described in Further reading.
 
 ## When NOT to use Delta (or when the choice is a wash)
 
-- **Don't switch formats for its own sake.** If you already run Iceberg on Athena/Trino and it works,
-  Delta buys you little; the formats are feature-comparable for most batch work. Choose Delta when
-  you are on Databricks (it is the native, best-supported format there) or when a tool you must use
-  only speaks Delta.
-- **Don't assume CDF is free history.** It must be enabled *before* the changes you want to read,
-  and it adds write cost and files. Enable it where you have a real incremental consumer, not
-  everywhere by default.
-- **Don't hand-edit `_delta_log`.** The log is the source of truth; a stray or malformed commit file
-  corrupts the table. Treat it as read-only metadata you inspect, never patch.
+- **Do not switch formats for the sake of switching.** Suppose you already run Iceberg on
+  Athena/Trino, and it works. Then Delta gives you little. The formats have comparable features
+  for most batch work. Choose Delta when you are on Databricks (it is the native format there, with
+  the best support). Or choose Delta when a tool that you must use only speaks Delta.
+- **Do not assume that CDF gives you free history.** You must enable it *before* the changes that
+  you want to read. It also adds write cost and files. Enable it where you have a real incremental
+  consumer. Do not enable it everywhere by default.
+- **Do not edit `_delta_log` by hand.** The log is the source of truth. A stray or malformed
+  commit file corrupts the table. Treat the log as read-only metadata. Inspect it, and never patch
+  it.
 
 ## Further reading
 

@@ -2,47 +2,60 @@
 
 ## Why a table format exists
 
-When you query an Iceberg table in Athena, you write `SELECT ... FROM glue_db.orders` and it
-behaves like a database table: you get a consistent view, you can time-travel, schema changes
-don't rewrite everything. But underneath there is no database — there is a bucket full of
-immutable Parquet files in S3. The magic that turns "a pile of files" into "a table" is a tree of
-**metadata** that Iceberg writes alongside the data. Learning to read that tree is the single most
-useful Iceberg skill, because every operational question — *why is this query slow?*, *why did the
-snapshot not expire?*, *which files does this filter actually read?* — is answered by walking it.
+In Athena, you query an Iceberg table with `SELECT ... FROM glue_db.orders`. It behaves like a
+database table. You get a consistent view. You can time-travel. Schema changes do not rewrite
+everything. But there is no database under the table. There is only a bucket of immutable Parquet
+files in S3.
 
-You already trust this tree every time Athena prunes partitions for you. This module opens the box
-so the behaviour stops being magic.
+Iceberg turns this "pile of files" into a "table". It writes a tree of **metadata** next to the
+data. Learn to read this tree. It is the most useful Iceberg skill. Every operational question is
+answered by walking the tree. For example:
+
+- *Why is this query slow?*
+- *Why did the snapshot not expire?*
+- *Which files does this filter actually read?*
+
+You already trust this tree every time Athena prunes partitions for you. This module opens the box.
+You will see how the behavior works, and it will not look like magic.
 
 ## How the tree is laid out
 
-Iceberg metadata is a four-level pointer chain, newest-first:
+Iceberg metadata is a pointer chain with four levels. The chain starts with the newest state.
 
 1. **Catalog entry → `metadata.json`.** The catalog (Glue, in your Athena world) stores *one*
-   atomic pointer per table: the path of the current `metadata.json`. That file is the root of the
-   tree. It lists the schema(s), partition spec(s), sort order(s), table properties, and the full
-   list of **snapshots** with the id of the *current* one. A commit is just an atomic swap of this
-   one pointer (LKH-02).
-2. **`metadata.json` → manifest list.** Each snapshot points at exactly one **manifest list** (a
-   `snap-*.avro` file). The manifest list is the snapshot's index: one row per **manifest**, with
-   that manifest's partition-value ranges and added/existing/deleted file counts.
-3. **manifest list → manifests.** Each **manifest** (`*.avro`) lists a batch of data (or delete)
-   files, and — crucially — carries **per-file column statistics**: `record_count`, and
-   `lower_bounds`/`upper_bounds`/`null_counts` per column.
-4. **manifest → data files.** The leaves are the immutable **Parquet data files** (plus, in v2+,
-   **delete files**, LKH-04).
+   atomic pointer per table. The pointer holds the path of the current `metadata.json`. This file
+   is the root of the tree. It lists the schemas, partition specs, sort orders and table
+   properties. It also lists all **snapshots**, with the id of the *current* one. A commit is only
+   an atomic swap of this one pointer (LKH-02).
+2. **`metadata.json` → manifest list.** Each snapshot points at exactly one **manifest list**
+   (a `snap-*.avro` file). The manifest list is the index of the snapshot. It has one row per
+   **manifest**. Each row holds the partition-value ranges of that manifest. It also holds the
+   counts of added, existing and deleted files.
+3. **manifest list → manifests.** Each **manifest** (`*.avro`) lists a batch of data files or
+   delete files. It also carries **per-file column statistics**. These are `record_count`, and
+   `lower_bounds`, `upper_bounds` and `null_counts` for each column.
+4. **manifest → data files.** The leaves are the immutable **Parquet data files**. In v2 and
+   later, the leaves also include **delete files** (LKH-04).
 
 ![Iceberg metadata tree: the catalog points to one metadata.json, which leads through a manifest list and manifests down to the data files](diagrams/iceberg-metadata-tree.svg)
 
-**Why two index levels (manifest list *and* manifests)?** So a query planner can prune cheaply.
-It reads the small manifest list, drops whole manifests whose partition range can't match, then
-reads only the surviving manifests and uses their per-file min/max to drop individual data files —
-the same row-group pruning idea from FND-06, but one level up, over *files* instead of row groups.
-This is **scan planning**, and the number of files it decides to read is a measurable fact:
-`DataScan.plan_files()` returns exactly the file-scan tasks a correct engine would execute.
+**Why are there two index levels (the manifest list and the manifests)?** The two levels let a
+query planner prune at low cost. The planner works in these steps:
 
-Each write produces a new **snapshot** (a new `metadata.json` version, a new manifest list), while
-old snapshots keep pointing at their own manifest lists — that is what makes **time travel** and
-atomic commits possible: nothing is mutated, only added, and the catalog pointer flips.
+1. It reads the small manifest list.
+2. It drops each manifest whose partition range cannot match.
+3. It reads only the remaining manifests.
+4. It uses the per-file min/max values to drop single data files.
+
+This is the same idea as row-group pruning in FND-06. But it works one level higher, over *files*
+and not over row groups. This process is **scan planning**. The number of files that it chooses to
+read is a measurable fact. `DataScan.plan_files()` returns exactly the file-scan tasks that a
+correct engine would run.
+
+Each write produces a new **snapshot**. A new snapshot means a new `metadata.json` version and a
+new manifest list. Old snapshots keep pointing at their own manifest lists. This is how **time
+travel** and atomic commits work. Iceberg never changes existing files. It only adds new files,
+and the catalog pointer moves to the new `metadata.json`.
 
 ## From your world
 
@@ -56,14 +69,14 @@ atomic commits possible: nothing is mutated, only added, and the catalog pointer
 
 ## When NOT to lean on the metadata tree
 
-- **Don't read the Avro files by hand in production** to answer a question `t.inspect.*` or the
-  SQL metadata tables (`.snapshots`, `.files`, `.manifests`) already answer — hand-parsing is for
-  learning and for the rare forensic case.
-- **Don't treat the per-file min/max as a secondary index for point lookups.** Iceberg prunes
-  files, it is not a KV store; if you need sub-second lookups by key, that is the "when not to use
-  a lakehouse" case from the track intro.
-- **Don't equate "number of manifests" with "number of data files".** One manifest lists many
-  files; conflating the levels is the classic beginner metadata-reading bug.
+- **Do not read the Avro files by hand in production.** Use `t.inspect.*` or the SQL metadata
+  tables (`.snapshots`, `.files`, `.manifests`) when they already answer your question. Parse the
+  files by hand only to learn, or in the rare forensic case.
+- **Do not use the per-file min/max as a secondary index for point lookups.** Iceberg prunes
+  files. It is not a key-value store. If you need lookups by key in under one second, use the
+  "when not to use a lakehouse" case from the track intro.
+- **Do not treat "number of manifests" as "number of data files".** One manifest lists many files.
+  Mixing the two levels is the classic beginner bug when you read metadata.
 
 ## Further reading
 

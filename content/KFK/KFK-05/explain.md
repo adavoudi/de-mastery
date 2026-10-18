@@ -1,12 +1,13 @@
 # KFK-05 · Explain it back (Feynman)
 
-**Prompt A.** "Explain how a transactional read-process-write loop achieves exactly-once, naming the
-five calls (init / begin / produce / send_offsets / commit) and what each contributes. Why does
-sending the input offsets inside the transaction matter? What must the downstream consumer set?"
+**Prompt A.** "Explain how a transactional read-process-write loop achieves exactly-once. Name the
+five calls (init / begin / produce / send_offsets / commit) and say what each call contributes. Why
+does it matter to send the input offsets inside the transaction? What must the downstream consumer
+set?"
 
-**Prompt B.** "Explain what a 'zombie' producer is and how Kafka's transactional.id + epoch fences
-it. Why would using a random transactional.id per run reintroduce the duplicate you were trying to
-prevent?"
+**Prompt B.** "Explain what a 'zombie' producer is. Explain how the transactional.id and the epoch
+of Kafka fence it. Why does a random transactional.id for each run bring back the duplicate that you
+wanted to prevent?"
 
 ## Rubric — a strong explanation hits these (5–7):
 

@@ -8,9 +8,9 @@
     D: "Run the query engine."
   answer: [B]
   explanation: >-
-    The catalog resolves db.table to the current metadata.json, performs the atomic pointer swap
-    that is a commit, and (Glue/Lake Formation, Unity, Polaris, Nessie, Lakekeeper) governs access.
-    The data files are portable across catalogs; the catalog is the control plane.
+    The catalog resolves db.table to the current metadata.json. It performs the atomic pointer
+    swap that is a commit. It also governs access (Glue/Lake Formation, Unity, Polaris, Nessie,
+    Lakekeeper). The data files are portable across catalogs. The catalog is the control plane.
   source: "https://iceberg.apache.org/docs/latest/branching/"
 
 - id: LKH-03-q2
@@ -18,42 +18,43 @@
   prompt: "What is the difference between an Iceberg tag and a branch?"
   options:
     A: "They are the same thing."
-    B: "A tag is an immutable label on one snapshot; a branch is a mutable reference you can commit to independently of main."
-    C: "A branch is immutable; a tag is mutable."
-    D: "Tags store data; branches store metadata."
+    B: "A tag is an immutable label on one snapshot. A branch is a mutable reference you can commit to independently of main."
+    C: "A branch is immutable. A tag is mutable."
+    D: "Tags store data. Branches store metadata."
   answer: [B]
   explanation: >-
     A tag names a fixed snapshot (a point in time). A branch is a movable reference, like a git
-    branch, that you can write to without affecting readers of main.
+    branch. You can write to a branch without an effect on readers of main.
   source: "https://iceberg.apache.org/spec/#snapshot-references"
 
 - id: LKH-03-q3
   type: single
   prompt: "In a write-audit-publish flow, WHERE do you write the new data first, and why?"
   options:
-    A: "Directly into main, because it's faster."
+    A: "Directly into main, because it is faster."
     B: "Into a short-lived branch, so production readers on main never see unaudited data."
     C: "Into a brand new table each time."
     D: "Into a tag."
   answer: [B]
   explanation: >-
-    Writing to a branch isolates the new data from main. Readers of main continue to see the last
-    published state while you validate the branch. Only a passing audit publishes it to main.
+    When you write to a branch, the new data is isolated from main. Readers of main continue to see
+    the last published state while you validate the branch. Only a passing audit publishes the data
+    to main.
   source: "https://iceberg.apache.org/docs/latest/branching/"
 
 - id: LKH-03-q4
   type: single
   prompt: "Which snapshot must the audit checks run against in WAP?"
   options:
-    A: "The main branch's current snapshot."
-    B: "The audit branch's snapshot (the data you are about to publish)."
-    C: "Any snapshot; it doesn't matter."
+    A: "The current snapshot of the main branch."
+    B: "The snapshot of the audit branch (the data you are about to publish)."
+    C: "Any snapshot. It does not matter."
     D: "The oldest snapshot."
   answer: [B]
   explanation: >-
-    The whole point is to validate the candidate data before it reaches main, so the checks must
-    read the AUDIT branch's snapshot. Auditing main (which doesn't contain the new data yet) is a
-    classic WAP mistake that passes bad data straight through.
+    The goal is to validate the candidate data before it reaches main. So the checks must read the
+    snapshot of the AUDIT branch. Main does not contain the new data yet. If you audit main, you
+    make a classic WAP mistake. It passes bad data straight through.
   source: "https://iceberg.apache.org/docs/latest/branching/"
 
 - id: LKH-03-q5
@@ -61,29 +62,30 @@
   prompt: "What does CALL <catalog>.system.fast_forward('db.t','main','audit') do?"
   options:
     A: "Deletes the audit branch."
-    B: "Moves main's reference to the audit branch's tip, publishing the audited data (valid when main has not diverged)."
+    B: "Moves the reference of main to the tip of the audit branch, publishing the audited data (valid when main has not diverged)."
     C: "Copies main onto audit."
     D: "Rolls main back one snapshot."
   answer: [B]
   explanation: >-
-    fast_forward advances main to the audit branch tip, publishing the staged snapshots. It is the
-    'publish' step of WAP; cherrypick_snapshot is the alternative when you want to apply a single
-    branch snapshot onto a main that has moved.
+    fast_forward advances main to the tip of the audit branch. This publishes the staged
+    snapshots. It is the 'publish' step of WAP. The alternative is cherrypick_snapshot. Use it when
+    you want to apply a single snapshot of the branch onto a main that has moved.
   source: "https://iceberg.apache.org/docs/latest/spark-procedures/"
 
 - id: LKH-03-q6
   type: single
   prompt: "Why does the ORDER (write -> audit -> publish) matter for a SOX-style control?"
   options:
-    A: "It doesn't; order is cosmetic."
-    B: "Auditing before publishing is what blocks bad data from main; publishing before the audit, or auditing the wrong snapshot, makes the control meaningless."
+    A: "It does not. Order is cosmetic."
+    B: "Auditing before publishing is what blocks bad data from main. If you publish before the audit, or audit the wrong snapshot, the control is meaningless."
     C: "Publishing first is faster and just as safe."
     D: "The audit must run on main for the control to count."
   answer: [B]
   explanation: >-
-    A control only works if the gate is enforced before the data is visible. Publishing before the
-    check, or checking a snapshot that doesn't contain the candidate data, lets bad rows reach
-    production — exactly the failure the audited-publish control exists to prevent.
+    A control works only if the gate is enforced before the data is visible. Suppose you publish
+    before the check. Or suppose you check a snapshot that does not contain the candidate data.
+    Then bad rows reach production. The audited-publish control exists to prevent exactly this
+    failure.
   source: "https://iceberg.apache.org/docs/latest/branching/"
 
 - id: LKH-03-q7
@@ -96,6 +98,6 @@
     D: "When multiple engines must validate the candidate."
   answer: [B]
   explanation: >-
-    Branching adds snapshots and maintenance overhead. It pays off when a bad publish is costly or
-    must be approved; for cheap, low-risk appends the overhead isn't justified.
+    Branching adds snapshots and maintenance overhead. It is worth it when a bad publish is costly
+    or when someone must approve it. For cheap, low-risk appends, the overhead is not justified.
   source: "https://iceberg.apache.org/docs/latest/branching/"

@@ -3,21 +3,21 @@
   prompt: "What is the key difference between repartition(n) and coalesce(n)?"
   options:
     A: "They are identical."
-    B: "repartition(n) does a full shuffle to produce n balanced partitions (and can increase the count); coalesce(n) merges existing partitions with no shuffle and can only reduce the count."
-    C: "coalesce always shuffles; repartition never does."
+    B: "repartition(n) does a full shuffle to produce n balanced partitions (and can increase the count). coalesce(n) merges existing partitions with no shuffle and can only reduce the count."
+    C: "coalesce always shuffles. repartition never does."
     D: "coalesce can only increase the partition count."
   answer: [B]
   explanation: >-
-    repartition is a wide transformation (adds an Exchange) giving n balanced partitions and can
-    grow or shrink. coalesce is narrow (no Exchange), only reduces, and may leave uneven partitions
-    because it just concatenates existing ones.
+    repartition is a wide transformation (it adds an Exchange). It gives n balanced partitions and can
+    grow or shrink the count. coalesce is narrow (no Exchange) and only reduces the count. It may leave
+    uneven partitions, because it only joins existing partitions together.
   source: "https://spark.apache.org/docs/4.0.0/sql-performance-tuning.html"
 
 - id: SPK-07-q2
   type: single
   prompt: >-
-    After a selective filter leaves a small result spread over 200 partitions, you want ~4 output
-    files cheaply. Which is best?
+    A selective filter leaves a small result spread over 200 partitions. You want ~4 output
+    files, and you want to do it cheaply. Which is best?
   options:
     A: "repartition(4) — needs a full shuffle"
     B: "coalesce(4) — merges partitions with no shuffle"
@@ -25,14 +25,14 @@
     D: "partitionBy('customer_id')"
   answer: [B]
   explanation: >-
-    coalesce(4) reduces the file count without a shuffle, which is the cheap way to merge files
-    after a filter. repartition(4) would needlessly shuffle; coalesce(1) would funnel everything
+    coalesce(4) reduces the file count without a shuffle. This is the cheap way to merge files
+    after a filter. repartition(4) would shuffle without need. coalesce(1) would send everything
     through one task.
   source: "https://spark.apache.org/docs/4.0.0/api/python/reference/pyspark.sql/api/pyspark.sql.DataFrame.coalesce.html"
 
 - id: SPK-07-q3
   type: single
-  prompt: "What determines the (approximate) number of output files a single write produces?"
+  prompt: "What determines the (approximate) number of output files that a single write produces?"
   options:
     A: "The number of columns."
     B: "The number of in-memory partitions at write time, times the number of on-disk partition folders from partitionBy."
@@ -40,8 +40,8 @@
     D: "spark.sql.shuffle.partitions, always, regardless of the DataFrame."
   answer: [B]
   explanation: >-
-    Each in-memory partition writes (up to) one file per on-disk partition folder. So controlling
-    the partition count (repartition/coalesce) and partitionBy together controls the file count.
+    Each in-memory partition writes (up to) one file per on-disk partition folder. So the partition
+    count (repartition/coalesce) and partitionBy together control the file count.
   source: "https://spark.apache.org/docs/4.0.0/sql-data-sources-load-save-functions.html"
 
 - id: SPK-07-q4
@@ -49,14 +49,14 @@
   prompt: "Why is partitionBy('customer_id') on a high-cardinality column usually a mistake?"
   options:
     A: "Spark forbids it."
-    B: "It creates one directory per customer — potentially millions of tiny files/dirs, the worst form of the small-file problem."
+    B: "It creates one directory per customer. This can give millions of tiny files/dirs, the worst form of the small-file problem."
     C: "It makes the data unqueryable."
     D: "It forces a broadcast join."
   answer: [B]
   explanation: >-
-    partitionBy on a high-cardinality column explodes into a huge number of small directories and
-    files, crushing listing and metadata performance. Partition on low-cardinality, frequently
-    filtered columns (date, company).
+    partitionBy on a high-cardinality column creates a huge number of small directories and
+    files. This greatly reduces listing and metadata performance. Partition on low-cardinality columns
+    that you filter on often (date, company).
   source: "https://spark.apache.org/docs/4.0.0/sql-data-sources-load-save-functions.html"
 
 - id: SPK-07-q5
@@ -64,14 +64,14 @@
   prompt: "How does bucketing let two tables join without a shuffle at read time?"
   options:
     A: "It caches both tables."
-    B: "bucketBy pre-shuffles each table on the key into a fixed number of buckets at write time, so matching keys are already colocated when the tables are later joined on that key."
+    B: "bucketBy pre-shuffles each table on the key into a fixed number of buckets at write time. When you later join the tables on that key, matching keys are already colocated."
     C: "It broadcasts both tables."
     D: "It sorts the rows alphabetically."
   answer: [B]
   explanation: >-
-    Bucketing writes each table already partitioned by hash of the key into the same number of
-    buckets. A later join on the bucket key finds matching keys colocated, so no shuffle is needed —
-    the analogue of a Redshift DISTKEY making joins local.
+    Bucketing writes each table already partitioned by the hash of the key, into the same number of
+    buckets. A later join on the bucket key finds matching keys colocated, so it needs no shuffle.
+    This is the analogue of a Redshift DISTKEY that makes joins local.
   source: "https://spark.apache.org/docs/4.0.0/sql-data-sources-load-save-functions.html#bucketing-sorting-and-partitioning"
 
 - id: SPK-07-q6
@@ -79,14 +79,14 @@
   prompt: "Why is coalesce(1) on a very large DataFrame dangerous?"
   options:
     A: "It raises an error."
-    B: "It forces all data through a single task/partition, removing parallelism and risking OOM/slowness; the file count should be derived from data size instead."
+    B: "It forces all data through a single task/partition. This removes parallelism and risks OOM/slowness. You should calculate the file count from the data size instead."
     C: "It shuffles twice."
     D: "It produces corrupted files."
   answer: [B]
   explanation: >-
-    coalesce(1) means one output partition, so one task must process everything — no parallelism,
-    high memory pressure. Target a file size and derive the partition count; don't hard-code 1 for
-    big data.
+    coalesce(1) means one output partition, so one task must process everything. There is no
+    parallelism and the memory pressure is high. Target a file size and calculate the partition count
+    from it. Do not hard-code 1 for big data.
   source: "https://spark.apache.org/docs/4.0.0/api/python/reference/pyspark.sql/api/pyspark.sql.DataFrame.coalesce.html"
 
 - id: SPK-07-q7
@@ -95,11 +95,11 @@
     repartition(n) vs partitionBy(col) — what is the correct distinction?
   options:
     A: "They are the same operation."
-    B: "repartition sets the in-memory task/partition layout during computation; partitionBy sets the on-disk directory layout of the written output. They meet at write time."
-    C: "partitionBy shuffles in memory; repartition writes directories."
+    B: "repartition sets the in-memory task/partition layout during computation. partitionBy sets the on-disk directory layout of the written output. They meet at write time."
+    C: "partitionBy shuffles in memory. repartition writes directories."
     D: "Both only affect reads."
   answer: [B]
   explanation: >-
-    repartition/coalesce control how many in-memory partitions (tasks) exist; partitionBy controls
-    the col=value/ directory structure on disk. Confusing them is a common error.
+    repartition and coalesce control how many in-memory partitions (tasks) exist. partitionBy controls
+    the col=value/ directory structure on disk. People often confuse them.
   source: "https://spark.apache.org/docs/4.0.0/sql-data-sources-load-save-functions.html"

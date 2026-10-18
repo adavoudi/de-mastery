@@ -1,51 +1,52 @@
 - id: KFK-11-q1
   type: single
-  prompt: "In a partition's replica list [2, 0, 1], what is the role of broker 2?"
+  prompt: "In the replica list [2, 0, 1] of a partition, what is the role of broker 2?"
   options:
     A: "A follower chosen at random."
-    B: "The preferred leader — the broker Kafka prefers to make leader for that partition."
+    B: "The preferred leader — the broker that Kafka prefers as leader for that partition."
     C: "The controller for the whole cluster."
     D: "A read-only replica that never serves writes."
   answer: [B]
   explanation: >-
-    The first broker in the replica list is the preferred leader; the rest are followers that
-    replicate from the leader and sit in the ISR. Preferred-leader election tries to restore that
-    first broker as leader after disruptions.
+    The first broker in the replica list is the preferred leader. The other brokers are followers.
+    They replicate from the leader and stay in the ISR. After a disruption, preferred-leader election
+    tries to make that first broker the leader again.
   source: "https://kafka.apache.org/documentation/#basic_ops_cluster_expansion"
 
 - id: KFK-11-q2
   type: single
-  prompt: "Why is a partition replica list not allowed to contain the same broker twice?"
+  prompt: "Why can the replica list of a partition not contain the same broker twice?"
   options:
     A: "It would waste a partition id."
-    B: "Two replicas on one broker provide no fault tolerance — losing that broker loses both copies."
+    B: "Two replicas on one broker give no fault tolerance. If that broker fails, both copies are lost."
     C: "Kafka cannot store duplicate integers."
     D: "It would double the retention."
   answer: [B]
   explanation: >-
-    Replication exists to survive a broker loss. Placing two replicas of one partition on the same
-    broker means a single failure takes out two copies, defeating the purpose; assignments must use
-    distinct brokers.
+    Replication exists so that the data survives the loss of a broker. Suppose two replicas of one
+    partition are on the same broker. Then a single failure takes out two copies, and this defeats the
+    purpose. Assignments must use distinct brokers.
   source: "https://kafka.apache.org/documentation/#replication"
 
 - id: KFK-11-q3
   type: single
-  prompt: "You retarget partition P from replicas [0,1] onto the broker set {0,2}. Which assignment moves the LEAST data?"
+  prompt: "You move partition P from replicas [0,1] onto the broker set {0,2}. Which assignment moves the LEAST data?"
   options:
     A: "[2, 3] — replace both replicas."
-    B: "[0, 2] — keep broker 0's replica, move only 1 -> 2."
-    C: "[2, 0] — same set as [0,2] but reordered, still a full copy."
+    B: "[0, 2] — keep the replica on broker 0, move only 1 -> 2."
+    C: "[2, 0] — same set as [0,2] but in a different order, still a full copy."
     D: "Any assignment moves the same amount."
   answer: [B]
   explanation: >-
-    Keeping an existing replica (broker 0) means that copy's data stays put; only the 1 -> 2 replica
-    is copied over the network. Minimal-movement reassignment preserves as many current replicas as
-    the constraints allow.
+    If you keep an existing replica (broker 0), the data of that copy stays in place. Kafka copies only
+    the 1 -> 2 replica over the network. Minimal-movement reassignment keeps as many current replicas
+    as the constraints allow. The order [2, 0] also keeps broker 0, so it moves the same data as [0, 2].
+    The order changes only the preferred leader. It does not cause a full copy.
   source: "https://kafka.apache.org/documentation/#basic_ops_cluster_expansion"
 
 - id: KFK-11-q4
   type: single
-  prompt: "With broker.rack configured and replication factor 3 across 3 racks, how should a partition's replicas be placed?"
+  prompt: "broker.rack is configured and the replication factor is 3 across 3 racks. How should the replicas of a partition be placed?"
   options:
     A: "All three on the fastest rack."
     B: "On three distinct racks, so a single rack outage still leaves at least one replica up."
@@ -54,64 +55,65 @@
   answer: [B]
   explanation: >-
     Rack awareness spreads replicas across racks. With rf <= number of racks, each replica should be
-    on a distinct rack so a whole-rack (or AZ) failure cannot take all replicas of a partition offline.
+    on a distinct rack. Then the failure of a whole rack (or AZ) cannot take all replicas of a
+    partition offline.
   source: "https://kafka.apache.org/documentation/#basic_ops_racks"
 
 - id: KFK-11-q5
   type: single
-  prompt: "What is the purpose of the --throttle option on kafka-reassign-partitions.sh?"
+  prompt: "What is the purpose of the --throttle option of kafka-reassign-partitions.sh?"
   options:
-    A: "To speed replication up by using more threads."
-    B: "To cap the replication bandwidth used by the move so it does not starve normal produce/consume traffic."
+    A: "To make replication faster by using more threads."
+    B: "To limit the replication bandwidth that the move uses, so it does not starve normal produce/consume traffic."
     C: "To limit how many partitions a topic can have."
     D: "To delete old segments faster."
   answer: [B]
   explanation: >-
-    A reassignment copies partition data between brokers. Throttling bounds that traffic so it does
-    not saturate the network and degrade production. Set too low, though, the reassignment may never
-    complete (a KFK-14 incident).
+    A reassignment copies partition data between brokers. A throttle limits this traffic, so it does
+    not saturate the network and degrade production. But if the throttle is too low, the reassignment
+    may never complete (a KFK-14 incident).
   source: "https://kafka.apache.org/documentation/#rep-throttle"
 
 - id: KFK-11-q6
   type: single
-  prompt: "After --execute, how do you confirm a reassignment has finished?"
+  prompt: "After --execute, how do you confirm that a reassignment has finished?"
   options:
     A: "Restart every broker."
-    B: "Run the same command with --verify until it reports the reassignment is complete."
+    B: "Run the same command with --verify until it reports that the reassignment is complete."
     C: "Delete and recreate the topic."
     D: "There is no way to confirm."
   answer: [B]
   explanation: >-
-    --verify checks the in-progress reassignment against the target JSON and reports when each
-    partition's move is complete (and removes any throttle). You poll it until done.
+    --verify compares the in-progress reassignment with the target JSON. It reports when the move of
+    each partition is complete (and removes any throttle). You run it repeatedly until it is done.
   source: "https://kafka.apache.org/documentation/#basic_ops_cluster_expansion"
 
 - id: KFK-11-q7
   type: single
-  prompt: "min.insync.replicas=2 with producer acks=all on a replication-factor-3 topic means a produce succeeds when:"
+  prompt: "min.insync.replicas=2 with producer acks=all on a topic with replication factor 3. A produce succeeds when:"
   options:
     A: "Only the leader has the record."
-    B: "At least 2 replicas (leader + 1 follower) have acknowledged the record; otherwise the producer gets an error."
+    B: "At least 2 replicas (leader + 1 follower) have acknowledged the record. Otherwise the producer gets an error."
     C: "All 3 replicas plus the controller acknowledge."
     D: "The record is written to disk on every broker in the cluster."
   answer: [B]
   explanation: >-
-    acks=all means the leader waits for all in-sync replicas, and min.insync.replicas=2 requires at
-    least 2 in the ISR for the write to be accepted. If the ISR drops below 2, the producer gets
-    NOT_ENOUGH_REPLICAS rather than risking an under-durable write.
+    acks=all means the leader waits for all in-sync replicas. min.insync.replicas=2 requires at
+    least 2 replicas in the ISR before the broker accepts the write. If the ISR drops below 2, the
+    producer gets NOT_ENOUGH_REPLICAS. This avoids a write with too little durability.
   source: "https://kafka.apache.org/documentation/#brokerconfigs"
 
 - id: KFK-11-q8
   type: single
-  prompt: "A teammate 'rebalances' a healthy cluster by regenerating a brand-new assignment for every partition. What is the risk?"
+  prompt: "A teammate 'rebalances' a healthy cluster. The teammate generates a brand-new assignment for every partition. What is the risk?"
   options:
-    A: "No risk; regenerating is always safe."
-    B: "It can move nearly every replica at once, saturating the network with replication traffic and causing under-replicated partitions."
+    A: "No risk. Generating a new assignment is always safe."
+    B: "It can move nearly every replica at once. This saturates the network with replication traffic and causes under-replicated partitions."
     C: "It permanently deletes data."
     D: "It changes the number of partitions."
   answer: [B]
   explanation: >-
-    A from-scratch assignment ignores current placement, so most replicas move and the cluster
+    An assignment from scratch ignores the current placement. Most replicas move, and the cluster
     copies huge volumes of data at once. Prefer a minimal-movement plan (keep existing replicas) and
     throttle the move.
   source: "https://kafka.apache.org/documentation/#basic_ops_cluster_expansion"

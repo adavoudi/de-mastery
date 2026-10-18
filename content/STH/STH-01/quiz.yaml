@@ -3,93 +3,93 @@
   prompt: "What is the defining structural feature of a Lambda architecture?"
   options:
     A: "A single streaming pipeline that replays a log to reprocess history"
-    B: "Two parallel pipelines — a batch recompute layer and a low-latency speed layer — merged at serving time"
+    B: "Two parallel pipelines (a batch recompute layer and a low-latency speed layer) merged at serving time"
     C: "A single transactional lake table queried by SQL at batch latency"
-    D: "A stream-native storage layer serving both streaming and batch reads"
+    D: "A stream-native storage layer that serves both streaming and batch reads"
   answer: [B]
-  explanation: "Lambda runs a batch layer (correct, complete, slow) and a separate speed layer (approximate, low-latency) and merges them in a serving layer. Option A is Kappa, C is a lakehouse, D is a streamhouse."
+  explanation: "Lambda runs a batch layer (correct, complete, slow) and a separate speed layer (approximate, low-latency). A serving layer merges them. Option A is Kappa. Option C is a lakehouse. Option D is a streamhouse."
   source: "https://fluss.apache.org/docs/intro/"
 
 - id: STH-01-q2
   type: single
-  prompt: "What is the main recurring cost of Lambda architecture that Kappa was designed to remove?"
+  prompt: "Kappa was designed to remove one main recurring cost of Lambda architecture. What is this cost?"
   options:
     A: "Object storage is too expensive"
     B: "The same business logic is maintained twice (batch and speed), and the two answers drift"
     C: "It cannot do time travel"
     D: "It requires Flink"
   answer: [B]
-  explanation: "Lambda's dual code paths implement the same logic twice and drift, forcing reconciliation. Kappa removes the batch layer so there is one pipeline and one code path."
+  explanation: "Lambda has two code paths. They implement the same logic twice and drift, so people must reconcile them. Kappa removes the batch layer. It has one pipeline and one code path."
   source: "https://paimon.apache.org/docs/master/concepts/overview/"
 
 - id: STH-01-q3
   type: single
-  prompt: "In Kappa architecture, what is the system of record and how is history reprocessed?"
+  prompt: "In Kappa architecture, what is the system of record, and how does the system reprocess history?"
   options:
-    A: "A transactional Iceberg table; reprocessed by time travel"
-    B: "An append-only log (e.g. Kafka); reprocessed by replaying the log"
-    C: "A relational database; reprocessed by nightly batch jobs"
-    D: "Two merged layers; reprocessed by the batch layer"
+    A: "A transactional Iceberg table, reprocessed by time travel"
+    B: "An append-only log (for example Kafka), reprocessed by replaying the log"
+    C: "A relational database, reprocessed by nightly batch jobs"
+    D: "Two merged layers, reprocessed by the batch layer"
   answer: [B]
-  explanation: "Kappa treats the append-only log as the system of record and replays it to recompute results, which is also the source of its weakness: long-term queryable history in the log is expensive and OLAP over it is awkward."
+  explanation: "Kappa uses the append-only log as the system of record. It replays the log to recompute results. This is also the source of its weakness: long-term queryable history in the log is expensive, and OLAP over it is awkward."
   source: "https://fluss.apache.org/docs/intro/"
 
 - id: STH-01-q4
   type: single
-  prompt: "A platform stores all curated data in Iceberg tables on S3, queried by Athena, refreshed every few minutes by Spark. What is it, and what is its latency limit?"
+  prompt: "A platform stores all curated data in Iceberg tables on S3. Athena queries the tables. Spark refreshes them every few minutes. What is this platform, and what is its latency limit?"
   options:
-    A: "Kappa; limited by log retention"
-    B: "Lakehouse; limited to batch/micro-batch (minutes) commit latency"
-    C: "Streamhouse; sub-second"
-    D: "Lambda; limited by reconciliation"
+    A: "Kappa, limited by log retention"
+    B: "Lakehouse, limited to batch/micro-batch (minutes) commit latency"
+    C: "Streamhouse, sub-second"
+    D: "Lambda, limited by reconciliation"
   answer: [B]
-  explanation: "One transactional lake table format serving SQL/BI is a lakehouse. Its commits land on a batch/micro-batch cadence (minutes at best), so it cannot answer sub-minute streaming questions, and frequent commits create small files."
+  explanation: "One transactional lake table format that serves SQL/BI is a lakehouse. Its commits land at a batch/micro-batch rate (minutes at best). So it cannot answer sub-minute streaming questions. Frequent commits also create small files."
   source: "https://iceberg.apache.org/docs/latest/flink/"
 
 - id: STH-01-q5
   type: single
-  prompt: "What does a streamhouse add over a batch lakehouse?"
+  prompt: "What does a streamhouse add to a batch lakehouse?"
   options:
     A: "A second parallel speed pipeline that is reconciled nightly"
-    B: "A stream-native storage layer (e.g. Paimon/Fluss) so one copy serves both streaming/changelog reads and batch/OLAP reads"
+    B: "A stream-native storage layer (for example Paimon/Fluss) so one copy serves both streaming/changelog reads and batch/OLAP reads"
     C: "It removes object storage entirely"
     D: "It replaces SQL with a key-value API"
   answer: [B]
-  explanation: "A streamhouse puts stream-native storage on the lake so the same copy of the data answers both a low-latency streaming/changelog read and a batch/OLAP read — without a separate speed layer to reconcile (unlike Lambda)."
+  explanation: "A streamhouse puts stream-native storage on the lake. The same copy of the data then answers both a low-latency streaming/changelog read and a batch/OLAP read. Unlike Lambda, it needs no separate speed layer to reconcile."
   source: "https://paimon.apache.org/docs/master/concepts/overview/"
 
 - id: STH-01-q6
   type: single
   prompt: "Which scenario is a POOR fit for a streamhouse?"
   options:
-    A: "Sub-minute freshness is required and the same data must also serve OLAP"
-    B: "A dashboard that is refreshed nightly and has no sub-minute requirement"
+    A: "The system needs sub-minute freshness, and the same data must also serve OLAP"
+    B: "A dashboard refreshes every night and has no sub-minute requirement"
     C: "A changelog consumer and an analyst query the same mart"
     D: "You want to avoid maintaining a separate speed layer"
   answer: [B]
-  explanation: "If hourly/daily freshness is enough, a batch lakehouse is simpler, cheaper and more mature; adding Paimon/Fluss, Flink and a tiering job to serve a nightly dashboard is unjustified complexity."
+  explanation: "If hourly or daily freshness is enough, a batch lakehouse is simpler, cheaper and more mature. To add Paimon/Fluss, Flink and a tiering job for a nightly dashboard is unjustified complexity."
   source: "https://paimon.apache.org/docs/master/concepts/overview/"
 
 - id: STH-01-q7
   type: multi
-  prompt: "Which statements are TRUE about classifying a real architecture? (choose all)"
+  prompt: "Which statements are TRUE about how to classify a real architecture? (choose all)"
   options:
-    A: "You classify by storage and pipeline shape, not the vendor's marketing label"
+    A: "You classify by storage and pipeline shape, not by the vendor's marketing label"
     B: "Two parallel pipelines merged at serving indicate Lambda"
-    C: "A stream-native store serving both streaming and batch reads from one copy indicates a streamhouse"
+    C: "A stream-native store that serves both streaming and batch reads from one copy indicates a streamhouse"
     D: "Any system that uses Kafka anywhere is Kappa"
   answer: [A, B, C]
-  explanation: "Classification is structural. Lambda = two merged pipelines; streamhouse = one stream-native copy serving both read paths. D is wrong: Kafka as an ingestion bus feeding batch loads is not Kappa — Kappa requires the log to be the queryable system of record with replay-based reprocessing."
+  explanation: "Classification depends on structure. Lambda = two merged pipelines. Streamhouse = one stream-native copy that serves both read paths. Option D is wrong. Kafka as an ingestion bus that feeds batch loads is not Kappa. Kappa requires the log to be the queryable system of record, with reprocessing by replay."
   source: "https://fluss.apache.org/docs/intro/"
 
 - id: STH-01-q8
   type: single
-  prompt: "Where did the term 'streamhouse' originate and what is its current status?"
+  prompt: "Where did the term 'streamhouse' originate, and what is its current status?"
   options:
-    A: "Coined by Databricks and exclusive to Delta Lake"
-    B: "Coined by Ververica (~2024) and now shared across a cross-vendor working group (Aiven, Confluent, Redpanda, StreamNative, Ververica)"
-    C: "An Apache project name for Kafka 4.0"
-    D: "A synonym for Lambda architecture"
+    A: "Databricks coined it, and it is exclusive to Delta Lake"
+    B: "Ververica coined it (~2024), and a cross-vendor working group now shares it (Aiven, Confluent, Redpanda, StreamNative, Ververica)"
+    C: "It is an Apache project name for Kafka 4.0"
+    D: "It is a synonym for Lambda architecture"
   answer: [B]
-  explanation: "Ververica coined 'streamhouse'; it is now a cross-vendor concept with a working group spanning several streaming vendors, reflecting convergence of streaming storage and the lakehouse."
+  explanation: "Ververica coined 'streamhouse'. It is now a cross-vendor concept. A working group of several streaming vendors shares it. This shows that streaming storage and the lakehouse are converging."
   source: "https://fluss.apache.org/docs/intro/"

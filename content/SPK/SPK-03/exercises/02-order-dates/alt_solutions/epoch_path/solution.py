@@ -5,7 +5,7 @@ from pyspark.sql import functions as F
 
 def with_date_parts(df):
     # Parse to timestamp, convert to epoch seconds, and back — exercises the epoch path
-    # (objective 3.4) while landing on the same instants.
+    # while landing on the same instants.
     epoch = F.unix_timestamp(F.to_timestamp("order_ts_raw"))
     ts = F.to_timestamp(F.from_unixtime(epoch))
     return (

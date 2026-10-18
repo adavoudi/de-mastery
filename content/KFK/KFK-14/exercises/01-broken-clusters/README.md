@@ -1,9 +1,15 @@
 # KFK-14 · Six broken-cluster scenarios — diagnose and fix
 
-Six classic Kafka incidents. For each, implement a `diagnose_X` (read state, return a small
-structured dict) and a `fix_X` (apply the smallest change). The grader **creates each fault
-deterministically**, asserts your diagnosis names it, applies your fix, and re-checks that health is
-restored. Edit `troubleshoot.py`.
+There are six classic Kafka incidents. For each incident, implement a `diagnose_X` (read the state and
+return a small structured dict) and a `fix_X` (apply the smallest change). The grader follows these
+steps:
+
+1. It **creates each fault deterministically**.
+2. It asserts that your diagnosis names the fault.
+3. It applies your fix.
+4. It checks again that health is restored.
+
+Edit `troubleshoot.py`.
 
 ## The six incidents
 
@@ -18,8 +24,8 @@ restored. Edit `troubleshoot.py`.
 
 ## Diagnosis return shapes
 
-Each `diagnose_X` returns a dict with an `"issue"` key that is the problem name when the fault is
-present, or `"healthy"` when it is not:
+Each `diagnose_X` returns a dict with an `"issue"` key. The value is the problem name when the fault
+is present. The value is `"healthy"` when the fault is not present.
 
 - `diagnose_under_replicated(admin, topic)` → `{"issue": "under_replicated"|"healthy",
   "under_replicated_partitions": [...]}`
@@ -35,10 +41,10 @@ present, or `"healthy"` when it is not:
 
 ## Notes
 
-- The `admin` object is a confluent_kafka `AdminClient`; `cluster` is the de_testkit cluster
+- The `admin` object is a confluent_kafka `AdminClient`. The `cluster` object is the de_testkit cluster
   (`run_tool`, `start_broker`, `bootstrap_servers`). Fixes use the bundled CLI tools
   (`kafka-configs.sh`, `kafka-consumer-groups.sh`) or `cluster.start_broker`.
-- Scenarios 5 and 6 are **pure** (operate on a config/props dict, no broker) so part of the suite is
-  always gradable on a bare machine.
-- `retention.ms = -1` means infinite retention and is **healthy** — only a non-negative value below
+- Scenarios 5 and 6 are **pure**. They work on a config/props dict and need no broker. So you can
+  always grade part of the suite on a bare machine.
+- `retention.ms = -1` means infinite retention and is **healthy**. Only a non-negative value below
   the floor is a fault.

@@ -2,59 +2,66 @@
 
 ## Why many engines, one table
 
-The whole point of an open table format is that the **data is not owned by an engine**. The same
-Iceberg or Delta table can be read by Spark, Trino, Athena (which is managed Trino/Presto under the
-hood), DuckDB, StarRocks and more. This is the lakehouse promise you already live on the consumer
-side: you query Iceberg from Athena today. This module is about reasoning across engines — why the
-*same* logical query runs differently on each, and how to read a plan to see whether the engine is
-actually skipping the data it should.
+The whole point of an open table format is that **no engine owns the data**. Many engines can read
+the same Iceberg or Delta table. These include Spark, Trino, Athena (managed Trino/Presto under the
+hood), DuckDB, StarRocks and more. This is the lakehouse promise. You already live it on the
+consumer side: you query Iceberg from Athena today. This module is about reasoning across engines.
+It explains why the *same* logical query runs differently on each engine. It also shows how to read
+a plan, so that you can see whether the engine actually skips the data that it should skip.
 
-The skill that matters in interviews and on the job: given a slow query, can you tell whether the
-engine **pushed the filter down** to the scan and **pruned partitions/files**, or whether it read the
-whole table and filtered late? That reasoning transfers across every engine; only the plan syntax
+This skill matters in interviews and on the job. You get a slow query. Can you tell whether the
+engine **pushed the filter down** to the scan and **pruned partitions and files**? Or did it read
+the whole table and filter late? This reasoning works for every engine. Only the syntax of the plan
 changes.
 
 ## How it works
 
-**Predicate pushdown.** A `WHERE amt > 50` can be evaluated three places: by the engine after reading
-every row (worst), at the file-format layer using Parquet row-group min/max to skip row groups
-(better), or recorded in the table-format scan so whole files are skipped by their statistics (best).
-A good engine *pushes the predicate down* to the scan. In Spark's plan you see it as `PushedFilters`
-(file sources) or, for Iceberg, `filters=...` on the `BatchScan`. In Trino you see it in `EXPLAIN` as
-predicates on the `TableScan`. If the predicate is **not** in the scan, the engine is reading
-everything and filtering in memory.
+**Predicate pushdown.** An engine can evaluate `WHERE amt > 50` in three places:
 
-**Partition pruning.** When a table is partitioned (Iceberg hidden partitioning, LKH-05), a predicate
-on the partition column (or a column feeding its transform) lets the planner **skip entire
-partitions** before reading any data file. In Spark's plan this appears as `PartitionFilters` (plain
-file sources) or as the partition predicate inside the Iceberg scan's `filters=`. Pruning is coarser
-and cheaper than per-file skipping and happens first.
+1. The engine reads every row and then evaluates the predicate (worst).
+2. The file-format layer evaluates it. It uses Parquet row-group min/max to skip row groups
+   (better).
+3. The table-format scan records it. Then the scan skips whole files by their statistics (best).
 
-**File/row-group skipping with statistics.** Within the partitions it must read, the engine uses
-per-file and per-row-group min/max (and null counts) to skip chunks whose range cannot match the
-predicate. Sort order (LKH-05) makes these bounds tight, which is why clustering by a filter column
-pays off. This is the same column-stats pruning you built in FND-06.
+A good engine *pushes the predicate down* to the scan. In the plan of Spark, you see it as
+`PushedFilters` (file sources). For Iceberg, you see `filters=...` on the `BatchScan`. In Trino,
+you see it in `EXPLAIN` as predicates on the `TableScan`. If the predicate is **not** in the scan,
+the engine reads everything and filters in memory.
 
-**Puffin files and statistics.** Iceberg stores table-level statistics (e.g. NDV sketches —
-Theta/`apache-datasketches`) in **Puffin** files, which cost-based optimizers in Trino/Spark use to
-pick join orders and strategies. Without stats, an engine guesses; with them, it plans better joins.
-This is why `ANALYZE`/stats collection matters on the lake just as it did on Redshift.
+**Partition pruning.** Suppose a table is partitioned (Iceberg hidden partitioning, LKH-05). A
+predicate on the partition column (or on a column that feeds its transform) lets the planner
+**skip entire partitions** before it reads any data file. In the plan of Spark, this appears as
+`PartitionFilters` (plain file sources). Or it appears as the partition predicate inside the
+`filters=` of the Iceberg scan. Pruning is coarser and cheaper than per-file skipping. It happens
+first.
+
+**File/row-group skipping with statistics.** The engine must read some partitions. Inside them, it
+uses per-file and per-row-group min/max (and null counts). It skips the chunks whose range cannot
+match the predicate. A sort order (LKH-05) makes these bounds tight. For this reason, clustering by
+a filter column pays off. This is the same column-stats pruning that you built in FND-06.
+
+**Puffin files and statistics.** Iceberg stores table-level statistics in **Puffin** files. An
+example is NDV sketches (Theta/`apache-datasketches`). Cost-based optimizers in Trino and Spark use
+these statistics to pick join orders and strategies. Without statistics, an engine guesses. With
+them, it plans better joins. For this reason, `ANALYZE` and stats collection matter on the lake,
+as they did on Redshift.
 
 **Engine personalities (same table, different strengths).**
 
-- **Trino / Athena**: MPP SQL engine, great for interactive BI-style queries across many sources;
-  Athena is Trino/Presto-as-a-service with no cluster to run. Pushdown + pruning are essential to
-  keep bytes-scanned (and the Athena bill) down.
-- **Spark**: general compute (batch, streaming, ML); heavier startup, best for large ETL and complex
-  pipelines, not sub-second BI.
-- **DuckDB**: single-node, in-process, vectorized; astonishingly fast on one machine for datasets that
-  fit (or stream through) local memory. Reads Parquet/Iceberg directly — ideal as a local oracle and
-  for medium data without a cluster.
-- **StarRocks**: MPP with a cost-based optimizer and caching, aimed at low-latency analytics on
+- **Trino / Athena**: an MPP SQL engine. It is great for interactive BI-style queries across many
+  sources. Athena is Trino/Presto-as-a-service, and you run no cluster. Pushdown and pruning are
+  essential to keep bytes-scanned (and the Athena bill) low.
+- **Spark**: general compute (batch, streaming, ML). It starts slowly. It is best for large ETL and
+  complex pipelines. It is not best for sub-second BI.
+- **DuckDB**: single-node, in-process and vectorized. It is very fast on one machine for datasets
+  that fit in local memory (or stream through it). It reads Parquet/Iceberg directly. It is ideal
+  as a local oracle and for medium data without a cluster.
+- **StarRocks**: MPP with a cost-based optimizer and caching. It targets low-latency analytics on
   lakehouse tables.
 
-The same `SELECT ... WHERE ... GROUP BY` is one logical query; each engine compiles it to its own
-plan, but **all should push the filter and prune partitions** — if one doesn't, that's your bug.
+The same `SELECT ... WHERE ... GROUP BY` is one logical query. Each engine compiles it to its own
+plan. But **all engines should push the filter and prune partitions**. If one engine does not, that
+is your bug.
 
 ## From your world
 
@@ -68,13 +75,13 @@ plan, but **all should push the filter and prune partitions** — if one doesn't
 
 ## When NOT to add another engine
 
-- **Don't reach for Spark for a sub-second interactive query.** Its startup and shuffle overhead lose
-  to Trino/DuckDB on small, latency-sensitive queries.
-- **Don't stand up a Trino cluster for data that fits on one node.** DuckDB (or Athena serverless)
-  often beats a cluster you have to operate.
-- **Don't trust an engine is pruning — verify it.** Read the plan. A missing `PushedFilters` /
-  `PartitionFilters` (or a `TableScan` with no predicate) means a full read; the fix is usually a
-  predicate on the partition column, better stats, or a sort order.
+- **Do not use Spark for a sub-second interactive query.** The startup and shuffle overhead of
+  Spark is worse than Trino or DuckDB on small, latency-sensitive queries.
+- **Do not set up a Trino cluster for data that fits on one node.** DuckDB (or Athena serverless)
+  is often better than a cluster that you must operate.
+- **Do not trust that an engine is pruning. Verify it.** Read the plan. A missing `PushedFilters`
+  or `PartitionFilters` (or a `TableScan` with no predicate) means a full read. The fix is usually
+  a predicate on the partition column, better stats, or a sort order.
 
 ## Further reading
 

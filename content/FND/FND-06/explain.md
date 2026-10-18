@@ -9,9 +9,11 @@ Walk through row groups, column chunks, and footer min/max stats.
 
 ## Rubric (self-check — aim for 5/6)
 
-- [ ] Contrasts **row vs columnar** access patterns and why columnar reads fewer bytes.
-- [ ] Names Parquet's layout: **row groups → column chunks → pages**, with stats in the **footer**.
-- [ ] Explains **row-group pruning** using per-group `min/max` (skip when the range can't match).
-- [ ] States that pruning needs **sorting/clustering**; random order prunes nothing.
+- [ ] Contrasts **row vs columnar** access patterns. Says why columnar reads fewer bytes.
+- [ ] Names the layout of Parquet: **row groups → column chunks → pages**, with stats in the
+      **footer**.
+- [ ] Explains **row-group pruning** with the `min/max` of each group (skip when the range cannot
+      match).
+- [ ] States that pruning needs **sorting/clustering**. Random order prunes nothing.
 - [ ] Connects to **Athena bytes-scanned billing** and column projection as the top cost lever.
-- [ ] Mentions Iceberg manifest **column metrics / sort order** doing file-level pruning.
+- [ ] Mentions that Iceberg manifest **column metrics / sort order** do file-level pruning.

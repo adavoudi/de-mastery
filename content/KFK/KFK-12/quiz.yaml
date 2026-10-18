@@ -3,61 +3,62 @@
   prompt: "What is the difference between authentication and authorization in Kafka?"
   options:
     A: "They are the same thing."
-    B: "Authentication proves WHO a client is (e.g. SASL/SCRAM -> a User: principal); authorization decides WHAT that principal may do (ACLs)."
-    C: "Authentication is about encryption; authorization is about compression."
+    B: "Authentication proves WHO a client is (e.g. SASL/SCRAM -> a User: principal). Authorization decides WHAT that principal may do (ACLs)."
+    C: "Authentication is about encryption. Authorization is about compression."
     D: "Authorization happens first, then authentication."
   answer: [B]
   explanation: >-
-    Authentication establishes the principal's identity (TLS mutual auth or a SASL mechanism).
-    Authorization is a separate layer where the authorizer checks that principal's requests against
-    ACLs. Both are needed to lock down a cluster.
+    Authentication establishes the identity of the principal (TLS mutual auth or a SASL mechanism).
+    Authorization is a separate layer. The authorizer checks the requests of that principal against
+    ACLs. You need both to lock down a cluster.
   source: "https://kafka.apache.org/documentation/#security_authz"
 
 - id: KFK-12-q2
   type: single
-  prompt: "With the StandardAuthorizer enabled and no matching ACL, what happens when User:app tries to produce to a topic?"
+  prompt: "The StandardAuthorizer is enabled and no ACL matches. What happens when User:app tries to produce to a topic?"
   options:
-    A: "The write succeeds; ACLs only apply to reads."
+    A: "The write succeeds. ACLs apply only to reads."
     B: "The request is denied (TOPIC_AUTHORIZATION_FAILED) because authorization is deny-by-default."
     C: "The broker crashes."
     D: "The write succeeds but is logged."
   answer: [B]
   explanation: >-
     The authorizer denies anything without a matching allow ACL (unless the principal is a super
-    user). An unauthorized produce fails with TOPIC_AUTHORIZATION_FAILED — the denial you test for.
+    user). An unauthorized produce fails with TOPIC_AUTHORIZATION_FAILED. This is the denial that you
+    test for.
   source: "https://kafka.apache.org/documentation/#security_authz"
 
 - id: KFK-12-q3
   type: single
-  prompt: "Where are SCRAM user credentials stored, and how is the password protected on the wire?"
+  prompt: "Where does Kafka store SCRAM user credentials, and how does it protect the password on the wire?"
   options:
-    A: "In a plaintext file on each client; the password is sent as-is."
-    B: "In the cluster metadata (created via kafka-configs.sh); SCRAM uses a salted challenge-response so the password is never sent in the clear."
-    C: "In the consumer group; sent base64-encoded."
-    D: "They are not stored anywhere."
+    A: "In a plaintext file on each client. The password is sent as-is."
+    B: "In the cluster metadata (created with kafka-configs.sh). SCRAM uses a salted challenge-response, so the password is never sent in the clear."
+    C: "In the consumer group. The password is sent base64-encoded."
+    D: "Kafka does not store them anywhere."
   answer: [B]
   explanation: >-
-    SCRAM credentials are stored in the cluster metadata and created with kafka-configs.sh. SCRAM is
-    a salted challenge-response mechanism, so the raw password is never transmitted.
+    Kafka stores SCRAM credentials in the cluster metadata, and you create them with kafka-configs.sh.
+    SCRAM is a salted challenge-response mechanism, so the raw password is never transmitted.
   source: "https://kafka.apache.org/documentation/#security_sasl_scram_credentials"
 
 - id: KFK-12-q4
   type: single
-  prompt: "Why should an application service account NOT be listed in super.users?"
+  prompt: "Why should you NOT list an application service account in super.users?"
   options:
     A: "Super users are slower."
-    B: "Super users bypass all ACLs, which defeats least privilege; apps should earn each permission through an explicit ACL."
+    B: "Super users bypass all ACLs, which defeats least privilege. Apps should earn each permission through an explicit ACL."
     C: "Kafka allows only one super user."
     D: "Super users cannot produce."
   answer: [B]
   explanation: >-
-    super.users bypass authorization entirely. Granting that to an application is the opposite of
-    least privilege; reserve it for a trusted internal/admin path and grant apps narrow ACLs.
+    super.users bypass authorization entirely. If you give this to an application, you do the opposite
+    of least privilege. Use it only for a trusted internal/admin path. Give apps narrow ACLs.
   source: "https://kafka.apache.org/documentation/#security_authz"
 
 - id: KFK-12-q5
   type: single
-  prompt: "A consumer with Read on topic 'orders' still cannot join its group. What ACL is missing?"
+  prompt: "A consumer has Read on topic 'orders' and still cannot join its group. Which ACL is missing?"
   options:
     A: "Write on the topic."
     B: "Read on the consumer Group resource (a consumer needs topic Read AND group Read)."
@@ -65,8 +66,8 @@
     D: "Describe on the broker."
   answer: [B]
   explanation: >-
-    Consuming needs two grants: Read on the Topic and Read on the consumer Group resource. Granting
-    only the topic lets the fetch authorize but the group join/commit fails.
+    Consuming needs two grants: Read on the Topic and Read on the consumer Group resource. If you grant
+    only the topic, the authorizer accepts the fetch, but the group join and commit fail.
   source: "https://kafka.apache.org/documentation/#security_authz_cli"
 
 - id: KFK-12-q6
@@ -79,8 +80,8 @@
     D: "group.id and auto.offset.reset."
   answer: [B]
   explanation: >-
-    The client must select the SASL security protocol and mechanism and supply its SCRAM username and
-    password; those identify the principal the broker authorizes.
+    The client must select the SASL security protocol and mechanism. It must also give its SCRAM
+    username and password. These identify the principal that the broker authorizes.
   source: "https://kafka.apache.org/documentation/#security_sasl_scram"
 
 - id: KFK-12-q7
@@ -93,8 +94,8 @@
     D: "Add User:app to super.users"
   answer: [B]
   explanation: >-
-    A producer needs Write (and Describe) on exactly that topic. Granting All, a wildcard topic,
-    Read/Delete, or super-user status all violate least privilege.
+    A producer needs Write (and Describe) on exactly that topic. All of these violate least
+    privilege: granting All, a wildcard topic, Read/Delete, or super-user status.
   source: "https://kafka.apache.org/documentation/#security_authz_cli"
 
 - id: KFK-12-q8
@@ -102,11 +103,11 @@
   prompt: "Why is SASL_PLAINTEXT acceptable in a local exercise but not in production?"
   options:
     A: "It is deprecated everywhere."
-    B: "It authenticates but does not encrypt the connection, so credentials and data travel in the clear; production should use SASL_SSL."
+    B: "It authenticates but does not encrypt the connection, so credentials and data travel in the clear. Production should use SASL_SSL."
     C: "It only works with ZooKeeper."
     D: "It disables ACLs."
   answer: [B]
   explanation: >-
-    SASL_PLAINTEXT provides authentication without TLS encryption. It is fine on a trusted local
-    loopback for teaching, but production must use SASL_SSL so the channel is encrypted.
+    SASL_PLAINTEXT gives authentication without TLS encryption. It is fine on a trusted local loopback
+    for teaching. Production must use SASL_SSL, so the channel is encrypted.
   source: "https://kafka.apache.org/documentation/#security_sasl_scram"
