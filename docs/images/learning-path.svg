@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 330" role="img" aria-labelledby="t d">
+<title id="t">DE Mastery learning path</title>
+<desc id="d">Seven tracks in order: Foundations, Spark, Lakehouse, Java, Kafka, Flink, Streamhouse. Spark, Lakehouse, Kafka and Flink each end with a build-your-own challenge.</desc>
+<style>text{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}.id{font-size:13px;font-weight:700;letter-spacing:.08em;fill:#1d5c63}.nm{font-size:17px;font-weight:600;fill:#26231d}.mt{font-size:12px;fill:#7b7467}.tag{font-size:11px;font-weight:600;fill:#8a6a00}.hd{font-size:13px;fill:#4b463c}</style>
+<rect width="780" height="330" rx="14" fill="#faf8f3"/>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#4b463c"/></marker></defs>
+<text class="hd" x="390.0" y="34" text-anchor="middle">Follow the arrows. Each track builds on the one before.</text>
+<rect x="36.0" y="70" width="150" height="72" rx="10" fill="#fff" stroke="#1d5c63" stroke-width="1.8"/>
+<text class="id" x="50.0" y="92">FND</text><text class="nm" x="50.0" y="115">Foundations</text><text class="mt" x="50.0" y="134">7 modules · 20 h</text>
+<rect x="222.0" y="70" width="150" height="86" rx="10" fill="#fff" stroke="#1d5c63" stroke-width="1.8"/>
+<text class="id" x="236.0" y="92">SPK</text><text class="nm" x="236.0" y="115">Spark</text><text class="mt" x="236.0" y="134">12 modules · 70 h</text>
+<text class="tag" x="236.0" y="150">+ build your own</text>
+<rect x="408.0" y="70" width="150" height="86" rx="10" fill="#fff" stroke="#1d5c63" stroke-width="1.8"/>
+<text class="id" x="422.0" y="92">LKH</text><text class="nm" x="422.0" y="115">Lakehouse</text><text class="mt" x="422.0" y="134">8 modules · 35 h</text>
+<text class="tag" x="422.0" y="150">+ build your own</text>
+<rect x="594.0" y="70" width="150" height="72" rx="10" fill="#fff" stroke="#1d5c63" stroke-width="1.8"/>
+<text class="id" x="608.0" y="92">JVM</text><text class="nm" x="608.0" y="115">Java for data</text><text class="mt" x="608.0" y="134">6 modules · 20 h</text>
+<rect x="36.0" y="210" width="150" height="86" rx="10" fill="#fff" stroke="#1d5c63" stroke-width="1.8"/>
+<text class="id" x="50.0" y="232">KFK</text><text class="nm" x="50.0" y="255">Kafka</text><text class="mt" x="50.0" y="274">14 modules · 65 h</text>
+<text class="tag" x="50.0" y="290">+ build your own</text>
+<rect x="222.0" y="210" width="150" height="86" rx="10" fill="#fff" stroke="#1d5c63" stroke-width="1.8"/>
+<text class="id" x="236.0" y="232">FLK</text><text class="nm" x="236.0" y="255">Flink</text><text class="mt" x="236.0" y="274">12 modules · 65 h</text>
+<text class="tag" x="236.0" y="290">+ build your own</text>
+<rect x="408.0" y="210" width="150" height="72" rx="10" fill="#fff" stroke="#1d5c63" stroke-width="1.8"/>
+<text class="id" x="422.0" y="232">STH</text><text class="nm" x="422.0" y="255">Streamhouse</text><text class="mt" x="422.0" y="274">8 modules · 35 h</text>
+<path d="M188.0 106H219.0" stroke="#4b463c" stroke-width="1.6" marker-end="url(#a)"/>
+<path d="M374.0 106H405.0" stroke="#4b463c" stroke-width="1.6" marker-end="url(#a)"/>
+<path d="M560.0 106H591.0" stroke="#4b463c" stroke-width="1.6" marker-end="url(#a)"/>
+<path d="M669.0 142V170H111.0V207" fill="none" stroke="#4b463c" stroke-width="1.6" marker-end="url(#a)"/>
+<path d="M188.0 246H219.0" stroke="#4b463c" stroke-width="1.6" marker-end="url(#a)"/>
+<path d="M374.0 246H405.0" stroke="#4b463c" stroke-width="1.6" marker-end="url(#a)"/>
+<text class="mt" x="582.0" y="240">~310 h in total</text><text class="mt" x="582.0" y="260">4 challenges</text>
+</svg>
