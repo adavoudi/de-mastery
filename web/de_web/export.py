@@ -6,7 +6,8 @@ Every page is fetched from the app and written as ``<path>/index.html``. Root-re
 prefixed with ``--base`` so the site works under a sub-path such as ``https://example.com/de-mastery``.
 Static hosts serve ``<path>/index.html`` at ``<path>/`` and redirect ``<path>`` there, so page links
 get a trailing slash. With ``--site-url``, each page also gets a canonical URL and share-card tags,
-and the export writes a ``sitemap.xml``.
+and the export writes a ``sitemap.xml``. With ``--ga-id``, each page loads Google Analytics; the
+local ``de web`` server never does.
 """
 
 from __future__ import annotations
@@ -61,6 +62,13 @@ def add_share_tags(html: str, url: str, image: str) -> str:
     return html.replace("</head>", tags + "</head>", 1)
 
 
+def add_analytics(html: str, ga_id: str) -> str:
+    tag = (f'<script async src="https://www.googletagmanager.com/gtag/js?id={ga_id}"></script>\n'
+           "<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}"
+           f"gtag('js',new Date());gtag('config','{ga_id}');</script>\n")
+    return html.replace("</head>", tag + "</head>", 1)
+
+
 def sitemap(urls: list[str]) -> str:
     today = date.today().isoformat()
     items = "".join(f"<url><loc>{escape(u)}</loc><lastmod>{today}</lastmod></url>" for u in urls)
@@ -68,7 +76,8 @@ def sitemap(urls: list[str]) -> str:
             f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{items}</urlset>\n')
 
 
-def export(out: Path, base: str = "", repo_root: Path | None = None, site_url: str = "") -> int:
+def export(out: Path, base: str = "", repo_root: Path | None = None, site_url: str = "",
+           ga_id: str = "") -> int:
     base = base.rstrip("/")
     site_url = site_url.rstrip("/")
     image = f"{site_url}{base}/static/brand/og.png"
@@ -100,10 +109,13 @@ def export(out: Path, base: str = "", repo_root: Path | None = None, site_url: s
         if site_url:
             urls.append(page_url(site_url, base, path))
             html = add_share_tags(html, urls[-1], image)
+        if ga_id:
+            html = add_analytics(html, ga_id)
         dest = out / path.strip("/") / "index.html" if path != "/" else out / "index.html"
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(html)
-    (out / "404.html").write_text(prefix_html(client.get("/m/no-such-page").text, base))
+    not_found = prefix_html(client.get("/m/no-such-page").text, base)
+    (out / "404.html").write_text(add_analytics(not_found, ga_id) if ga_id else not_found)
     if site_url:
         (out / "sitemap.xml").write_text(sitemap(urls))
     return len(page_paths(lib))
@@ -115,8 +127,9 @@ def main() -> None:
     ap.add_argument("--base", default="", help="URL sub-path the site is served under, e.g. /de-mastery")
     ap.add_argument("--site-url", default="", help="scheme and host, e.g. https://adavoudi.info; "
                     "adds canonical URLs, share-card tags and sitemap.xml")
+    ap.add_argument("--ga-id", default="", help="Google Analytics measurement id, e.g. G-XXXXXXXXXX")
     a = ap.parse_args()
-    print(f"wrote {export(a.out, a.base, site_url=a.site_url)} pages to {a.out}")
+    print(f"wrote {export(a.out, a.base, site_url=a.site_url, ga_id=a.ga_id)} pages to {a.out}")
 
 
 if __name__ == "__main__":
