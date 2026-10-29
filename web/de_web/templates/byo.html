@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% from "macros.html" import runbox %}
 {% block title %}{{ challenge.title }} · DE Mastery{% endblock %}
+{% block description %}{{ challenge.title }}: a build-your-own project in {{ challenge.stages|length }} stages, part of DE Mastery, a free hands-on data engineering course.{% endblock %}
 {% block body %}
 <div class="page"><article class="prose-wrap">
   <header class="phead">

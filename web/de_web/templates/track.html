@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% from "macros.html" import toc %}
-{% block title %}{{ track.id }} · {{ track.name }} · DE Mastery{% endblock %}
+{% block title %}{{ track.name }} track ({{ track.id }}) · DE Mastery{% endblock %}
+{% block description %}{{ track.name }} track of DE Mastery, a free data engineering course: {{ track.modules|length }} modules with exercises and quizzes. {{ track.blurb }}{% endblock %}
 {% block body %}
 <div class="page">
 <article class="prose-wrap">

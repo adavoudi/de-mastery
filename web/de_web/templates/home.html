@@ -1,5 +1,12 @@
 {% extends "base.html" %}
-{% block title %}DE Mastery · From analytics engineer to data platform engineer{% endblock %}
+{% block title %}DE Mastery: free data engineering course (Spark, Kafka, Flink, lakehouse){% endblock %}
+{% block head %}<script type="application/ld+json">{{ {
+  "@context": "https://schema.org", "@type": "Course", "name": "DE Mastery",
+  "description": "Free hands-on data engineering course for analytics engineers: Spark, Kafka, Flink, the lakehouse and the streamhouse.",
+  "inLanguage": "en", "isAccessibleForFree": true,
+  "provider": {"@type": "Person", "@id": "https://adavoudi.info/#person", "name": "Alireza Davoudi", "url": "https://adavoudi.info/"},
+  "hasCourseInstance": {"@type": "CourseInstance", "courseMode": "online", "courseWorkload": "PT" ~ (lib.modules.values()|sum(attribute='hours'))|round|int|string ~ "H"}
+}|tojson }}</script>{% endblock %}
 {% block body %}
 <section class="hero">
   <p class="eyebrow">A self-paced course</p>

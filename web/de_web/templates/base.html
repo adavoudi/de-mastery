@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <title>{% block title %}DE Mastery{% endblock %}</title>
+<meta name="description" content="{% filter trim|truncate(160, True, '…', 0) %}{% block description %}Free hands-on data engineering course: Spark, Kafka, Flink, the lakehouse and the streamhouse, with graded exercises, quizzes and build-your-own projects.{% endblock %}{% endfilter %}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DE Mastery">
+<meta property="og:title" content="{{ self.title() }}">
+<meta property="og:description" content="{% filter trim|truncate(160, True, '…', 0) %}{{ self.description() }}{% endfilter %}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="author" content="Alireza Davoudi">
 <link rel="icon" href="{{ asset('brand/favicon.svg') }}" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="{{ asset('brand/apple-touch-icon.png') }}">

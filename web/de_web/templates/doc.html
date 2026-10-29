@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% from "macros.html" import toc %}
 {% block title %}{{ doc_meta.title }} · DE Mastery{% endblock %}
+{% block description %}{{ doc_meta.title }}: a guide for DE Mastery, a free hands-on data engineering course on Spark, Kafka, Flink and the lakehouse.{% endblock %}
 {% block body %}
 <div class="page"><article class="prose-wrap">
   <header class="phead"><p class="eyebrow">{{ doc_meta.group }}</p><h1>{{ doc_meta.title }}</h1></header>

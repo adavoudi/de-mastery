@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% from "macros.html" import toc, runbox %}
-{% block title %}{{ module.id }} · {{ module.title }} · DE Mastery{% endblock %}
+{% block title %}{% if exercise is defined and exercise %}{{ exercise.title }} · {% elif part != 'lesson' %}{{ parts.get(part, part|capitalize) }} · {% endif %}{{ module.title }} ({{ module.id }}) · DE Mastery{% endblock %}
+{% block description %}{% if exercise is defined and exercise %}Exercise: {{ exercise.title }}. Starter code and hints for {{ module.title }} ({{ module.id }}){% elif part == 'quiz' %}Practice quiz with instant feedback for {{ module.title }} ({{ module.id }}){% elif part == 'exercises' %}Hands-on exercises for {{ module.title }} ({{ module.id }}){% elif part != 'lesson' %}{{ parts.get(part, part|capitalize) }} for {{ module.title }} ({{ module.id }}){% else %}{{ module.title }} ({{ module.id }}): a lesson{% endif %} in the {{ lib.tracks[module.track].name }} track of DE Mastery, a free hands-on data engineering course.{% endblock %}
 {% block body %}
 <div class="page">
 <article class="prose-wrap">

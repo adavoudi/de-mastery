@@ -29,7 +29,7 @@ The course is published at **https://adavoudi.info/de-mastery**. A GitHub Action
 yourself:
 
 ```bash
-uv run python -m de_web.export --out dist --base /de-mastery   # --base '' for a site at the root
+uv run python -m de_web.export --out dist --base /de-mastery --site-url https://adavoudi.info   # --base '' for a site at the root
 ```
 
 ## Host it for others

@@ -170,10 +170,14 @@ def test_diagram_renderer(tmp_path):
 
 def test_static_export_prefixes_links(tmp_path):
     from de_web.export import export
-    n = export(tmp_path, "/de-mastery", ROOT)
-    assert n > 400 and (tmp_path / ".nojekyll").exists() and (tmp_path / "404.html").exists()
+    n = export(tmp_path, "/de-mastery", ROOT, site_url="https://example.com")
+    assert n > 400 and (tmp_path / ".nojekyll").exists()
+    assert "Page not found" in (tmp_path / "404.html").read_text()
     html = (tmp_path / "m" / "FND-01" / "index.html").read_text()
-    assert 'href="/de-mastery/static/style.css' in html and 'href="/de-mastery/roadmap"' in html
+    assert 'href="/de-mastery/static/style.css' in html and 'href="/de-mastery/roadmap/"' in html
+    assert '<link rel="canonical" href="https://example.com/de-mastery/m/FND-01/">' in html
+    assert '<meta name="description" content="' in html
+    assert "<loc>https://example.com/de-mastery/m/FND-01/</loc>" in (tmp_path / "sitemap.xml").read_text()
     assert 'href="/roadmap"' not in html and 'src="/static' not in html
     assert 'url("/de-mastery/static/fonts' in (tmp_path / "static" / "style.css").read_text()
 
